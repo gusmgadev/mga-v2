@@ -1,0 +1,1 @@
+# components/landing - Componentes solo para landing

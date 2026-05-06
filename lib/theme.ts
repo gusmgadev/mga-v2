@@ -1,0 +1,262 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// lib/theme.ts — Sistema de Diseño Base — Mundo Digital
+// Todos los componentes importan desde acá — un cambio acá cambia todo.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const theme = {
+
+  // ── COLORES ────────────────────────────────────────────────────────────────
+  colors: {
+    primary:    "#1A237E",   // azul marino (marca principal)
+    secondary:  "#1C1C1E",   // gris oscuro (cards, bloques)
+    accent:     "#42A5F5",   // azul celeste (CTA, highlights)
+    background: "#FFFFFF",   // fondo general (claro)
+    dark:       "#0D1B5E",   // azul más oscuro para navbar/contraste
+    text:       "#333333",   // texto principal
+    textMuted:  "#666666",   // texto secundario
+    border:     "#E0E0E0",   // bordes sutiles en modo claro
+    success:    "#1D9E75",
+    error:      "#E24B4A",
+    warning:    "#EF9F27",
+  },
+
+  // ── TIPOGRAFÍA ─────────────────────────────────────────────────────────────
+  fonts: {
+    primary:   "Inter, Roboto, sans-serif",  // títulos
+    secondary: "Inter, Roboto, sans-serif",  // cuerpo
+  },
+
+  fontSizes: {
+    xs:   "11px",
+    sm:   "13px",
+    base: "16px",
+    lg:   "20px",
+    xl:   "28px",
+    xxl:  "40px",
+  },
+
+  fontWeights: {
+    regular: 400,
+    medium:  500,
+    bold:    700,
+  },
+
+  // ── ESPACIADO ──────────────────────────────────────────────────────────────
+  spacing: {
+    xs:  "4px",
+    sm:  "8px",
+    md:  "16px",
+    lg:  "24px",
+    xl:  "48px",
+    xxl: "80px",
+  },
+
+  // ── BORDES ─────────────────────────────────────────────────────────────────
+  radii: {
+    sm:   "6px",
+    md:   "12px",
+    lg:   "20px",
+    full: "99px",
+  },
+
+  // ── SOMBRAS ────────────────────────────────────────────────────────────────
+  shadows: {
+    sm:  "0 1px 3px rgba(0,0,0,0.08)",
+    md:  "0 4px 12px rgba(0,0,0,0.10)",
+    nav: "0 2px 8px rgba(0,0,0,0.06)",
+  },
+
+  // ── TRANSICIONES ───────────────────────────────────────────────────────────
+  transitions: {
+    fast:   "0.15s ease",
+    normal: "0.25s ease",
+    slow:   "0.40s ease",
+  },
+
+  // ── BREAKPOINTS ───────────────────────────────────────────────────────────
+  breakpoints: {
+    mobile:  "640px",
+    tablet:  "768px",
+    desktop: "1024px",
+  },
+
+  // ── NAVBAR ─────────────────────────────────────────────────────────────────
+  navbar: {
+    height:       "64px",
+    heightMobile: "56px",
+    cta: {
+      text: "Contactanos",
+      href: "#contact",
+    },
+  },
+
+  // ── SERVICIOS ────────────────────────────────────────────────────────────────
+  services: {
+    title: "Nuestros Servicios",
+    subtitle: "Soluciones tecnológicas integrales para tu hogar y empresa",
+    
+    items: [
+      {
+        icon: "code",
+        title: "Desarrollo Web",
+        description: "Sitios web, aplicaciones y sistemas personalizados adaptados a tus necesidades.",
+      },
+      {
+        icon: "shopping-cart",
+        title: "Sistemas de Gestión",
+        description: "Software de punto de venta, gestión de inventario y administración empresarial.",
+      },
+      {
+        icon: "briefcase",
+        title: "Consultoría IT",
+        description: "Asesoramiento especializado para optimizar tu infraestructura tecnológica.",
+      },
+      {
+        icon: "tool",
+        title: "Mantenimiento y Soporte",
+        description: "Servicio técnico, reparaciones, optimización y mantenimiento de equipos.",
+      },
+    ],
+  },
+
+  // ── PROCESO ────────────────────────────────────────────────────────────────
+  process: {
+    title: "Nuestro Proceso de Trabajo",
+    subtitle: "Así transformamos tu idea en solución digital",
+    
+    steps: [
+      {
+        number: "01",
+        title: "Diagnóstico",
+        description: "Analizamos tus necesidades y evaluamos la mejor solución para tu caso.",
+      },
+      {
+        number: "02",
+        title: "Propuesta",
+        description: "Presentamos un plan personalizado con tiempos y presupuesto detallado.",
+      },
+      {
+        number: "03",
+        title: "Desarrollo",
+        description: "Implementamos la solución con comunicación constante y entregas parciales.",
+      },
+      {
+        number: "04",
+        title: "Entrega y Soporte",
+        description: "Entregamos el producto terminado y brindamos soporte post-implementación.",
+      },
+    ],
+  },
+
+// ── CLIENTES ────────────────────────────────────────────────────────────────
+  clients: {
+    title: "Algunos de las empresas que confian en nostros",
+    subtitle: "desde el 2004 brindando soluciones tecnologicas en la region",
+    items: [], // se carga desde lib/clientes.ts
+  },
+
+  // ── HERO ───────────────────────────────────────────────────────────────────
+  hero: {
+    height:          "80vh",
+    heightMobile:    "70vh",
+    overlayOpacity:  0.75,
+    blurAmount:      "4px",
+    slideInterval:   3000,
+    slideTransition: "1s",
+
+    tag:            "SOLUCIONES TECNOLÓGICAS PARA EMPRESAS Y PARTICULARES",
+    title:          "Impulsamos tu Negocio en el",
+    titleHighlight: "Mundo Digital",
+    subtitle:       "Soluciones tecnológicas innovadoras que impulsan el crecimiento de tu negocio. Desde desarrollo web hasta gestión empresarial integral.",
+
+    cta: {
+      primary:   { text: "Ver Servicios", href: "#services" },
+      secondary: { text: "Contactanos",   href: "#contact"  },
+    },
+
+    images: [
+      "/images/hero/hero-1.jpg",
+      "/images/hero/hero-2.jpg",
+      "/images/hero/hero-3.jpg",
+    ],
+  },
+
+  // ── FOOTER ─────────────────────────────────────────────────────────────────
+  footer: {
+    description: "En Mundo Digital brindamos soluciones tecnológicas integrales: reparación de computadoras, optimización de sistemas, instalación de hardware, desarrollo de software a medida y asesoramiento técnico para hogares y empresas.",
+    copyright:   "Mundo Digital 2026",
+
+    social: {
+      facebook:  "",
+      instagram: "https://www.instagram.com/mgainformatica.ok/",
+      linkedin:  "",
+    },
+
+    maps: {
+      embedUrl: "https://www.google.com/maps?q=24+de+Marzo+925,+Rada+Tilly,+Chubut,+Argentina&output=embed",
+      height:   "120px",
+    },
+
+    legal: {
+      privacy: "/privacidad",
+      terms:   "/terminos",
+    },
+
+    services: [
+      { label: "Desarrollo WEB", href: "#services" },
+      { label: "Sistemas de Gestion y Puntos de venta", href: "#services" },
+      { label: "Consultoria IT",    href: "#services" },
+      { label: "Mantenimiento y Soporte IT",         href: "#services" },
+    ],
+
+    nav: [
+      { label: "Inicio",    href: "/" },
+      { label: "Servicios", href: "#services" },
+      { label: "Clientes",  href: "#clientes" },
+      { label: "Proceso",   href: "#process" },
+      { label: "Contacto", href: "#contact" },
+    ],
+  },
+
+  // ── CONTACTO ───────────────────────────────────────────────────────────────
+  contact: {
+    phone:    "+54 297 403-6526",
+    email:    "consultas.mgaservicios@gmail.com",
+    whatsapp: "5492974036526",
+    address:  "24 de Marzo 925, Rada Tilly, Chubut, Argentina",
+  },
+
+  // ── LOGO ───────────────────────────────────────────────────────────────────
+  logo: {
+    path:      "/images/logos/logo.png",
+    pathWhite: "/images/logos/logo-white.png",
+    width:  160,
+    height:  40,
+  },
+
+  // ── AUTH ────────────────────────���─��────────────────────────────────────────
+  auth: {
+    logo: {
+      width:  120,
+      height:  32,
+    },
+    redirectAfterLogin:    "/dashboard",
+    redirectAfterLogout:   "/auth/signin",
+    redirectAfterRegister: "/auth/signin",
+  },
+
+  // ── DASHBOARD ──────────────────────────────────────────────────────────────
+  dashboard: {
+    sidebarWidth:          "240px",
+    sidebarWidthCollapsed: "64px",
+    headerHeight:          "60px",
+  },
+
+} as const
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tipos exportados
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type Theme = typeof theme
+export type ThemeColors = typeof theme.colors

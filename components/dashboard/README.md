@@ -1,0 +1,1 @@
+# components/dashboard - Componentes solo para app interna

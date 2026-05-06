@@ -1,0 +1,1 @@
+# components/shared - Componentes compartidos entre zonas
