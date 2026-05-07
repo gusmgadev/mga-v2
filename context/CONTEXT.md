@@ -14,11 +14,11 @@
 
 - **Proyecto:** MGA Informática (sitio web + sistema de gestión)
 - **Cliente:** MGA Informática
-- **Rubro:** Servicios IT — desarrollo web, mantenimiento de equipos, sistemas de gestión, consultoría
-- **Objetivo:** Landing para captar clientes + panel de gestión interno (dashboard)
-- **URL producción:** https://mgadigital.com.ar — sin deploy aún
+- **Rubro:** Servicios IT — desarrollo web, mantenimiento de equipos, sistemas de gestión (Zoologic), consultoría IT, soporte técnico
+- **Objetivo:** Landing para captar clientes + páginas de servicios + sistema Zoologic
+- **URL producción:** https://mgadigital.com.ar
 - **Fecha inicio:** 2026
-- **Estado:** Etapa 1 completada (landing) — Etapa 2 pendiente (auth + dashboard)
+- **Estado:** Landing completa con secciones adicionales (Sistemas Zoologic, proceso interactivo)
 
 ---
 
@@ -148,18 +148,26 @@ mga-v2/
 ### Rutas creadas
 
 - `/` → landing principal (page.tsx)
+- `/desarrollo-web` → página de servicio desarrollo web
+- `/sistemas-gestion` → página de servicio sistemas de gestión Zoologic
+- `/consultoria-it` → página de servicio consultoría IT
+- `/soporte-tecnico` → página de servicio soporte técnico
+- `/lince` → página sistema Lince (Zoologic)
+- `/dragonfish` → página sistema Dragonfish (Zoologic)
+- `/pantera` → página sistema Pantera (Zoologic)
 - `/sitemap.xml` → generado por sitemap.ts
 - `/robots.txt` → generado por robots.ts
 
 ### Componentes landing (`components/landing/`)
 
 - `moving-banner.tsx` → banda animada fija en z-50 top-0 con palabras clave del servicio leídas desde `theme.banner.words`
-- `navbar.tsx`        → logo centrado, links con underline animado, hamburguesa mobile. Items leídos desde `theme.navbar.items`.
-- `hero.tsx`          → slideshow de 3 imágenes con blur + overlay + mockup de dashboard a la derecha. Animaciones fadeUp y slideInRight.
+- `navbar.tsx`        → logo centrado, links con underlineendido, hamburguesa mobile. Items leídos desde `theme.navbar.items`.
+- `hero.tsx`          → slideshow de 3 imágenes con blur + overlay. "Mundo Digital" tiene animación de gradiente azul→celeste con borde gris.
 - `services.tsx`      → grilla 4 columnas de servicios leídos desde `theme.services.items`
-- `process.tsx`       → timeline de 4 pasos leídos desde `theme.process.steps`
-- `clients.tsx`       → grilla responsiva de 22 clientes, hover revela dirección y teléfono, animación Framer Motion float
-- `contact.tsx`       → formulario con campos nombre/email/teléfono/mensaje. Llama a `/api/contact` (Resend).
+- `sistemas-zoologic.tsx` → grilla 3 sistemas Zoologic (Lince, Dragonfish, Pantera) con logos
+- `process.tsx`       → timeline de 4 pasos leídos desde `theme.process.steps` (click revela detalles)
+- `clients.tsx`       → grilla responsiva de clientes, hover revela dirección y teléfono, animación Framer Motion float, borde verde al hover
+- `contact.tsx`       → formulario con campos nombre/email/teléfono/mensaje. Fondo blanco con formulario azul gradiente. Botón "Consultános" va a `/#contact`.
 - `footer.tsx`        → banda CTA superior con gradiente + 4 columnas (empresa, servicios, nav, contacto+mapa)
 - `json-ld.tsx`       → script JSON-LD con schema LocalBusiness para Google rich results
 
@@ -170,12 +178,17 @@ mga-v2/
 - [x] Landing completa con todas las secciones
 - [x] Moving banner animado con palabras clave de servicios
 - [x] Navbar con logo centrado y links con underline animado
-- [x] Hero con slideshow de imágenes y mockup de dashboard
+- [x] Hero con slideshow de imágenes y animación "Mundo Digital" (gradiente azul→celeste con borde gris)
 - [x] Sección Servicios (4 items desde theme.ts)
-- [x] Sección Proceso (4 pasos desde theme.ts)
-- [x] Sección Clientes (22 empresas desde lib/clientes.ts con hover card)
-- [x] Formulario de contacto con backend real (Resend → consultas@mgadigital.com.ar)
+- [x] Sección Sistemas Zoologic (3 sistemas: Lince, Dragonfish, Pantera)
+- [x] Sección Proceso interactiva (4 pasos con click revelar detalles)
+- [x] Sección Clientes con hover borde verde
+- [x] Formulario de contacto con fondo blanco, formulario con gradiente azul→celeste
 - [x] Footer con banda CTA + mapa de Google Maps embed
+- [x] Páginas de servicios: desarrollo-web, sistemas-gestion, consultoria-it, soporte-tecnico
+- [x] Páginas Zoologic: lince, dragonfish, pantera
+- [x] Teléfono abre WhatsApp (#wa.me)
+- [x] Botones "Consultános" van a /#contact
 - [x] SEO completo: title, description, keywords, Open Graph, Twitter Card, geo tags
 - [x] sitemap.xml generado dinámicamente
 - [x] robots.txt (bloquea /dashboard, /auth, /api)
@@ -192,16 +205,13 @@ mga-v2/
 
 ## Pendientes y próximos pasos
 
-### Crítico (antes de salir a producción)
+### Pendientes
 
-1. **Autenticación** — implementar NextAuth v5 con Supabase. Ver `context/AUTH_CONTEXT.md`
-3. **Middleware de rutas** — crear `middleware.ts` para proteger `/dashboard` y redirigir desde `/auth` si ya está logueado
-4. **Deploy** — configurar Vercel o VPS con dominio mgadigital.com.ar
-
-### Próxima sesión
-
-- Implementar backend del formulario de contacto (Resend + API route)
-- O iniciar la zona de autenticación
+- Autenticación (NextAuth v5 instalado)
+- Middleware de rutas
+- Dashboard funcional
+- Deploy en mgadigital.com.ar
+- Google Search Console
 
 ### Backlog
 
@@ -241,5 +251,5 @@ mga-v2/
 
 ---
 
-**Última actualización:** 07/05/2026 (v2)
+**Última actualización:** 07/05/2026 (v3)
 **Actualizado por:** Claude Code
