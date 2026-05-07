@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { theme } from "@/lib/theme"
 import { TrendingUp, Clock } from "lucide-react"
@@ -51,14 +52,21 @@ export default function Hero() {
             style={{
               position: "absolute",
               inset: 0,
-              backgroundImage: `url(${img})`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-              filter: `blur(${theme.hero.blurAmount}) brightness(0.4)`,
               opacity: idx === currentSlide ? 1 : 0,
               transition: `opacity ${theme.hero.slideTransition} ease`,
             }}
-          />
+          >
+            <Image
+              src={img}
+              alt=""
+              fill
+              priority={idx === 0}
+              loading={idx === 0 ? "eager" : "eager"}
+              sizes="100vw"
+              className="object-cover object-center"
+              style={{ filter: `blur(${theme.hero.blurAmount}) brightness(0.4)` }}
+            />
+          </div>
         ))}
       </div>
 
