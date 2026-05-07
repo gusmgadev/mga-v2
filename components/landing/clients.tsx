@@ -15,7 +15,7 @@ export default function Clients() {
   return (
     <section
       id="clientes"
-      className="py-20 px-6 md:px-12"
+      className="py-20 px-6 md:px-12 rounded-2xl border shadow-md"
       style={{ 
         backgroundColor: "#F5F5F3",
         scrollMarginTop: "180px"
@@ -41,7 +41,7 @@ export default function Clients() {
           {visibleClients.map((client, idx) => (
             <motion.div
               key={idx}
-              className="relative h-40 rounded-xl overflow-hidden cursor-pointer"
+              className="relative h-48 sm:h-44 rounded-xl overflow-hidden cursor-pointer"
               style={{ 
                 backgroundColor: "#fff", 
                 boxShadow: theme.shadows.md,

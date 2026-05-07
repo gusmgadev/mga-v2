@@ -1,0 +1,1 @@
+# services/ - APIs externas (supabase, resend, etc)

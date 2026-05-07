@@ -8,9 +8,9 @@ export default function Process() {
   return (
     <section
       id="process"
-      className="py-20 px-6 md:px-12"
+      className="py-20 px-6 md:px-12 rounded-2xl border shadow-md"
       style={{ 
-        backgroundColor: "#F5F5F3",
+        backgroundColor: "#E5E5E3",
         scrollMarginTop: "180px"
       }}
     >

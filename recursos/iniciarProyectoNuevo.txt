@@ -1,0 +1,24 @@
+1. Crear el proyecto Next.js con este comando:
+   npx create-next-app@latest . --typescript --tailwind --eslint 
+   --app --turbopack --no-src-dir --no-import-alias
+
+2. Instalar las dependencias base:
+   npm install @supabase/supabase-js next-auth@beta
+   npm install react-hook-form zod @hookform/resolvers
+   npm install framer-motion lucide-react resend
+
+3. Crear el archivo .env.local en la raíz con las variables 
+   necesarias para el stack del proyecto (con placeholders)
+
+4. Crear la estructura de carpetas según CONTEXT.md:
+   app/(public)/ app/(auth)/ app/(dashboard)/ app/api/
+   components/landing/ components/dashboard/ components/shared/
+   lib/ services/ hooks/ types/
+   public/images/logos/ public/images/hero/ public/images/clientes/
+
+5. Copiar lib/theme.ts al proyecto (el archivo está adjunto)
+
+6. Crear un README.md en cada carpeta explicando qué va ahí
+
+Dame cada paso con el comando exacto a ejecutar en la terminal.
+No generes componentes todavía — solo el setup inicial.

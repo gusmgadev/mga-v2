@@ -1,0 +1,1 @@
+# types/ - Tipos TypeScript centralizados

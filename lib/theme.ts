@@ -1,9 +1,16 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// lib/theme.ts — Sistema de Diseño Base — Mundo Digital
+// lib/theme.ts — Sistema de Diseño Base — MGA Informática
 // Todos los componentes importan desde acá — un cambio acá cambia todo.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const theme = {
+
+  // ── SITIO ──────────────────────────────────────────────────────────────────
+  site: {
+    url:     "https://mgadigital.com.ar",
+    name:    "MGA Informática",
+    ogImage: "/images/hero/hero-1.jpg",     // imagen para compartir en redes (1200×630 ideal)
+  },
 
   // ── COLORES ────────────────────────────────────────────────────────────────
   colors: {
@@ -80,6 +87,18 @@ export const theme = {
     desktop: "1024px",
   },
 
+  // ── BANNER ANIMADO ─────────────────────────────────────────────────────────
+  banner: {
+    words: [
+      "DISEÑO WEB",
+      "SISTEMAS A MEDIDA",
+      "CONTROL STOCK Y VENTAS",
+      "SERVICIO TÉCNICO",
+      "ASESORAMIENTO INFORMÁTICO",
+      "VENTAS DE EQUIPOS",
+    ],
+  },
+
   // ── NAVBAR ─────────────────────────────────────────────────────────────────
   navbar: {
     height:       "64px",
@@ -88,6 +107,13 @@ export const theme = {
       text: "Contactanos",
       href: "#contact",
     },
+    items: [
+      { label: "Servicios", href: "#services" },
+      { label: "Proceso",   href: "#process"  },
+      { label: "Clientes",  href: "#clientes" },
+      { label: "Nosotros",  href: "#"         },
+      { label: "Contacto",  href: "#contact"  },
+    ],
   },
 
   // ── SERVICIOS ────────────────────────────────────────────────────────────────
@@ -177,14 +203,14 @@ export const theme = {
     images: [
       "/images/hero/hero-1.jpg",
       "/images/hero/hero-2.jpg",
-      "/images/hero/hero-3.jpg",
+      "/images/hero/hero-5.jpg",
     ],
   },
 
   // ── FOOTER ─────────────────────────────────────────────────────────────────
   footer: {
-    description: "En Mundo Digital brindamos soluciones tecnológicas integrales: reparación de computadoras, optimización de sistemas, instalación de hardware, desarrollo de software a medida y asesoramiento técnico para hogares y empresas.",
-    copyright:   "Mundo Digital 2026",
+    description: "En MGA Informática brindamos soluciones tecnológicas integrales: reparación de computadoras, optimización de sistemas, instalación de hardware, desarrollo de software a medida y asesoramiento técnico para hogares y empresas.",
+    copyright:   "MGA Informática 2026",
 
     social: {
       facebook:  "",
@@ -221,9 +247,11 @@ export const theme = {
   // ── CONTACTO ───────────────────────────────────────────────────────────────
   contact: {
     phone:    "+54 297 403-6526",
-    email:    "consultas.mgaservicios@gmail.com",
+    email:    "consultas@mgadigital.com.ar",
     whatsapp: "5492974036526",
     address:  "24 de Marzo 925, Rada Tilly, Chubut, Argentina",
+    title:    "Ponete en contacto",
+    subtitle: "Completá el formulario y nos comunicamos a la brevedad",
   },
 
   // ── LOGO ───────────────────────────────────────────────────────────────────

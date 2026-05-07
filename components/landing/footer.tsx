@@ -27,7 +27,7 @@ export default function Footer() {
       <div
         className="px-12 py-6 grid grid-cols-1 md:grid-cols-2 gap-6 items-center"
         style={{
-          backgroundColor: theme.colors.primary,
+          background: `linear-gradient(90deg, ${theme.colors.primary} 0%, ${theme.colors.accent} 50%, ${theme.colors.primary} 100%)`,
         }}
       >
         <div>
@@ -63,7 +63,7 @@ export default function Footer() {
           <div>
             <img
               src={theme.logo.path}
-              alt="Mundo Digital"
+              alt={theme.site.name}
               width={theme.logo.width}
               height={theme.logo.height}
               className="mb-4"

@@ -6,15 +6,8 @@ import { usePathname } from "next/navigation"
 import { Menu, X } from "lucide-react"
 import { theme } from "@/lib/theme"
 
-const navItems = [
-  { label: "Servicios", href: "#services" },
-  { label: "Proceso", href: "#process" },
-  { label: "Clientes", href: "#clientes" },
-  { label: "Nosotros", href: "#" },
-  { label: "Contacto", href: "#contact" },
-]
-
 export default function Navbar() {
+  const navItems = theme.navbar.items
   const pathname = usePathname()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
@@ -45,7 +38,7 @@ export default function Navbar() {
           <Link href="/" className="flex items-center">
             <img
               src={theme.logo.path}
-              alt="Mundo Digital"
+              alt={theme.site.name}
               width={theme.logo.width}
               height={theme.logo.height}
             />

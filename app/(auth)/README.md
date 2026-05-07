@@ -1,0 +1,1 @@
+# app/(auth) - Zona de autenticación (signin, signup)

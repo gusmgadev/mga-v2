@@ -16,7 +16,7 @@ export default function Services() {
   return (
     <section
       id="services"
-      className="py-20 px-6 md:px-12"
+      className="py-20 px-6 md:px-12 rounded-2xl border shadow-md"
       style={{ 
         backgroundColor: theme.colors.background,
         scrollMarginTop: "180px"

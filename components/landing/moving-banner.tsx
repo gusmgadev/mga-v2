@@ -2,16 +2,8 @@
 
 import { theme } from "@/lib/theme"
 
-const words = [
-  "DISEÑO WEB",
-  "SISTEMAS A MEDIDA",
-  "CONTROL STOCK Y VENTAS",
-  "SERVICIO TÉCNICO",
-  "ASESORAMIENTO INFORMÁTICO",
-  "VENTAS DE EQUIPOS",
-]
-
 export default function MovingBanner() {
+  const words = theme.banner.words
   return (
     <div
       className="fixed top-0 left-0 right-0 z-50 overflow-hidden py-2"
