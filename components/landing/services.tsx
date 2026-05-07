@@ -37,13 +37,16 @@ style={{
         }}
     >
       <div className="absolute inset-0">
-          <img
-            src="/images/secciones/servicios1.jpg"
-            alt="Servicios"
-            className="w-full h-full object-cover"
-            style={{ filter: "blur(2px) brightness(0.8)" }}
-          />
-        </div>
+        <Image
+          src="/images/secciones/servicios1.jpg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+          style={{ filter: "blur(2px) brightness(0.8)" }}
+        />
+      </div>
       <div className="absolute inset-0 bg-white/70" />
       <div className="max-w-6xl mx-auto relative">
         <div className="text-center mb-16">

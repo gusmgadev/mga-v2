@@ -17,13 +17,15 @@ export default function SistemasZoologic() {
       }}
     >
       <div className="absolute inset-0">
-          <img
-            src="/images/secciones/sistemas1.jpg"
-            alt="Sistemas"
-            className="w-full h-full object-cover"
-            style={{ filter: "blur(2px) brightness(0.8)" }}
-          />
-        </div>
+        <Image
+          src="/images/secciones/sistemas1.jpg"
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-cover"
+          style={{ filter: "blur(2px) brightness(0.8)" }}
+        />
+      </div>
       <div className="absolute inset-0 bg-white/70" />
       <div className="max-w-7xl mx-auto relative">
         <div className="text-center mb-8">

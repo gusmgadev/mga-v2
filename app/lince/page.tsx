@@ -30,10 +30,13 @@ export default function LincePage() {
       <Navbar />
       <main className="min-h-screen pt-48 pb-12 px-4 md:px-8 relative overflow-hidden">
         <div className="absolute inset-0">
-          <img
+          <Image
             src="/images/secciones/zoologic.jpg"
             alt=""
-            className="w-full h-full object-cover"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
             style={{ filter: "blur(3px) brightness(0.85)" }}
           />
         </div>
