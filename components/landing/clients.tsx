@@ -41,7 +41,7 @@ export default function Clients() {
           {visibleClients.map((client, idx) => (
             <motion.div
               key={idx}
-              className="relative h-48 sm:h-44 rounded-xl overflow-hidden cursor-pointer"
+              className="relative h-56 sm:h-52 rounded-xl overflow-hidden cursor-pointer"
               style={{ 
                 backgroundColor: "#fff", 
                 boxShadow: theme.shadows.md,
@@ -70,19 +70,19 @@ export default function Clients() {
                   />
                 </div>
                 <h3
-                  className="text-[9px] font-semibold text-center leading-tight"
+                  className="text-sm font-semibold text-center leading-tight"
                   style={{ color: theme.colors.text }}
                 >
                   {client.name}
                 </h3>
                 <p
-                  className="text-[10px] text-center"
+                  className="text-sm text-center"
                   style={{ color: theme.colors.textMuted }}
                 >
                   {client.category}
                 </p>
                 <p
-                  className="text-[10px] text-center"
+                  className="text-sm text-center"
                   style={{ color: theme.colors.textMuted }}
                 >
                   {client.location}
@@ -104,19 +104,19 @@ export default function Clients() {
                     />
                   </div>
                   <h3
-                    className="text-[9px] font-bold text-center leading-tight"
+                    className="text-sm font-bold text-center leading-tight"
                     style={{ color: theme.colors.text }}
                   >
                     {client.name}
                   </h3>
                   <p
-                    className="text-[10px] text-center"
+                    className="text-sm text-center"
                     style={{ color: theme.colors.textMuted }}
                   >
                     {client.category}
                   </p>
                   <p
-                    className="text-[10px] text-center"
+                    className="text-sm text-center"
                     style={{ color: theme.colors.textMuted }}
                   >
                     {client.location}

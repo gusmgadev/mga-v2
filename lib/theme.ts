@@ -3,6 +3,18 @@
 // Todos los componentes importan desde acá — un cambio acá cambia todo.
 // ─────────────────────────────────────────────────────────────────────────────
 
+export interface NavSubItem {
+  label: string
+  href: string
+}
+
+export interface NavItem {
+  label: string
+  href: string
+  scroll?: boolean
+  submenu?: NavSubItem[]
+}
+
 export const theme = {
 
   // ── SITIO ──────────────────────────────────────────────────────────────────
@@ -107,13 +119,13 @@ export const theme = {
       text: "Contactanos",
       href: "#contact",
     },
-    items: [
-      { label: "Servicios", href: "#services" },
-      { label: "Proceso",   href: "#process"  },
-      { label: "Clientes",  href: "#clientes" },
-      { label: "Nosotros",  href: "#"         },
-      { label: "Contacto",  href: "#contact"  },
-    ],
+items: [
+      { label: "Servicios", href: "/#services", scroll: true },
+      { label: "Proceso", href: "/#process", scroll: true },
+      { label: "Sistemas Zoologic", href: "/#sistemas-zoologic", scroll: true },
+      { label: "Clientes", href: "/#clientes", scroll: true },
+      { label: "Contacto", href: "/#contact", scroll: true },
+    ] as NavItem[],
   },
 
   // ── SERVICIOS ────────────────────────────────────────────────────────────────
@@ -176,9 +188,43 @@ export const theme = {
 
 // ── CLIENTES ────────────────────────────────────────────────────────────────
   clients: {
-    title: "Algunos de las empresas que confian en nostros",
+    title: "Algunas empresas y comercios que confian en nostros",
     subtitle: "desde el 2004 brindando soluciones tecnologicas en la region",
     items: [], // se carga desde lib/clientes.ts
+  },
+
+  // ── SISTEMAS ZOOLOGIC ───────────────────────────────────────────────────────
+  sistemasZoologic: {
+    title: "Sistemas de Gestión Zoologic",
+    subtitle: "Somos agentes comerciales certificados de Zoologic desde el año 2010",
+    badge: "Agentes Comerciales Certificados",
+    year: "2010",
+items: [
+      {
+        name: "Lince Indumentaria",
+        logo: "/images/logos/lince-logo.png",
+        title: "Lince Indumentaria",
+        description: "Lince Indumentaria es el sistema más elegido por la industria de la indumentaria con más de 25 años en el mercado, que te permite gestionar todas las instancias de tu operatoria comercial. Gestión de venta minorista, mayorista, compras, toma de inventario, tarjetas de crédito y gestión de producción.",
+        subtitle: "El más elegido por la industria con más de 25 años en el mercado",
+        url: "/lince",
+      },
+      {
+        name: "Dragonfish Color y Talle - Pymes",
+        logo: "/images/logos/dragonfish-logo.png",
+        title: "Dragonfish Color y Talle - Pymes",
+        description: "Dragonfish Color y Talle - Pymes es el software completo, sencillo y adaptable a las necesidades de tu negocio o empresa que te permite realizar y dar seguimiento muy fácilmente a todas las actividades de tu local, para que potencies las fortalezas de tu negocio y puedas crecer. Integraciones con Mercado Libre, Tienda Nube y WooCommerce.",
+        subtitle: "Gestión, administración y control para Pymes.",
+        url: "/dragonfish",
+      },
+      {
+        name: "Pantera Comercios",
+        logo: "/images/logos/pantera-logo.png",
+        title: "Pantera Comercios",
+        description: "Pantera Comercios es un sistema de gestión 100% web con el que podrás controlar el stock, emitir facturas, registrar la caja, facturar las ventas de Mercado Libre y obtener informes integrales de gestión. Vas a poder administrar todo tu negocio, de manera fácil, intuitiva y a muy bajo costo.",
+        subtitle: "Software de gestión líder del mercado.",
+        url: "/pantera",
+      },
+    ],
   },
 
   // ── HERO ───────────────────────────────────────────────────────────────────

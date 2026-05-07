@@ -1,17 +1,21 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { usePathname } from "next/navigation"
-import { Menu, X } from "lucide-react"
-import { theme } from "@/lib/theme"
+import { Menu, X, ChevronDown } from "lucide-react"
+import { theme, type NavItem } from "@/lib/theme"
 
 export default function Navbar() {
-  const navItems = theme.navbar.items
+  const navItems = theme.navbar.items as NavItem[]
+  const router = useRouter()
   const pathname = usePathname()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const [hoveredItem, setHoveredItem] = useState<string | null>(null)
+  const [openSubmenu, setOpenSubmenu] = useState<string | null>(null)
+  const submenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -20,6 +24,24 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (submenuRef.current && !submenuRef.current.contains(event.target as Node)) {
+        setOpenSubmenu(null)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  const handleNavClick = (item: NavItem) => {
+    if (item.submenu && item.submenu.length > 0) {
+      setOpenSubmenu(openSubmenu === item.label ? null : item.label)
+    } else if (item.scroll) {
+      router.push(item.href)
+    }
+  }
 
   return (
     <>
@@ -48,28 +70,78 @@ export default function Navbar() {
             {navItems.map((item) => {
               const isActive = pathname === item.href ||
                 (item.label === "Contacto" && pathname.includes("contact"))
+              const hasSubmenu = item.submenu && item.submenu.length > 0
 
               return (
-                <Link
+                <div
                   key={item.label}
-                  href={item.href}
-                  className="relative text-sm uppercase tracking-widest px-4 py-1"
-                  style={{
-                    color: isActive || hoveredItem === item.label ? theme.colors.primary : "#555",
-                    fontWeight: isActive || hoveredItem === item.label ? 700 : 400,
-                    transition: theme.transitions.fast,
+                  className="relative"
+                  onMouseEnter={() => {
+                    if (hasSubmenu) {
+                      setHoveredItem(item.label)
+                    }
                   }}
-                  onMouseEnter={() => setHoveredItem(item.label)}
-                  onMouseLeave={() => setHoveredItem(null)}
+                  onMouseLeave={() => {
+                    if (hasSubmenu) {
+                      setHoveredItem(null)
+                    }
+                  }}
                 >
-                  {item.label}
-                  <span
-                    className="absolute bottom-0 left-0 h-0.5 bg-[#1A237E] transition-all duration-300"
+                  <Link
+                    href={item.href}
+                    className="relative text-sm uppercase tracking-widest px-4 py-1 flex items-center gap-1"
                     style={{
-                      width: isActive || hoveredItem === item.label ? "100%" : "0%",
+                      color: isActive || hoveredItem === item.label ? theme.colors.primary : "#555",
+                      fontWeight: isActive || hoveredItem === item.label ? 700 : 400,
+                      transition: theme.transitions.fast,
+                      cursor: "pointer",
                     }}
-                  />
-                </Link>
+                    onClick={(e) => {
+                      if (hasSubmenu) {
+                        e.preventDefault()
+                        handleNavClick(item)
+                      } else if (item.scroll) {
+                        router.push(item.href)
+                      }
+                    }}
+                    onMouseEnter={() => setHoveredItem(item.label)}
+                    onMouseLeave={() => setHoveredItem(null)}
+                  >
+                    {item.label}
+                    {hasSubmenu && <ChevronDown size={14} />}
+                    <span
+                      className="absolute bottom-0 left-0 h-0.5 bg-[#1A237E] transition-all duration-300"
+                      style={{
+                        width: isActive || hoveredItem === item.label ? "100%" : "0%",
+                      }}
+                    />
+                  </Link>
+                  {hasSubmenu && (hoveredItem === item.label || openSubmenu === item.label) && (
+                    <div
+                      ref={submenuRef}
+                      className="absolute top-full left-0 mt-1 py-2 rounded-lg shadow-lg min-w-[180px]"
+                      style={{
+                        backgroundColor: theme.colors.background,
+                        border: `1px solid ${theme.colors.border}`,
+                      }}
+                    >
+                      {item.submenu?.map((subItem) => (
+                        <Link
+                          key={subItem.label}
+                          href={subItem.href}
+                          className="block px-4 py-2 text-sm hover:bg-gray-50"
+                          style={{ color: theme.colors.text }}
+                          onClick={() => {
+                            setOpenSubmenu(null)
+                            setHoveredItem(null)
+                          }}
+                        >
+                          {subItem.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )
             })}
           </div>
@@ -94,16 +166,44 @@ export default function Navbar() {
         >
           <div className="flex flex-col gap-4 mt-8">
             {navItems.map((item) => {
+              const hasSubmenu = item.submenu && item.submenu.length > 0
               return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="text-lg uppercase tracking-widest py-3 border-b"
-                  style={{ borderColor: theme.colors.border }}
-                  onClick={() => setIsMobileOpen(false)}
-                >
-                  {item.label}
-                </Link>
+                <div key={item.label}>
+                  <Link
+                    href={item.href}
+                    className="text-lg uppercase tracking-widest py-3 border-b flex items-center justify-between"
+                    style={{ borderColor: theme.colors.border }}
+                    onClick={(e) => {
+                      if (hasSubmenu) {
+                        e.preventDefault()
+                        setOpenSubmenu(openSubmenu === item.label ? null : item.label)
+                      } else if (item.scroll) {
+                        router.push(item.href)
+                        setIsMobileOpen(false)
+                      } else {
+                        setIsMobileOpen(false)
+                      }
+                    }}
+                  >
+                    {item.label}
+                    {hasSubmenu && <ChevronDown size={20} />}
+                  </Link>
+                  {hasSubmenu && openSubmenu === item.label && (
+                    <div className="pl-6">
+                      {item.submenu?.map((subItem) => (
+                        <Link
+                          key={subItem.label}
+                          href={subItem.href}
+                          className="block py-2 text-base border-b"
+                          style={{ borderColor: theme.colors.border }}
+                          onClick={() => setIsMobileOpen(false)}
+                        >
+                          {subItem.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )
             })}
           </div>
