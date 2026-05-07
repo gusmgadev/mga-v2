@@ -11,31 +11,39 @@ export default function SistemasZoologic() {
   return (
     <section
       id="sistemas-zoologic"
-      className="py-20 px-6 md:px-12"
+      className="py-20 px-6 md:px-12 relative overflow-hidden"
       style={{
-        backgroundColor: theme.colors.background,
         scrollMarginTop: "180px",
       }}
     >
-      <div className="max-w-7xl mx-auto">
+      <div className="absolute inset-0">
+          <img
+            src="/images/secciones/sistemas1.jpg"
+            alt="Sistemas"
+            className="w-full h-full object-cover"
+            style={{ filter: "blur(2px) brightness(0.8)" }}
+          />
+        </div>
+      <div className="absolute inset-0 bg-white/70" />
+      <div className="max-w-7xl mx-auto relative">
         <div className="text-center mb-16">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Image
               src="/images/logos/zoologic.png"
               alt="Zoologic"
-              width={120}
-              height={40}
+              width={240}
+              height={80}
               className="object-contain"
             />
           </div>
           <span
-            className="inline-block px-3 py-1 rounded-full text-xs font-medium mb-4"
+            className="inline-block px-3 py-1 rounded-full text-lg font-medium mb-4"
             style={{
               backgroundColor: theme.colors.primary + "15",
               color: theme.colors.primary,
             }}
           >
-            {sistemasZoologic.badge} • Desde {sistemasZoologic.year}
+            {sistemasZoologic.badge}
           </span>
           <h2
             className="text-3xl md:text-4xl font-bold mb-4"

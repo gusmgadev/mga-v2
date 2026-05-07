@@ -84,7 +84,7 @@ export default function PanteraPage() {
               ¿Qué esperás para optimizar tu negocio?
             </h2>
             <a
-              href="#contact"
+              href="/#contact"
               className="inline-block px-8 py-3 rounded-lg font-medium"
               style={{ backgroundColor: "#fff", color: "#7C3AED" }}
             >

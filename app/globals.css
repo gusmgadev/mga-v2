@@ -73,15 +73,28 @@ body {
 .animated-gradient-text {
   background: linear-gradient(
     90deg,
+    #fff 0%,
+    #9ca3af 50%,
+    #fff 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: text-shine 4s ease-in-out infinite;
+}
+
+.animated-gradient-text-celeste {
+  background: linear-gradient(
+    90deg,
     #1A237E 0%,
-    #42A5F5 25%,
-    #fff 50%,
-    #42A5F5 75%,
+    #90CAF9 50%,
     #1A237E 100%
   );
   background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 0.3px #333 !important;
   animation: text-shine 4s ease-in-out infinite;
 }

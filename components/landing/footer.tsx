@@ -141,7 +141,7 @@ export default function Footer() {
             <ul className="space-y-3 text-sm" style={{ color: theme.colors.textMuted }}>
               <li className="flex items-center gap-2">
                 <Phone size={14} />
-                <a href={`tel:${theme.contact.phone}`}>{theme.contact.phone}</a>
+                <a href={`https://wa.me/${theme.contact.whatsapp}`} target="_blank" rel="noopener noreferrer">{theme.contact.phone}</a>
               </li>
               <li className="flex items-center gap-2">
                 <Mail size={14} />

@@ -120,10 +120,11 @@ export const theme = {
       href: "#contact",
     },
 items: [
+      { label: "Home", href: "/", scroll: false },
       { label: "Servicios", href: "/#services", scroll: true },
-      { label: "Proceso", href: "/#process", scroll: true },
       { label: "Sistemas Zoologic", href: "/#sistemas-zoologic", scroll: true },
       { label: "Clientes", href: "/#clientes", scroll: true },
+      { label: "Proceso", href: "/#process", scroll: true },
       { label: "Contacto", href: "/#contact", scroll: true },
     ] as NavItem[],
   },
@@ -188,7 +189,7 @@ items: [
 
 // ── CLIENTES ────────────────────────────────────────────────────────────────
   clients: {
-    title: "Algunas empresas y comercios que confian en nostros",
+    title: "Algunas empresas y comercios que confian en nosotros",
     subtitle: "desde el 2004 brindando soluciones tecnologicas en la region",
     items: [], // se carga desde lib/clientes.ts
   },
@@ -196,9 +197,8 @@ items: [
   // ── SISTEMAS ZOOLOGIC ───────────────────────────────────────────────────────
   sistemasZoologic: {
     title: "Sistemas de Gestión Zoologic",
-    subtitle: "Somos agentes comerciales certificados de Zoologic desde el año 2010",
-    badge: "Agentes Comerciales Certificados",
-    year: "2010",
+    subtitle: "Representantes oficiales en Chubut y Zona norte de Santa Cruz",
+    badge: "Agentes certificados desde el 2010",
 items: [
       {
         name: "Lince Indumentaria",
@@ -282,8 +282,9 @@ items: [
     ],
 
     nav: [
-      { label: "Inicio",    href: "/" },
+      { label: "Home", href: "/" },
       { label: "Servicios", href: "#services" },
+      { label: "Sistemas Zoologic", href: "#sistemas-zoologic" },
       { label: "Clientes",  href: "#clientes" },
       { label: "Proceso",   href: "#process" },
       { label: "Contacto", href: "#contact" },
@@ -296,7 +297,7 @@ items: [
     email:    "consultas@mgadigital.com.ar",
     whatsapp: "5492974036526",
     address:  "24 de Marzo 925, Rada Tilly, Chubut, Argentina",
-    title:    "Ponete en contacto",
+title: "Contactanos",
     subtitle: "Completá el formulario y nos comunicamos a la brevedad",
   },
 

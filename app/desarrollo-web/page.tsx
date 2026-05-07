@@ -39,7 +39,7 @@ export default function DesarrolloWebPage() {
           </div>
           <div className="text-center p-8 rounded-2xl" style={{ backgroundColor: theme.colors.primary }}>
             <h2 className="text-2xl font-bold mb-4 text-white">¿Necesitás una solución web personalizada?</h2>
-            <a href="#contact" className="inline-block px-8 py-3 rounded-lg font-medium" style={{ backgroundColor: "#fff", color: theme.colors.primary }}>Consultános</a>
+            <a href="/#contact" className="inline-block px-8 py-3 rounded-lg font-medium" style={{ backgroundColor: "#fff", color: theme.colors.primary }}>Consultános</a>
           </div>
         </div>
       </main>

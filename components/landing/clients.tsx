@@ -15,9 +15,9 @@ export default function Clients() {
   return (
     <section
       id="clientes"
-      className="py-20 px-6 md:px-12 rounded-2xl border shadow-md"
+      className="py-20 px-6 md:px-12"
       style={{ 
-        backgroundColor: "#F5F5F3",
+        background: `linear-gradient(180deg, #1C1C1E 0%, #F5F5F3 100%)`,
         scrollMarginTop: "180px"
       }}
     >
@@ -25,13 +25,13 @@ export default function Clients() {
         <div className="text-center mb-16">
           <h2
             className="text-3xl md:text-4xl font-bold mb-4"
-            style={{ color: theme.colors.text }}
+            style={{ color: "#fff" }}
           >
             {clients.title}
           </h2>
           <p
-            className="text-lg max-w-2xl mx-auto"
-            style={{ color: theme.colors.textMuted }}
+            className="text-lg max-w-2xl mx-auto animated-gradient-text"
+            style={{ color: "#fff" }}
           >
             {clients.subtitle}
           </p>
@@ -45,7 +45,7 @@ export default function Clients() {
               style={{ 
                 backgroundColor: "#fff", 
                 boxShadow: theme.shadows.md,
-                border: `1px solid ${theme.colors.border}`,
+                border: hoveredIdx === idx ? "4px solid #4ade80" : `1px solid ${theme.colors.border}`,
               }}
               animate={{
                 y: [0, -2, 0, 2, 0],
@@ -77,7 +77,7 @@ export default function Clients() {
                 </h3>
                 <p
                   className="text-sm text-center"
-                  style={{ color: theme.colors.textMuted }}
+                  style={{ color: theme.colors.text }}
                 >
                   {client.category}
                 </p>

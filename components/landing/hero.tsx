@@ -104,7 +104,7 @@ export default function Hero() {
           >
             {theme.hero.title}
             <br />
-            <span className="animated-gradient-text">{theme.hero.titleHighlight}</span>
+            <span className="animated-gradient-text-celeste">{theme.hero.titleHighlight}</span>
           </h1>
 
           <p

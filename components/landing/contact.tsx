@@ -88,7 +88,9 @@ export default function Contact() {
                     Teléfono
                   </p>
                   <a
-                    href={`tel:${theme.contact.phone}`}
+                    href={`https://wa.me/${theme.contact.whatsapp}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="font-medium"
                     style={{ color: theme.colors.text }}
                   >
@@ -155,11 +157,12 @@ export default function Contact() {
                 </p>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-3">
+              <form onSubmit={handleSubmit} className="space-y-3 p-6 rounded-xl" style={{ background: `linear-gradient(90deg, ${theme.colors.primary} 0%, ${theme.colors.accent} 100%)` }}>
+                <h3 className="text-lg font-semibold mb-4 text-center" style={{ color: "#fff" }}>Envianos tu consulta</h3>
                 <div className="flex items-center gap-3">
                   <label
                     className="w-24 text-sm font-medium flex-shrink-0"
-                    style={{ color: theme.colors.text }}
+                    style={{ color: "#fff" }}
                   >
                     Nombre
                   </label>
@@ -171,7 +174,7 @@ export default function Contact() {
                     required
                     className="flex-1 px-2 py-1.5 rounded-lg border outline-none transition-colors"
                     style={{
-                      borderColor: theme.colors.border,
+                      borderColor: "rgba(255,255,255,0.3)",
                       backgroundColor: "#fff",
                     }}
                     onFocus={(e) =>
@@ -186,7 +189,7 @@ export default function Contact() {
                 <div className="flex items-center gap-3">
                   <label
                     className="w-24 text-sm font-medium flex-shrink-0"
-                    style={{ color: theme.colors.text }}
+                    style={{ color: "#fff" }}
                   >
                     Email
                   </label>
@@ -198,7 +201,7 @@ export default function Contact() {
                     required
                     className="flex-1 px-2 py-1.5 rounded-lg border outline-none transition-colors"
                     style={{
-                      borderColor: theme.colors.border,
+                      borderColor: "rgba(255,255,255,0.3)",
                       backgroundColor: "#fff",
                     }}
                     onFocus={(e) =>
@@ -213,7 +216,7 @@ export default function Contact() {
                 <div className="flex items-center gap-3">
                   <label
                     className="w-24 text-sm font-medium flex-shrink-0"
-                    style={{ color: theme.colors.text }}
+                    style={{ color: "#fff" }}
                   >
                     Teléfono
                   </label>
@@ -224,14 +227,14 @@ export default function Contact() {
                     onChange={handleChange}
                     className="flex-1 px-2 py-1.5 rounded-lg border outline-none transition-colors"
                     style={{
-                      borderColor: theme.colors.border,
+                      borderColor: "rgba(255,255,255,0.3)",
                       backgroundColor: "#fff",
                     }}
                     onFocus={(e) =>
                       (e.target.style.borderColor = theme.colors.primary)
                     }
                     onBlur={(e) =>
-                      (e.target.style.borderColor = theme.colors.border)
+                      (e.target.style.borderColor = "rgba(255,255,255,0.3)")
                     }
                     placeholder="+54 297 000-0000"
                   />
@@ -239,7 +242,7 @@ export default function Contact() {
                 <div className="flex items-start gap-3">
                   <label
                     className="w-24 text-sm font-medium flex-shrink-0 pt-1.5"
-                    style={{ color: theme.colors.text }}
+                    style={{ color: "#fff" }}
                   >
                     Mensaje
                   </label>
@@ -251,7 +254,7 @@ export default function Contact() {
                     rows={3}
                     className="flex-1 px-2 py-1.5 rounded-lg border outline-none transition-colors resize-none"
                     style={{
-                      borderColor: theme.colors.border,
+                      borderColor: "rgba(255,255,255,0.3)",
                       backgroundColor: "#fff",
                     }}
                     onFocus={(e) =>
@@ -266,10 +269,19 @@ export default function Contact() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-2 rounded-lg font-bold transition-all flex items-center justify-center gap-2"
+                  className="w-1/2 mx-auto py-2 rounded-lg font-bold transition-all flex items-center justify-center gap-2"
                   style={{
-                    backgroundColor: theme.colors.primary,
+                    backgroundColor: "transparent",
+                    border: "1px solid rgba(255,255,255,0.6)",
                     color: "#fff",
+                  }}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.borderColor = "#4ade80"
+                    e.currentTarget.style.borderWidth = "2px"
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.6)"
+                    e.currentTarget.style.borderWidth = "1px"
                   }}
                 >
                   <Send size={18} />

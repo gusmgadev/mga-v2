@@ -31,13 +31,21 @@ export default function Services() {
   return (
     <section
       id="services"
-      className="py-20 px-6 md:px-12"
-      style={{ 
-        backgroundColor: theme.colors.background,
-        scrollMarginTop: "180px"
-      }}
+      className="py-20 px-6 md:px-12 relative overflow-hidden"
+style={{ 
+          scrollMarginTop: "100px"
+        }}
     >
-      <div className="max-w-6xl mx-auto">
+      <div className="absolute inset-0">
+          <img
+            src="/images/secciones/servicios1.jpg"
+            alt="Servicios"
+            className="w-full h-full object-cover"
+            style={{ filter: "blur(2px) brightness(0.8)" }}
+          />
+        </div>
+      <div className="absolute inset-0 bg-white/70" />
+      <div className="max-w-6xl mx-auto relative">
         <div className="text-center mb-16">
           <h2
             className="text-3xl md:text-4xl font-bold mb-4"
