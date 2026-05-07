@@ -59,8 +59,9 @@ export default function Navbar() {
               className="md:hidden p-2 rounded"
               onClick={() => setIsMobileOpen(!isMobileOpen)}
               aria-label="Abrir menú"
+              style={{ color: theme.colors.primary }}
             >
-              {isMobileOpen ? <X size={24} /> : <Menu size={24} />}
+              {isMobileOpen ? <X size={26} /> : <Menu size={26} />}
             </button>
 
             <Link href="/" className="flex items-center">
