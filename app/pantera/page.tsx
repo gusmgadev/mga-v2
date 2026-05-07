@@ -6,8 +6,18 @@ import Navbar from "@/components/landing/navbar"
 import Footer from "@/components/landing/footer"
 
 export const metadata: Metadata = {
-  title: "Pantera Comercios - Sistema de Gestión 100% Web",
-  description: "Pantera Comercios es un sistema de gestión 100% web. Controlá el stock, emití facturas, registrá caja y vendé en Mercado Libre.",
+  title: "Pantera Comercios - Sistema de Gestión Web en Chubut | MGA Informática",
+  description: "Pantera Comercios: sistema de gestión 100% web para comercios. Control de stock, facturación electrónica, caja y venta en Mercado Libre desde cualquier dispositivo. Distribuidor en Chubut.",
+  keywords: ["Pantera Comercios Chubut", "sistema gestión web Patagonia", "ZooLogic Pantera", "software comercios Comodoro Rivadavia", "gestión online Chubut"],
+  alternates: { canonical: `${theme.site.url}/pantera` },
+  openGraph: {
+    title: "Pantera Comercios - MGA Informática",
+    description: "Sistema de gestión 100% web para comercios. Stock, facturación y Mercado Libre. Distribuidor en Chubut.",
+    url: `${theme.site.url}/pantera`,
+    siteName: theme.site.name,
+    locale: "es_AR",
+    type: "website",
+  },
 }
 
 export default function PanteraPage() {
@@ -18,10 +28,19 @@ export default function PanteraPage() {
     <>
       <MovingBanner />
       <Navbar />
-      <main className="min-h-screen pt-32 pb-12 px-4 md:px-8" style={{ backgroundColor: "#fff" }}>
-        <div className="max-w-6xl mx-auto">
+      <main className="min-h-screen pt-48 pb-12 px-4 md:px-8 relative overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            src="/images/secciones/zoologic.jpg"
+            alt=""
+            className="w-full h-full object-cover"
+            style={{ filter: "blur(3px) brightness(0.85)" }}
+          />
+        </div>
+        <div className="absolute inset-0 bg-white/75" />
+        <div className="max-w-6xl mx-auto relative">
           <div className="text-center mb-12">
-            <h1 className="text-2xl md:text-3xl font-bold mb-2" style={{ color: theme.colors.text }}>
+            <h1 className="text-2xl md:text-3xl font-bold mb-2" style={{ color: "#7C3AED" }}>
               {pantera.title}
             </h1>
             <p className="text-base mb-6" style={{ color: theme.colors.textMuted }}>
@@ -39,16 +58,16 @@ export default function PanteraPage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 mb-16">
-            <div className="p-6 rounded-xl" style={{ backgroundColor: "#F5F5F3" }}>
-              <h3 className="text-lg font-bold mb-2" style={{ color: theme.colors.primary }}>Facturá desde cualquier lugar</h3>
+            <div className="p-6 rounded-xl" style={{ backgroundColor: "#E0E0DD", border: "1px solid #7C3AED" }}>
+              <h3 className="text-lg font-bold mb-2" style={{ color: "#7C3AED" }}>Facturá desde cualquier lugar</h3>
               <p style={{ color: theme.colors.textMuted }}>Gestioná tu comercio 100% online desde tu celular, tablet o computadora.</p>
             </div>
-            <div className="p-6 rounded-xl" style={{ backgroundColor: "#F5F5F3" }}>
-              <h3 className="text-lg font-bold mb-2" style={{ color: theme.colors.primary }}>Integrá tu eCommerce</h3>
+            <div className="p-6 rounded-xl" style={{ backgroundColor: "#E0E0DD", border: "1px solid #7C3AED" }}>
+              <h3 className="text-lg font-bold mb-2" style={{ color: "#7C3AED" }}>Integrá tu eCommerce</h3>
               <p style={{ color: theme.colors.textMuted }}>Conectá con Mercado Libre y Tienda Nube automáticamente.</p>
             </div>
-            <div className="p-6 rounded-xl" style={{ backgroundColor: "#F5F5F3" }}>
-              <h3 className="text-lg font-bold mb-2" style={{ color: theme.colors.primary }}>Control total</h3>
+            <div className="p-6 rounded-xl" style={{ backgroundColor: "#E0E0DD", border: "1px solid #7C3AED" }}>
+              <h3 className="text-lg font-bold mb-2" style={{ color: "#7C3AED" }}>Control total</h3>
               <p style={{ color: theme.colors.textMuted }}>Stock, caja, ventas y reportes en tiempo real.</p>
             </div>
           </div>
@@ -72,20 +91,20 @@ export default function PanteraPage() {
                 "Etiquetas y Categorías",
                 "Importadores Masivos",
               ].map((item, idx) => (
-                <div key={idx} className="p-4 rounded-lg border" style={{ borderColor: theme.colors.border }}>
-                  <h4 className="font-semibold" style={{ color: theme.colors.text }}>{item}</h4>
+                <div key={idx} className="p-4 rounded-lg" style={{ backgroundColor: "#E0E0DD", border: "1px solid #7C3AED" }}>
+                  <h4 className="font-semibold" style={{ color: "#374151" }}>{item}</h4>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="text-center p-8 rounded-2xl" style={{ backgroundColor: "#7C3AED" }}>
-            <h2 className="text-2xl font-bold mb-4 text-white">
+          <div className="p-4 rounded-xl flex items-center justify-center gap-6" style={{ backgroundColor: "#7C3AED" }}>
+            <h2 className="text-base font-bold text-white">
               ¿Qué esperás para optimizar tu negocio?
             </h2>
             <a
               href="/#contact"
-              className="inline-block px-8 py-3 rounded-lg font-medium"
+              className="inline-block px-5 py-2 rounded-lg font-medium text-sm whitespace-nowrap flex-shrink-0"
               style={{ backgroundColor: "#fff", color: "#7C3AED" }}
             >
               Consultános

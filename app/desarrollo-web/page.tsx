@@ -3,10 +3,21 @@ import Image from "next/image"
 import { theme } from "@/lib/theme"
 import MovingBanner from "@/components/landing/moving-banner"
 import Navbar from "@/components/landing/navbar"
+import Footer from "@/components/landing/footer"
 
 export const metadata: Metadata = {
-  title: "Desarrollo Web - MGA Informática",
-  description: "Creamos sitios web modernos, rápidos y escalables con las últimas tecnologías.",
+  title: "Desarrollo Web en Rada Tilly y Comodoro Rivadavia - MGA Informática",
+  description: "Creamos sitios web modernos, rápidos y escalables. Landing pages, tiendas online, aplicaciones web a medida en Rada Tilly, Chubut. Desarrollo con Next.js, React y Tailwind CSS.",
+  keywords: ["desarrollo web Rada Tilly", "diseño web Comodoro Rivadavia", "páginas web Chubut", "tienda online Patagonia", "landing page", "aplicación web a medida"],
+  alternates: { canonical: `${theme.site.url}/desarrollo-web` },
+  openGraph: {
+    title: "Desarrollo Web - MGA Informática",
+    description: "Sitios web modernos y aplicaciones a medida en Rada Tilly, Chubut.",
+    url: `${theme.site.url}/desarrollo-web`,
+    siteName: theme.site.name,
+    locale: "es_AR",
+    type: "website",
+  },
 }
 
 const heroImage = "/images/hero/hero-2.jpg"
@@ -37,12 +48,13 @@ export default function DesarrolloWebPage() {
               </div>
             ))}
           </div>
-          <div className="text-center p-8 rounded-2xl" style={{ backgroundColor: theme.colors.primary }}>
-            <h2 className="text-2xl font-bold mb-4 text-white">¿Necesitás una solución web personalizada?</h2>
-            <a href="/#contact" className="inline-block px-8 py-3 rounded-lg font-medium" style={{ backgroundColor: "#fff", color: theme.colors.primary }}>Consultános</a>
+          <div className="p-4 rounded-xl flex items-center justify-center gap-6" style={{ backgroundColor: theme.colors.primary }}>
+            <h2 className="text-base font-bold text-white">¿Necesitás una solución web personalizada?</h2>
+            <a href="/#contact" className="inline-block px-5 py-2 rounded-lg font-medium text-sm whitespace-nowrap flex-shrink-0" style={{ backgroundColor: "#fff", color: theme.colors.primary }}>Consultános</a>
           </div>
         </div>
       </main>
+      <Footer />
     </>
   )
 }

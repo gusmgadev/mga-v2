@@ -12,19 +12,19 @@ const stepDetails = [
 
 export default function Process() {
   const { process: processData } = theme
-  const [selectedStep, setSelectedStep] = useState<number | null>(null)
+  const [hoveredStep, setHoveredStep] = useState<number | null>(null)
 
   return (
     <section
       id="process"
-      className="py-20 px-6 md:px-12"
-      style={{ 
+      className="pt-10 pb-20 px-6 md:px-12"
+      style={{
         background: `linear-gradient(135deg, #0D1B5E 0%, #1A237E 50%, #42A5F5 100%)`,
         scrollMarginTop: "180px"
       }}
     >
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-16">
+        <div className="text-center mb-8">
           <h2
             className="text-3xl md:text-4xl font-bold mb-4"
             style={{ color: "#fff" }}
@@ -44,28 +44,21 @@ export default function Process() {
             <div
               key={idx}
               className="relative"
+              onMouseEnter={() => setHoveredStep(idx)}
+              onMouseLeave={() => setHoveredStep(null)}
             >
               <div
-                onClick={() => setSelectedStep(selectedStep === idx ? null : idx)}
-                className="relative p-6 rounded-xl transition-all duration-300 cursor-pointer hover:scale-105"
-                style={{ 
-                  backgroundColor: selectedStep === idx ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.1)", 
-                  backdropFilter: "blur(8px)", 
-                  border: `2px solid ${selectedStep === idx ? "#4ade80" : "rgba(255,255,255,0.2)"}`,
+                className="relative p-6 rounded-xl cursor-pointer hover:scale-105"
+                style={{
+                  backgroundColor: hoveredStep === idx ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.1)",
+                  backdropFilter: "blur(8px)",
+                  border: `2px solid ${hoveredStep === idx ? "#2979FF" : "rgba(255,255,255,0.2)"}`,
                   transition: "all 0.3s ease"
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "#4ade80"
-                }}
-                onMouseLeave={(e) => {
-                  if (selectedStep !== idx) {
-                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"
-                  }
                 }}
               >
                 <div
                   className="text-4xl font-bold mb-3"
-                  style={{ color: selectedStep === idx ? "#4ade80" : "#fff", opacity: selectedStep === idx ? 1 : 0.4 }}
+                  style={{ color: hoveredStep === idx ? "#2979FF" : "#fff", opacity: hoveredStep === idx ? 1 : 0.4 }}
                 >
                   {step.number}
                 </div>
@@ -85,24 +78,46 @@ export default function Process() {
                   <div className="hidden lg:block absolute top-1/2 -right-3 w-6 h-0.5 bg-white/30" />
                 )}
               </div>
-              {selectedStep === idx && (
-                <div 
+
+              {hoveredStep === idx && (
+                <div
                   className="absolute z-10 mt-2 p-4 rounded-xl"
-                  style={{ 
-                    backgroundColor: "#fff", 
+                  style={{
+                    backgroundColor: "#fff",
                     boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
                     animation: "fadeIn 0.3s ease"
                   }}
                 >
-                  <div className="relative">
-                    <p className="text-sm" style={{ color: theme.colors.text }}>
-                      {stepDetails[idx]}
-                    </p>
-                  </div>
+                  <p className="text-sm" style={{ color: theme.colors.text }}>
+                    {stepDetails[idx]}
+                  </p>
                 </div>
               )}
             </div>
           ))}
+        </div>
+
+        <div className="text-center mt-12">
+          <a
+            href="/#contact"
+            className="inline-block px-8 py-3 rounded-full font-semibold text-base transition-all duration-300 hover:scale-105"
+            style={{
+              background: "rgba(255,255,255,0.12)",
+              border: "2px solid rgba(255,255,255,0.5)",
+              color: "#fff",
+              backdropFilter: "blur(8px)",
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = "rgba(255,255,255,0.22)"
+              e.currentTarget.style.borderColor = "#2979FF"
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = "rgba(255,255,255,0.12)"
+              e.currentTarget.style.borderColor = "rgba(255,255,255,0.5)"
+            }}
+          >
+            ¿Tenés una idea para tu negocio? Escribinos
+          </a>
         </div>
       </div>
     </section>

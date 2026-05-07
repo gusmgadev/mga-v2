@@ -45,7 +45,7 @@ export default function Clients() {
               style={{ 
                 backgroundColor: "#fff", 
                 boxShadow: theme.shadows.md,
-                border: hoveredIdx === idx ? "4px solid #4ade80" : `1px solid ${theme.colors.border}`,
+                border: hoveredIdx === idx ? "4px solid #2979FF" : `1px solid ${theme.colors.border}`,
               }}
               animate={{
                 y: [0, -2, 0, 2, 0],

@@ -1,11 +1,10 @@
 import { Resend } from "resend"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
-const TO_EMAIL   = "consultas@mgadigital.com.ar"
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "noreply@mgadigital.com.ar"
+const TO_EMAIL = "consultas@mgadigital.com.ar"
 
 export async function POST(request: Request) {
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "noreply@mgadigital.com.ar"
   const body = await request.json()
   const { name, email, phone, message } = body as {
     name: string

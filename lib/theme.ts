@@ -198,7 +198,7 @@ items: [
   sistemasZoologic: {
     title: "Sistemas de Gestión Zoologic",
     subtitle: "Representantes oficiales en Chubut y Zona norte de Santa Cruz",
-    badge: "Agentes certificados desde el 2010",
+    badge: "Agentes certificados desde el 2008",
 items: [
       {
         name: "Lince Indumentaria",

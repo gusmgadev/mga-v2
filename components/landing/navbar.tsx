@@ -18,9 +18,7 @@ export default function Navbar() {
   const submenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20)
-    }
+    const handleScroll = () => setIsScrolled(window.scrollY > 20)
     window.addEventListener("scroll", handleScroll)
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
@@ -53,22 +51,36 @@ export default function Navbar() {
           boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
         }}
       >
-        <div
-          className="flex flex-col items-center py-3 px-4"
-          style={{ backgroundColor: theme.colors.background }}
-        >
-          <Link href="/" className="flex items-center">
-            <img
-              src={theme.logo.path}
-              alt={theme.site.name}
-              width={theme.logo.width}
-              height={theme.logo.height}
-            />
-          </Link>
+        <div className="py-3 px-4" style={{ backgroundColor: theme.colors.background }}>
 
-          <div className="flex gap-4 mt-2">
+          {/* Fila superior: hamburguesa (mobile) | logo | spacer (mobile) */}
+          <div className="flex items-center justify-between md:justify-center">
+            <button
+              className="md:hidden p-2 rounded"
+              onClick={() => setIsMobileOpen(!isMobileOpen)}
+              aria-label="Abrir menú"
+            >
+              {isMobileOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+
+            <Link href="/" className="flex items-center">
+              <img
+                src={theme.logo.path}
+                alt={theme.site.name}
+                width={theme.logo.width}
+                height={theme.logo.height}
+              />
+            </Link>
+
+            {/* Spacer invisible para centrar el logo en mobile */}
+            <div className="md:hidden w-10" />
+          </div>
+
+          {/* Links de escritorio — ocultos en mobile */}
+          <div className="hidden md:flex gap-4 mt-2 justify-center">
             {navItems.map((item) => {
-              const isActive = pathname === item.href ||
+              const isActive =
+                pathname === item.href ||
                 (item.label === "Contacto" && pathname.includes("contact"))
               const hasSubmenu = item.submenu && item.submenu.length > 0
 
@@ -76,16 +88,8 @@ export default function Navbar() {
                 <div
                   key={item.label}
                   className="relative"
-                  onMouseEnter={() => {
-                    if (hasSubmenu) {
-                      setHoveredItem(item.label)
-                    }
-                  }}
-                  onMouseLeave={() => {
-                    if (hasSubmenu) {
-                      setHoveredItem(null)
-                    }
-                  }}
+                  onMouseEnter={() => hasSubmenu && setHoveredItem(item.label)}
+                  onMouseLeave={() => hasSubmenu && setHoveredItem(null)}
                 >
                   <Link
                     href={item.href}
@@ -94,7 +98,6 @@ export default function Navbar() {
                       color: isActive || hoveredItem === item.label ? theme.colors.primary : "#555",
                       fontWeight: isActive || hoveredItem === item.label ? 700 : 400,
                       transition: theme.transitions.fast,
-                      cursor: "pointer",
                     }}
                     onClick={(e) => {
                       if (hasSubmenu) {
@@ -110,12 +113,14 @@ export default function Navbar() {
                     {item.label}
                     {hasSubmenu && <ChevronDown size={14} />}
                     <span
-                      className="absolute bottom-0 left-0 h-0.5 bg-[#1A237E] transition-all duration-300"
+                      className="absolute bottom-0 left-0 h-0.5 transition-all duration-300"
                       style={{
                         width: isActive || hoveredItem === item.label ? "100%" : "0%",
+                        backgroundColor: theme.colors.primary,
                       }}
                     />
                   </Link>
+
                   {hasSubmenu && (hoveredItem === item.label || openSubmenu === item.label) && (
                     <div
                       ref={submenuRef}
@@ -148,23 +153,13 @@ export default function Navbar() {
         </div>
       </nav>
 
-      <button
-        className="md:hidden fixed top-12 right-4 z-50 p-2"
-        onClick={() => setIsMobileOpen(!isMobileOpen)}
-        style={{ backgroundColor: theme.colors.background }}
-      >
-        {isMobileOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
-
+      {/* Menú mobile — pantalla completa */}
       {isMobileOpen && (
         <div
           className="md:hidden fixed inset-0 z-40 pt-28 px-6"
-          style={{
-            backgroundColor: theme.colors.background,
-            backdropFilter: "blur(12px)",
-          }}
+          style={{ backgroundColor: theme.colors.background }}
         >
-          <div className="flex flex-col gap-4 mt-8">
+          <div className="flex flex-col gap-4 mt-4">
             {navItems.map((item) => {
               const hasSubmenu = item.submenu && item.submenu.length > 0
               return (
@@ -172,7 +167,7 @@ export default function Navbar() {
                   <Link
                     href={item.href}
                     className="text-lg uppercase tracking-widest py-3 border-b flex items-center justify-between"
-                    style={{ borderColor: theme.colors.border }}
+                    style={{ borderColor: theme.colors.border, color: theme.colors.text }}
                     onClick={(e) => {
                       if (hasSubmenu) {
                         e.preventDefault()
@@ -188,6 +183,7 @@ export default function Navbar() {
                     {item.label}
                     {hasSubmenu && <ChevronDown size={20} />}
                   </Link>
+
                   {hasSubmenu && openSubmenu === item.label && (
                     <div className="pl-6">
                       {item.submenu?.map((subItem) => (
@@ -195,7 +191,7 @@ export default function Navbar() {
                           key={subItem.label}
                           href={subItem.href}
                           className="block py-2 text-base border-b"
-                          style={{ borderColor: theme.colors.border }}
+                          style={{ borderColor: theme.colors.border, color: theme.colors.text }}
                           onClick={() => setIsMobileOpen(false)}
                         >
                           {subItem.label}

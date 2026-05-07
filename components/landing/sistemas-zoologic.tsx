@@ -11,7 +11,7 @@ export default function SistemasZoologic() {
   return (
     <section
       id="sistemas-zoologic"
-      className="py-20 px-6 md:px-12 relative overflow-hidden"
+      className="pt-8 pb-20 px-6 md:px-12 relative overflow-hidden"
       style={{
         scrollMarginTop: "180px",
       }}
@@ -26,8 +26,8 @@ export default function SistemasZoologic() {
         </div>
       <div className="absolute inset-0 bg-white/70" />
       <div className="max-w-7xl mx-auto relative">
-        <div className="text-center mb-16">
-          <div className="flex items-center justify-center gap-2 mb-4">
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-4 mb-4">
             <Image
               src="/images/logos/zoologic.png"
               alt="Zoologic"
@@ -35,16 +35,15 @@ export default function SistemasZoologic() {
               height={80}
               className="object-contain"
             />
+            <div className="text-left border-l-2 pl-4" style={{ borderColor: theme.colors.primary }}>
+              <p className="text-sm font-bold uppercase tracking-wide" style={{ color: theme.colors.primary }}>
+                Agentes certificados
+              </p>
+              <p className="text-2xl font-bold" style={{ color: theme.colors.text }}>
+                desde el 2008
+              </p>
+            </div>
           </div>
-          <span
-            className="inline-block px-3 py-1 rounded-full text-lg font-medium mb-4"
-            style={{
-              backgroundColor: theme.colors.primary + "15",
-              color: theme.colors.primary,
-            }}
-          >
-            {sistemasZoologic.badge}
-          </span>
           <h2
             className="text-3xl md:text-4xl font-bold mb-4"
             style={{ color: theme.colors.text }}
@@ -61,9 +60,9 @@ export default function SistemasZoologic() {
 
         <div className="grid md:grid-cols-3 gap-6">
           {sistemasZoologic.items.map((item, idx) => (
+            <Link href={item.url} key={idx} className="block">
             <motion.div
-              key={idx}
-              className="rounded-xl overflow-hidden flex flex-col"
+              className="rounded-xl overflow-hidden flex flex-col cursor-pointer hover:scale-105 transition-transform duration-300"
               style={{
                 backgroundColor: "#fff",
                 boxShadow: theme.shadows.md,
@@ -103,18 +102,18 @@ export default function SistemasZoologic() {
                 </p>
               </div>
               <div className="p-4 pt-0">
-                <Link
-                  href={item.url}
-                  className="block w-1/2 mx-auto text-center py-2 rounded-lg font-medium transition-colors text-sm"
+                <div
+                  className="block w-1/2 mx-auto text-center py-2 rounded-lg font-medium text-sm"
                   style={{
                     backgroundColor: idx === 0 ? "#F58220" : idx === 1 ? "#0077C0" : "#7C3AED",
                     color: "#fff",
                   }}
                 >
-                  Conocér más
-                </Link>
+                  Conocer más
+                </div>
               </div>
             </motion.div>
+            </Link>
           ))}
         </div>
       </div>

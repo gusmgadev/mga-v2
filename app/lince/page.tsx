@@ -6,8 +6,18 @@ import Navbar from "@/components/landing/navbar"
 import Footer from "@/components/landing/footer"
 
 export const metadata: Metadata = {
-  title: "Lince Indumentaria - Sistema de Gestión",
-  description: "Lince Indumentaria es el sistema más elegido por la industria de la indumentaria con más de 25 años en el mercado. Gestiona ventas, stock, producción y más.",
+  title: "Lince Indumentaria - Sistema de Gestión en Chubut | MGA Informática",
+  description: "Lince Indumentaria: el sistema más elegido por la industria textil con más de 25 años en el mercado. Gestión de ventas, stock, producción y facturación electrónica. Distribuidor certificado en Chubut.",
+  keywords: ["Lince Indumentaria Chubut", "sistema gestión indumentaria", "ZooLogic Lince", "software textil Patagonia", "punto de venta indumentaria Comodoro Rivadavia"],
+  alternates: { canonical: `${theme.site.url}/lince` },
+  openGraph: {
+    title: "Lince Indumentaria - MGA Informática",
+    description: "Sistema de gestión líder para la industria de la indumentaria. Distribuidor certificado en Chubut.",
+    url: `${theme.site.url}/lince`,
+    siteName: theme.site.name,
+    locale: "es_AR",
+    type: "website",
+  },
 }
 
 export default function LincePage() {
@@ -18,10 +28,19 @@ export default function LincePage() {
     <>
       <MovingBanner />
       <Navbar />
-      <main className="min-h-screen pt-32 pb-12 px-4 md:px-8" style={{ backgroundColor: "#fff" }}>
-        <div className="max-w-6xl mx-auto">
+      <main className="min-h-screen pt-48 pb-12 px-4 md:px-8 relative overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            src="/images/secciones/zoologic.jpg"
+            alt=""
+            className="w-full h-full object-cover"
+            style={{ filter: "blur(3px) brightness(0.85)" }}
+          />
+        </div>
+        <div className="absolute inset-0 bg-white/75" />
+        <div className="max-w-6xl mx-auto relative">
 <div className="text-center mb-12">
-            <h1 className="text-2xl md:text-3xl font-bold mb-2" style={{ color: theme.colors.text }}>
+            <h1 className="text-2xl md:text-3xl font-bold mb-2" style={{ color: "#F58220" }}>
               {lince.title}
             </h1>
             <p className="text-base mb-6" style={{ color: theme.colors.textMuted }}>
@@ -39,16 +58,16 @@ export default function LincePage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 mb-16">
-            <div className="p-6 rounded-xl" style={{ backgroundColor: "#F5F5F3" }}>
-              <h3 className="text-lg font-bold mb-2" style={{ color: theme.colors.primary }}>Gestión de Ventas</h3>
+            <div className="p-6 rounded-xl" style={{ backgroundColor: "#E0E0DD", border: "1px solid #F58220" }}>
+              <h3 className="text-lg font-bold mb-2" style={{ color: "#F58220" }}>Gestión de Ventas</h3>
               <p style={{ color: theme.colors.textMuted }}>Agilizá la gestión de ventas emitiendo facturas, tickets o facturación electrónica.</p>
             </div>
-            <div className="p-6 rounded-xl" style={{ backgroundColor: "#F5F5F3" }}>
-              <h3 className="text-lg font-bold mb-2" style={{ color: theme.colors.primary }}>Producción</h3>
+            <div className="p-6 rounded-xl" style={{ backgroundColor: "#E0E0DD", border: "1px solid #F58220" }}>
+              <h3 className="text-lg font-bold mb-2" style={{ color: "#F58220" }}>Producción</h3>
               <p style={{ color: theme.colors.textMuted }}>Controlá el stock de avíos y telas, gestioná el proceso de corte en talleres y el control de calidad.</p>
             </div>
-            <div className="p-6 rounded-xl" style={{ backgroundColor: "#F5F5F3" }}>
-              <h3 className="text-lg font-bold mb-2" style={{ color: theme.colors.primary }}>Inventario</h3>
+            <div className="p-6 rounded-xl" style={{ backgroundColor: "#E0E0DD", border: "1px solid #F58220" }}>
+              <h3 className="text-lg font-bold mb-2" style={{ color: "#F58220" }}>Inventario</h3>
               <p style={{ color: theme.colors.textMuted }}>Controlá y ajustá las diferencias del stock del sistema en función al inventario físico.</p>
             </div>
           </div>
@@ -70,20 +89,20 @@ export default function LincePage() {
                 "Zoo Logic Cubos",
                 "Programador de Tareas",
               ].map((item, idx) => (
-                <div key={idx} className="p-4 rounded-lg border" style={{ borderColor: theme.colors.border }}>
-                  <h4 className="font-semibold" style={{ color: theme.colors.text }}>{item}</h4>
+                <div key={idx} className="p-4 rounded-lg" style={{ backgroundColor: "#E0E0DD", border: "1px solid #F58220" }}>
+                  <h4 className="font-semibold" style={{ color: "#374151" }}>{item}</h4>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="text-center p-8 rounded-2xl" style={{ backgroundColor: "#F58220" }}>
-            <h2 className="text-2xl font-bold mb-4 text-white">
+          <div className="p-4 rounded-xl flex items-center justify-center gap-6" style={{ backgroundColor: "#F58220" }}>
+            <h2 className="text-base font-bold text-white">
               Mejorá el trabajo en tu negocio con Lince Indumentaria
             </h2>
             <a
               href="/#contact"
-              className="inline-block px-8 py-3 rounded-lg font-medium"
+              className="inline-block px-5 py-2 rounded-lg font-medium text-sm whitespace-nowrap flex-shrink-0"
               style={{ backgroundColor: "#fff", color: "#F58220" }}
             >
               Consultános

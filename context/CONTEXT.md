@@ -161,13 +161,13 @@ mga-v2/
 ### Componentes landing (`components/landing/`)
 
 - `moving-banner.tsx` → banda animada fija en z-50 top-0 con palabras clave del servicio leídas desde `theme.banner.words`
-- `navbar.tsx`        → logo centrado, links con underlineendido, hamburguesa mobile. Items leídos desde `theme.navbar.items`.
+- `navbar.tsx`        → logo centrado + hamburguesa mobile (responsive). Desktop: links debajo del logo. Mobile: menú pantalla completa.
 - `hero.tsx`          → slideshow de 3 imágenes con blur + overlay. "Mundo Digital" tiene animación de gradiente azul→celeste con borde gris.
 - `services.tsx`      → grilla 4 columnas de servicios leídos desde `theme.services.items`
-- `sistemas-zoologic.tsx` → grilla 3 sistemas Zoologic (Lince, Dragonfish, Pantera) con logos
-- `process.tsx`       → timeline de 4 pasos leídos desde `theme.process.steps` (click revela detalles)
-- `clients.tsx`       → grilla responsiva de clientes, hover revela dirección y teléfono, animación Framer Motion float, borde verde al hover
-- `contact.tsx`       → formulario con campos nombre/email/teléfono/mensaje. Fondo blanco con formulario azul gradiente. Botón "Consultános" va a `/#contact`.
+- `sistemas-zoologic.tsx` → grilla 3 sistemas Zoologic (Lince, Dragonfish, Pantera) con logos. Card completa clickeable → página del sistema. Badge "Agentes certificados desde el 2008".
+- `process.tsx`       → timeline de 4 pasos leídos desde `theme.process.steps`. Hover revela detalle. CTA "¿Tenés una idea?" al pie.
+- `clients.tsx`       → grilla responsiva de clientes, hover revela dirección y teléfono, animación Framer Motion float, borde azul MGA al hover
+- `contact.tsx`       → formulario con campos nombre/email/teléfono/mensaje. Formulario arriba en mobile. Botón "Consultános" va a `/#contact`.
 - `footer.tsx`        → banda CTA superior con gradiente + 4 columnas (empresa, servicios, nav, contacto+mapa)
 - `json-ld.tsx`       → script JSON-LD con schema LocalBusiness para Google rich results
 
@@ -177,20 +177,21 @@ mga-v2/
 
 - [x] Landing completa con todas las secciones
 - [x] Moving banner animado con palabras clave de servicios
-- [x] Navbar con logo centrado y links con underline animado
+- [x] Navbar responsive: logo centrado, hamburguesa mobile, menú pantalla completa
 - [x] Hero con slideshow de imágenes y animación "Mundo Digital" (gradiente azul→celeste con borde gris)
 - [x] Sección Servicios (4 items desde theme.ts)
-- [x] Sección Sistemas Zoologic (3 sistemas: Lince, Dragonfish, Pantera)
-- [x] Sección Proceso interactiva (4 pasos con click revelar detalles)
-- [x] Sección Clientes con hover borde verde
-- [x] Formulario de contacto con fondo blanco, formulario con gradiente azul→celeste
+- [x] Sección Sistemas Zoologic con badge "Agentes certificados desde el 2008". Cards clickeables.
+- [x] Sección Proceso interactiva (hover revela detalles). CTA "¿Tenés una idea?" al pie.
+- [x] Sección Clientes con hover borde azul MGA
+- [x] Formulario de contacto: formulario primero en mobile, info de contacto después
 - [x] Footer con banda CTA + mapa de Google Maps embed
-- [x] Páginas de servicios: desarrollo-web, sistemas-gestion, consultoria-it, soporte-tecnico
-- [x] Páginas Zoologic: lince, dragonfish, pantera
+- [x] Páginas de servicios con Footer: desarrollo-web, sistemas-gestion, consultoria-it, soporte-tecnico
+- [x] Páginas Zoologic con fondo imagen desenfocada: lince, dragonfish, pantera
+- [x] Colores por sistema: Lince naranja, Dragonfish azul, Pantera violeta (título, bordes, cards)
 - [x] Teléfono abre WhatsApp (#wa.me)
 - [x] Botones "Consultános" van a /#contact
-- [x] SEO completo: title, description, keywords, Open Graph, Twitter Card, geo tags
-- [x] sitemap.xml generado dinámicamente
+- [x] SEO completo en todas las páginas: title, description, keywords, Open Graph, canonical
+- [x] sitemap.xml con todas las rutas (8 URLs)
 - [x] robots.txt (bloquea /dashboard, /auth, /api)
 - [x] JSON-LD LocalBusiness (Schema.org — Rich Results en Google)
 - [x] favicon.ico
@@ -251,5 +252,5 @@ mga-v2/
 
 ---
 
-**Última actualización:** 07/05/2026 (v3)
+**Última actualización:** 07/05/2026 (v4)
 **Actualizado por:** Claude Code
