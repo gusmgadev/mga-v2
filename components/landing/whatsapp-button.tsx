@@ -1,8 +1,12 @@
 "use client"
 
+import { usePathname } from "next/navigation"
 import { theme } from "@/lib/theme"
 
 export default function WhatsAppButton() {
+  const pathname = usePathname()
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/auth')) return null
+
   const url = `https://wa.me/${theme.contact.whatsapp}?text=Hola%20MGA%20Informática%2C%20quisiera%20hacer%20una%20consulta`
 
   return (
