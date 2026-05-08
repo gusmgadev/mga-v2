@@ -31,14 +31,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const { data: profile } = await supabaseAdmin
           .from('users')
-          .select('id, email, name, role_id, roles(name)')
+          .select('id, email, name, role_id')
           .eq('id', authData.user.id)
           .single()
 
         if (!profile) return null
 
-        const rolesArr = profile.roles as { name: string }[] | null
-        const roleName = Array.isArray(rolesArr) && rolesArr.length > 0 ? rolesArr[0].name : 'Usuario'
+        const { data: roleData } = await supabaseAdmin
+          .from('roles')
+          .select('name')
+          .eq('id', profile.role_id)
+          .single()
+
+        const roleName = roleData?.name ?? 'Usuario'
 
         return {
           id: profile.id as string,
