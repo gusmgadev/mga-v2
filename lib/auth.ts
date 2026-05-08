@@ -37,7 +37,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!profile) return null
 
-        const roleName = (profile.roles as { name: string } | null)?.name ?? 'Usuario'
+        const rolesArr = profile.roles as { name: string }[] | null
+        const roleName = Array.isArray(rolesArr) && rolesArr.length > 0 ? rolesArr[0].name : 'Usuario'
 
         return {
           id: profile.id as string,

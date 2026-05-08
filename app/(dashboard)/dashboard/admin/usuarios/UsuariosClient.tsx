@@ -14,20 +14,20 @@ type Usuario = {
   name: string | null
   role_id: number
   created_at: string
-  roles: { name: string } | null
+  roles: { name: string }[] | null
 }
 
 const createSchema = z.object({
   name: z.string().min(2, 'Mínimo 2 caracteres'),
   email: z.string().email('Email inválido'),
   password: z.string().min(8, 'Mínimo 8 caracteres'),
-  role_id: z.coerce.number().int().positive('Seleccioná un rol'),
+  role_id: z.number().int().positive('Seleccioná un rol'),
 })
 
 const editSchema = z.object({
   name: z.string().min(2, 'Mínimo 2 caracteres'),
   email: z.string().email('Email inválido'),
-  role_id: z.coerce.number().int().positive('Seleccioná un rol'),
+  role_id: z.number().int().positive('Seleccioná un rol'),
   password: z.string().min(8, 'Mínimo 8 caracteres').optional().or(z.literal('')),
 })
 
@@ -246,7 +246,7 @@ export default function UsuariosClient({
                 <td style={tdStyle}>{u.email}</td>
                 <td style={tdStyle}>
                   <span style={{ padding: '3px 10px', backgroundColor: `${theme.colors.primary}14`, color: theme.colors.primary, borderRadius: theme.radii.full, fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium }}>
-                    {u.roles?.name ?? '—'}
+                    {u.roles?.[0]?.name ?? '—'}
                   </span>
                 </td>
                 <td style={{ ...tdStyle, color: theme.colors.textMuted }}>
@@ -296,7 +296,7 @@ export default function UsuariosClient({
               </div>
               <div>
                 <label style={labelStyle}>Rol</label>
-                <select {...createForm.register('role_id')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+                <select {...createForm.register('role_id', { valueAsNumber: true })} style={{ ...inputStyle, backgroundColor: '#fff' }}>
                   <option value="">Seleccioná un rol</option>
                   {roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </select>
@@ -331,7 +331,7 @@ export default function UsuariosClient({
               </div>
               <div>
                 <label style={labelStyle}>Rol</label>
-                <select {...editForm.register('role_id')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+                <select {...editForm.register('role_id', { valueAsNumber: true })} style={{ ...inputStyle, backgroundColor: '#fff' }}>
                   {roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </select>
               </div>

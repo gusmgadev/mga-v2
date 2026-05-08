@@ -1,3 +1,5 @@
+import type {} from 'next-auth/jwt'
+
 export type UserRole = string
 
 export type Role = {
