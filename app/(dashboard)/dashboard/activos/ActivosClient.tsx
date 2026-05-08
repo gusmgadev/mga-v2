@@ -4,48 +4,34 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import Link from 'next/link'
-import { Plus, Pencil, Trash2, X, Loader2, AlertCircle, HardDrive } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Plus, Pencil, Trash2, X, Loader2, AlertCircle } from 'lucide-react'
 import { theme } from '@/lib/theme'
 
-type Cliente = {
+type Activo = {
   id: number
-  name: string
-  type: 'PARTICULAR' | 'EMPRESA' | 'COMERCIO'
-  email: string | null
-  phone: string | null
-  address: string | null
-  cuit: string | null
-  rubro: string | null
-  notes: string | null
-  active: boolean
-  imagen: string | null
-  pagina_web: string | null
-  mostrar_en_landing: boolean
+  cliente_id: number
+  nombre: string
+  tipo: 'PC' | 'NOTEBOOK' | 'SERVIDOR' | 'IMPRESORA' | 'SISTEMA' | 'DESARROLLO' | 'SERVICIO' | 'DISPOSITIVO' | 'OTRO'
+  numero_serie: string | null
+  notas: string | null
+  activo: boolean
   created_at: string
 }
 
-const clienteSchema = z.object({
-  name: z.string().min(2, 'Mínimo 2 caracteres'),
-  type: z.enum(['PARTICULAR', 'EMPRESA', 'COMERCIO']),
-  email: z.string().email('Email inválido').optional().or(z.literal('')),
-  phone: z.string().optional(),
-  address: z.string().optional(),
-  cuit: z.string().optional(),
-  rubro: z.string().optional(),
-  notes: z.string().optional(),
-  active: z.boolean(),
-  imagen: z.string().optional(),
-  pagina_web: z.string().url('URL inválida').optional().or(z.literal('')),
-  mostrar_en_landing: z.boolean(),
-})
-type ClienteForm = z.infer<typeof clienteSchema>
+type ClienteSimple = { id: number; name: string }
 
-const TYPE_LABELS: Record<string, string> = {
-  PARTICULAR: 'Particular',
-  EMPRESA: 'Empresa',
-  COMERCIO: 'Comercio',
-}
+const TIPOS = ['PC', 'NOTEBOOK', 'SERVIDOR', 'IMPRESORA', 'SISTEMA', 'DESARROLLO', 'SERVICIO', 'DISPOSITIVO', 'OTRO'] as const
+
+const activoSchema = z.object({
+  cliente_id: z.number().int().positive('Seleccioná un cliente'),
+  nombre: z.string().min(2, 'Mínimo 2 caracteres'),
+  tipo: z.enum(TIPOS),
+  numero_serie: z.string().optional(),
+  notas: z.string().optional(),
+  activo: z.boolean(),
+})
+type ActivoForm = z.infer<typeof activoSchema>
 
 const inputStyle = {
   width: '100%', padding: '10px 14px', fontSize: theme.fontSizes.base,
@@ -95,162 +81,153 @@ function ErrorBox({ message }: { message: string }) {
   )
 }
 
-function ClienteFormFields({ form }: { form: ReturnType<typeof useForm<ClienteForm>> }) {
+function ActivoFormFields({
+  form,
+  clientes,
+}: {
+  form: ReturnType<typeof useForm<ActivoForm>>
+  clientes: ClienteSimple[]
+}) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
         <div style={{ gridColumn: '1 / -1' }}>
+          <label style={labelStyle}>Cliente <span style={{ color: theme.colors.error }}>*</span></label>
+          <select
+            {...form.register('cliente_id', { valueAsNumber: true })}
+            style={{ ...inputStyle, backgroundColor: '#fff' }}
+          >
+            <option value={0}>Seleccioná un cliente...</option>
+            {clientes.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+          {form.formState.errors.cliente_id && (
+            <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+              {form.formState.errors.cliente_id.message}
+            </p>
+          )}
+        </div>
+        <div style={{ gridColumn: '1 / -1' }}>
           <label style={labelStyle}>Nombre <span style={{ color: theme.colors.error }}>*</span></label>
-          <input {...form.register('name')} style={inputStyle} placeholder="Nombre completo o razón social" />
-          {form.formState.errors.name && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.name.message}</p>}
+          <input {...form.register('nombre')} style={inputStyle} placeholder="Ej: PC Recepción, Sistema de facturación..." />
+          {form.formState.errors.nombre && (
+            <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+              {form.formState.errors.nombre.message}
+            </p>
+          )}
         </div>
         <div>
           <label style={labelStyle}>Tipo <span style={{ color: theme.colors.error }}>*</span></label>
-          <select {...form.register('type')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
-            <option value="PARTICULAR">Particular</option>
-            <option value="EMPRESA">Empresa</option>
-            <option value="COMERCIO">Comercio</option>
+          <select {...form.register('tipo')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+            {TIPOS.map((t) => <option key={t} value={t}>{t}</option>)}
           </select>
         </div>
         <div>
-          <label style={labelStyle}>CUIT / DNI</label>
-          <input {...form.register('cuit')} style={inputStyle} placeholder="20-12345678-9" />
-        </div>
-        <div>
-          <label style={labelStyle}>Rubro</label>
-          <input {...form.register('rubro')} style={inputStyle} placeholder="Ej: Indumentaria, Óptica..." />
-        </div>
-        <div>
-          <label style={labelStyle}>Email</label>
-          <input {...form.register('email')} type="email" style={inputStyle} placeholder="cliente@email.com" />
-          {form.formState.errors.email && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.email.message}</p>}
-        </div>
-        <div>
-          <label style={labelStyle}>Teléfono</label>
-          <input {...form.register('phone')} style={inputStyle} placeholder="2664-123456" />
+          <label style={labelStyle}>N° Serie / ID</label>
+          <input {...form.register('numero_serie')} style={inputStyle} placeholder="SN-12345..." />
         </div>
         <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>Dirección</label>
-          <input {...form.register('address')} style={inputStyle} placeholder="Calle, número, localidad" />
-        </div>
-        <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>Notas internas</label>
+          <label style={labelStyle}>Notas</label>
           <textarea
-            {...form.register('notes')}
+            {...form.register('notas')}
             rows={3}
             style={{ ...inputStyle, resize: 'vertical' }}
-            placeholder="Observaciones, condiciones especiales..."
+            placeholder="Observaciones, configuración, historial..."
           />
         </div>
-        <div>
-          <label style={labelStyle}>Imagen (URL del logo)</label>
-          <input {...form.register('imagen')} style={inputStyle} placeholder="https://..." />
-        </div>
-        <div>
-          <label style={labelStyle}>Página web</label>
-          <input {...form.register('pagina_web')} type="url" style={inputStyle} placeholder="https://www.ejemplo.com" />
-          {form.formState.errors.pagina_web && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.pagina_web.message}</p>}
-        </div>
-        <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <input
-              type="checkbox"
-              id="active-check"
-              {...form.register('active')}
-              style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: theme.colors.primary }}
-            />
-            <label htmlFor="active-check" style={{ ...labelStyle, marginBottom: 0, cursor: 'pointer' }}>
-              Cliente activo
-            </label>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <input
-              type="checkbox"
-              id="landing-check"
-              {...form.register('mostrar_en_landing')}
-              style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: theme.colors.primary }}
-            />
-            <label htmlFor="landing-check" style={{ ...labelStyle, marginBottom: 0, cursor: 'pointer' }}>
-              Mostrar en landing
-            </label>
-          </div>
+        <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <input
+            type="checkbox"
+            id="activo-check"
+            {...form.register('activo')}
+            style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: theme.colors.primary }}
+          />
+          <label htmlFor="activo-check" style={{ ...labelStyle, marginBottom: 0, cursor: 'pointer' }}>
+            Activo (desmarcar = De baja)
+          </label>
         </div>
       </div>
     </div>
   )
 }
 
-export default function ClientesClient({ initialClientes }: { initialClientes: Cliente[] }) {
-  const [clientes, setClientes] = useState(initialClientes)
+export default function ActivosClient({
+  initialActivos,
+  clientes,
+  clienteIdFilter,
+}: {
+  initialActivos: Activo[]
+  clientes: ClienteSimple[]
+  clienteIdFilter: number | null
+}) {
+  const router = useRouter()
+  const [activos, setActivos] = useState(initialActivos)
   const [showCreate, setShowCreate] = useState(false)
-  const [editTarget, setEditTarget] = useState<Cliente | null>(null)
-  const [deleteTarget, setDeleteTarget] = useState<Cliente | null>(null)
+  const [editTarget, setEditTarget] = useState<Activo | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Activo | null>(null)
   const [globalError, setGlobalError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
 
-  const createForm = useForm<ClienteForm>({
-    resolver: zodResolver(clienteSchema),
-    defaultValues: { type: 'PARTICULAR', active: true },
+  const clienteMap = Object.fromEntries(clientes.map((c) => [c.id, c.name]))
+
+  const createForm = useForm<ActivoForm>({
+    resolver: zodResolver(activoSchema),
+    defaultValues: { cliente_id: clienteIdFilter ?? 0, tipo: 'PC', activo: true },
   })
   const [createError, setCreateError] = useState<string | null>(null)
   const [createLoading, setCreateLoading] = useState(false)
 
-  const editForm = useForm<ClienteForm>({
-    resolver: zodResolver(clienteSchema),
-    defaultValues: { type: 'PARTICULAR', active: true },
+  const editForm = useForm<ActivoForm>({
+    resolver: zodResolver(activoSchema),
+    defaultValues: { tipo: 'PC', activo: true },
   })
   const [editError, setEditError] = useState<string | null>(null)
   const [editLoading, setEditLoading] = useState(false)
 
   const openCreate = () => {
-    createForm.reset({ type: 'PARTICULAR', active: true, mostrar_en_landing: false, name: '', email: '', phone: '', address: '', cuit: '', rubro: '', notes: '', imagen: '', pagina_web: '' })
+    createForm.reset({ cliente_id: clienteIdFilter ?? 0, tipo: 'PC', activo: true, nombre: '', numero_serie: '', notas: '' })
     setCreateError(null)
     setShowCreate(true)
   }
 
-  const openEdit = (c: Cliente) => {
-    setEditTarget(c)
+  const openEdit = (a: Activo) => {
+    setEditTarget(a)
     editForm.reset({
-      name: c.name,
-      type: c.type,
-      email: c.email ?? '',
-      phone: c.phone ?? '',
-      address: c.address ?? '',
-      cuit: c.cuit ?? '',
-      rubro: c.rubro ?? '',
-      notes: c.notes ?? '',
-      active: c.active,
-      imagen: c.imagen ?? '',
-      pagina_web: c.pagina_web ?? '',
-      mostrar_en_landing: c.mostrar_en_landing,
+      cliente_id: a.cliente_id,
+      nombre: a.nombre,
+      tipo: a.tipo,
+      numero_serie: a.numero_serie ?? '',
+      notas: a.notas ?? '',
+      activo: a.activo,
     })
     setEditError(null)
   }
 
-  const onCreateSubmit = async (data: ClienteForm) => {
+  const onCreateSubmit = async (data: ActivoForm) => {
     setCreateLoading(true)
     setCreateError(null)
-    const res = await fetch('/api/dashboard/clientes', {
+    const res = await fetch('/api/dashboard/activos', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
     })
     const json = await res.json()
     setCreateLoading(false)
     if (!res.ok) { setCreateError(json.error); return }
-    setClientes((prev) => [json, ...prev].sort((a, b) => a.name.localeCompare(b.name)))
+    setActivos((prev) => [json, ...prev].sort((a, b) => a.nombre.localeCompare(b.nombre)))
     setShowCreate(false)
   }
 
-  const onEditSubmit = async (data: ClienteForm) => {
+  const onEditSubmit = async (data: ActivoForm) => {
     if (!editTarget) return
     setEditLoading(true)
     setEditError(null)
-    const res = await fetch(`/api/dashboard/clientes/${editTarget.id}`, {
+    const res = await fetch(`/api/dashboard/activos/${editTarget.id}`, {
       method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
     })
     const json = await res.json()
     setEditLoading(false)
     if (!res.ok) { setEditError(json.error); return }
-    setClientes((prev) => prev.map((c) => (c.id === editTarget.id ? json : c)))
+    setActivos((prev) => prev.map((a) => (a.id === editTarget.id ? json : a)))
     setEditTarget(null)
   }
 
@@ -258,25 +235,45 @@ export default function ClientesClient({ initialClientes }: { initialClientes: C
     if (!deleteTarget) return
     setDeleting(true)
     setGlobalError(null)
-    const res = await fetch(`/api/dashboard/clientes/${deleteTarget.id}`, { method: 'DELETE' })
+    const res = await fetch(`/api/dashboard/activos/${deleteTarget.id}`, { method: 'DELETE' })
     const json = await res.json()
     setDeleting(false)
     if (!res.ok) { setGlobalError(json.error); setDeleteTarget(null); return }
-    setClientes((prev) => prev.filter((c) => c.id !== deleteTarget.id))
+    setActivos((prev) => prev.filter((a) => a.id !== deleteTarget.id))
     setDeleteTarget(null)
+  }
+
+  const handleFilterChange = (value: string) => {
+    if (value) {
+      router.push(`/dashboard/activos?cliente_id=${value}`)
+    } else {
+      router.push('/dashboard/activos')
+    }
   }
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
-          {clientes.length} cliente{clientes.length !== 1 ? 's' : ''}
-        </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '16px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <select
+            defaultValue={clienteIdFilter ?? ''}
+            onChange={(e) => handleFilterChange(e.target.value)}
+            style={{ padding: '8px 14px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', backgroundColor: '#fff', fontFamily: 'inherit', color: theme.colors.text }}
+          >
+            <option value="">Todos los clientes</option>
+            {clientes.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+          <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
+            {activos.length} activo{activos.length !== 1 ? 's' : ''}
+          </p>
+        </div>
         <button
           onClick={openCreate}
           style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 16px', backgroundColor: theme.colors.primary, color: '#fff', border: 'none', borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, cursor: 'pointer' }}
         >
-          <Plus size={15} /> Agregar cliente
+          <Plus size={15} /> Agregar activo
         </button>
       </div>
 
@@ -286,59 +283,48 @@ export default function ClientesClient({ initialClientes }: { initialClientes: C
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
+              <th style={thStyle}>Cliente</th>
               <th style={thStyle}>Nombre</th>
               <th style={thStyle}>Tipo</th>
-              <th style={thStyle}>Rubro</th>
-              <th style={thStyle}>Teléfono</th>
+              <th style={thStyle}>N° Serie</th>
               <th style={thStyle}>Estado</th>
-              <th style={thStyle}>Landing</th>
               <th style={{ ...thStyle, textAlign: 'right' }}>Acciones</th>
             </tr>
           </thead>
           <tbody>
-            {clientes.length === 0 && (
+            {activos.length === 0 && (
               <tr>
-                <td colSpan={7} style={{ ...tdStyle, textAlign: 'center', color: theme.colors.textMuted }}>
-                  No hay clientes registrados
+                <td colSpan={6} style={{ ...tdStyle, textAlign: 'center', color: theme.colors.textMuted }}>
+                  No hay activos registrados
                 </td>
               </tr>
             )}
-            {clientes.map((c) => (
-              <tr key={c.id}>
-                <td style={{ ...tdStyle, fontWeight: theme.fontWeights.medium }}>{c.name}</td>
+            {activos.map((a) => (
+              <tr key={a.id}>
+                <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{clienteMap[a.cliente_id] ?? '—'}</td>
+                <td style={{ ...tdStyle, fontWeight: theme.fontWeights.medium }}>{a.nombre}</td>
                 <td style={tdStyle}>
                   <span style={{ padding: '3px 10px', backgroundColor: `${theme.colors.primary}14`, color: theme.colors.primary, borderRadius: theme.radii.full, fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium }}>
-                    {TYPE_LABELS[c.type] ?? c.type}
+                    {a.tipo}
                   </span>
                 </td>
-                <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{c.rubro || '—'}</td>
-                <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{c.phone || '—'}</td>
+                <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{a.numero_serie || '—'}</td>
                 <td style={tdStyle}>
                   <span style={{
                     padding: '3px 10px', borderRadius: theme.radii.full,
                     fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium,
-                    backgroundColor: c.active ? `${theme.colors.success}18` : `${theme.colors.textMuted}18`,
-                    color: c.active ? theme.colors.success : theme.colors.textMuted,
+                    backgroundColor: a.activo ? `${theme.colors.success}18` : `${theme.colors.textMuted}18`,
+                    color: a.activo ? theme.colors.success : theme.colors.textMuted,
                   }}>
-                    {c.active ? 'Activo' : 'Inactivo'}
+                    {a.activo ? 'Activo' : 'De baja'}
                   </span>
-                </td>
-                <td style={tdStyle}>
-                  {c.mostrar_en_landing ? (
-                    <span style={{ padding: '3px 10px', borderRadius: theme.radii.full, fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium, backgroundColor: `${theme.colors.primary}14`, color: theme.colors.primary }}>
-                      Sí
-                    </span>
-                  ) : <span style={{ color: theme.colors.textMuted }}>—</span>}
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right' }}>
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                    <Link href={`/dashboard/activos?cliente_id=${c.id}`} style={{ background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, padding: '5px 8px', display: 'flex', alignItems: 'center', textDecoration: 'none' }} title="Ver activos">
-                      <HardDrive size={13} />
-                    </Link>
-                    <button onClick={() => openEdit(c)} style={{ background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, padding: '5px 8px', display: 'flex', alignItems: 'center' }}>
+                    <button onClick={() => openEdit(a)} style={{ background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, padding: '5px 8px', display: 'flex', alignItems: 'center' }}>
                       <Pencil size={13} />
                     </button>
-                    <button onClick={() => setDeleteTarget(c)} style={{ background: 'none', border: `1px solid ${theme.colors.error}44`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.error, padding: '5px 8px', display: 'flex', alignItems: 'center' }}>
+                    <button onClick={() => setDeleteTarget(a)} style={{ background: 'none', border: `1px solid ${theme.colors.error}44`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.error, padding: '5px 8px', display: 'flex', alignItems: 'center' }}>
                       <Trash2 size={13} />
                     </button>
                   </div>
@@ -352,9 +338,9 @@ export default function ClientesClient({ initialClientes }: { initialClientes: C
       {/* Create modal */}
       {showCreate && (
         <ModalOverlay onClose={() => setShowCreate(false)}>
-          <ModalCard title="Nuevo cliente" onClose={() => setShowCreate(false)}>
+          <ModalCard title="Nuevo activo" onClose={() => setShowCreate(false)}>
             <form onSubmit={createForm.handleSubmit(onCreateSubmit)}>
-              <ClienteFormFields form={createForm} />
+              <ActivoFormFields form={createForm} clientes={clientes} />
               {createError && <div style={{ marginTop: '14px' }}><ErrorBox message={createError} /></div>}
               <button
                 type="submit"
@@ -362,7 +348,7 @@ export default function ClientesClient({ initialClientes }: { initialClientes: C
                 style={{ width: '100%', padding: '11px', marginTop: '20px', backgroundColor: createLoading ? `${theme.colors.primary}99` : theme.colors.primary, color: '#fff', fontSize: theme.fontSizes.base, fontWeight: theme.fontWeights.medium, border: 'none', borderRadius: theme.radii.sm, cursor: createLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
               >
                 {createLoading && <Loader2 size={15} className="animate-spin" />}
-                {createLoading ? 'Guardando...' : 'Crear cliente'}
+                {createLoading ? 'Guardando...' : 'Crear activo'}
               </button>
             </form>
           </ModalCard>
@@ -372,9 +358,9 @@ export default function ClientesClient({ initialClientes }: { initialClientes: C
       {/* Edit modal */}
       {editTarget && (
         <ModalOverlay onClose={() => setEditTarget(null)}>
-          <ModalCard title="Editar cliente" onClose={() => setEditTarget(null)}>
+          <ModalCard title="Editar activo" onClose={() => setEditTarget(null)}>
             <form onSubmit={editForm.handleSubmit(onEditSubmit)}>
-              <ClienteFormFields form={editForm} />
+              <ActivoFormFields form={editForm} clientes={clientes} />
               {editError && <div style={{ marginTop: '14px' }}><ErrorBox message={editError} /></div>}
               <button
                 type="submit"
@@ -392,9 +378,9 @@ export default function ClientesClient({ initialClientes }: { initialClientes: C
       {/* Delete confirm */}
       {deleteTarget && (
         <ModalOverlay onClose={() => setDeleteTarget(null)}>
-          <ModalCard title="Eliminar cliente" onClose={() => setDeleteTarget(null)}>
+          <ModalCard title="Eliminar activo" onClose={() => setDeleteTarget(null)}>
             <p style={{ fontSize: theme.fontSizes.base, color: theme.colors.text, marginBottom: '8px' }}>
-              ¿Eliminás a <strong>{deleteTarget.name}</strong>?
+              ¿Eliminás <strong>{deleteTarget.nombre}</strong>?
             </p>
             <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textMuted, marginBottom: '24px' }}>
               Esta acción no se puede deshacer.

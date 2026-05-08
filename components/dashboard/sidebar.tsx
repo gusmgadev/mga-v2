@@ -7,6 +7,7 @@ import { signOut } from 'next-auth/react'
 import {
   LayoutDashboard,
   Building2,
+  HardDrive,
   Users,
   Shield,
   Lock,
@@ -22,6 +23,7 @@ interface SidebarProps {
 const navItems = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, adminOnly: false },
   { label: 'Clientes', href: '/dashboard/clientes', icon: Building2, adminOnly: false },
+  { label: 'Activos', href: '/dashboard/activos', icon: HardDrive, adminOnly: false },
   { label: 'Usuarios', href: '/dashboard/admin/usuarios', icon: Users, adminOnly: true },
   { label: 'Roles', href: '/dashboard/admin/roles', icon: Shield, adminOnly: true },
   { label: 'Permisos', href: '/dashboard/admin/permisos', icon: Lock, adminOnly: true },
