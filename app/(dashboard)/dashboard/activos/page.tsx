@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { supabaseAdmin } from '@/services/supabase-admin'
+import { getModulePermisos } from '@/lib/permisos'
 import ActivosClient from './ActivosClient'
 
 export default async function ActivosPage({
@@ -10,6 +11,9 @@ export default async function ActivosPage({
 }) {
   const session = await auth()
   if (!session) redirect('/auth/signin')
+
+  const permisos = await getModulePermisos(session.user.role_id, session.user.role, 'activos')
+  if (!permisos.can_view) redirect('/dashboard')
 
   const { cliente_id } = await searchParams
 
@@ -28,6 +32,7 @@ export default async function ActivosPage({
       initialActivos={activos ?? []}
       clientes={clientes ?? []}
       clienteIdFilter={cliente_id ? Number(cliente_id) : null}
+      permisos={permisos}
     />
   )
 }

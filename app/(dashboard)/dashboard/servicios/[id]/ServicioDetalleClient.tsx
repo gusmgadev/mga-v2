@@ -7,6 +7,7 @@ import { z } from 'zod'
 import Link from 'next/link'
 import { ArrowLeft, Pencil, X, Loader2, AlertCircle, Plus, Trash2, CheckCircle2 } from 'lucide-react'
 import { theme } from '@/lib/theme'
+import type { ModulePermisos } from '@/lib/permisos'
 
 type ServicioEstado = 'INGRESADO' | 'EN PROCESO' | 'CANCELADO' | 'RECHAZADO' | 'TERMINADO' | 'PRESUPUESTADO'
 type EstadoPago = 'PENDIENTE' | 'SIN CARGO' | 'GARANTIA' | 'PAGO PARCIAL' | 'PAGADO'
@@ -149,10 +150,12 @@ export default function ServicioDetalleClient({
   initialServicio,
   clientes,
   activos,
+  permisos,
 }: {
   initialServicio: Servicio
   clientes: ClienteSimple[]
   activos: ActivoSimple[]
+  permisos: ModulePermisos
 }) {
   const [servicio, setServicio] = useState(initialServicio)
   const [tareas, setTareas] = useState<Tarea[]>(initialServicio.servicio_tareas ?? [])
@@ -323,12 +326,14 @@ export default function ServicioDetalleClient({
         >
           <ArrowLeft size={15} /> Volver a Servicios
         </Link>
-        <button
-          onClick={openEdit}
-          style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', backgroundColor: '#fff', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, cursor: 'pointer', color: theme.colors.text }}
-        >
-          <Pencil size={13} /> Editar servicio
-        </button>
+        {permisos.can_edit && (
+          <button
+            onClick={openEdit}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', backgroundColor: '#fff', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, cursor: 'pointer', color: theme.colors.text }}
+          >
+            <Pencil size={13} /> Editar servicio
+          </button>
+        )}
       </div>
 
       {/* Info card */}
@@ -383,50 +388,60 @@ export default function ServicioDetalleClient({
                 key={tarea.id}
                 style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 20px', borderBottom: `1px solid ${theme.colors.border}` }}
               >
-                <select
-                  value={tarea.estado}
-                  disabled={updatingTareaId === tarea.id}
-                  onChange={(e) => cambiarEstadoTarea(tarea, e.target.value as TareaEstado)}
-                  style={{ padding: '4px 8px', fontSize: theme.fontSizes.xs, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', backgroundColor: '#fff', fontFamily: 'inherit', cursor: 'pointer', color: TAREA_COLORS[tarea.estado].text }}
-                >
-                  {TAREA_ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
-                </select>
+                {permisos.can_edit ? (
+                  <select
+                    value={tarea.estado}
+                    disabled={updatingTareaId === tarea.id}
+                    onChange={(e) => cambiarEstadoTarea(tarea, e.target.value as TareaEstado)}
+                    style={{ padding: '4px 8px', fontSize: theme.fontSizes.xs, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', backgroundColor: '#fff', fontFamily: 'inherit', cursor: 'pointer', color: TAREA_COLORS[tarea.estado].text }}
+                  >
+                    {TAREA_ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
+                  </select>
+                ) : (
+                  <span style={{ padding: '4px 8px', fontSize: theme.fontSizes.xs, borderRadius: theme.radii.sm, backgroundColor: TAREA_COLORS[tarea.estado].bg, color: TAREA_COLORS[tarea.estado].text }}>
+                    {tarea.estado}
+                  </span>
+                )}
                 <span style={{ flex: 1, fontSize: theme.fontSizes.sm, color: theme.colors.text }}>
                   {tarea.descripcion}
                 </span>
-                <button
-                  onClick={() => eliminarTarea(tarea.id)}
-                  disabled={deletingTareaId === tarea.id}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.textMuted, display: 'flex', padding: '4px' }}
-                >
-                  {deletingTareaId === tarea.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
-                </button>
+                {permisos.can_delete && (
+                  <button
+                    onClick={() => eliminarTarea(tarea.id)}
+                    disabled={deletingTareaId === tarea.id}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.textMuted, display: 'flex', padding: '4px' }}
+                  >
+                    {deletingTareaId === tarea.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                  </button>
+                )}
               </div>
             ))}
           </div>
         )}
 
         {/* Add task */}
-        <div style={{ padding: '16px 20px' }}>
-          {tareaError && <div style={{ marginBottom: '10px' }}><ErrorBox message={tareaError} /></div>}
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <input
-              value={nuevaTarea}
-              onChange={(e) => setNuevaTarea(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); agregarTarea() } }}
-              placeholder="Descripción de la tarea..."
-              style={{ ...inputStyle, flex: 1, padding: '8px 12px', fontSize: theme.fontSizes.sm }}
-            />
-            <button
-              onClick={agregarTarea}
-              disabled={tareaLoading || !nuevaTarea.trim()}
-              style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '8px 12px', backgroundColor: tareaLoading || !nuevaTarea.trim() ? `${theme.colors.primary}66` : theme.colors.primary, color: '#fff', border: 'none', borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, cursor: tareaLoading || !nuevaTarea.trim() ? 'not-allowed' : 'pointer' }}
-            >
-              {tareaLoading ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
-              Agregar
-            </button>
+        {permisos.can_create && (
+          <div style={{ padding: '16px 20px' }}>
+            {tareaError && <div style={{ marginBottom: '10px' }}><ErrorBox message={tareaError} /></div>}
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                value={nuevaTarea}
+                onChange={(e) => setNuevaTarea(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); agregarTarea() } }}
+                placeholder="Descripción de la tarea..."
+                style={{ ...inputStyle, flex: 1, padding: '8px 12px', fontSize: theme.fontSizes.sm }}
+              />
+              <button
+                onClick={agregarTarea}
+                disabled={tareaLoading || !nuevaTarea.trim()}
+                style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '8px 12px', backgroundColor: tareaLoading || !nuevaTarea.trim() ? `${theme.colors.primary}66` : theme.colors.primary, color: '#fff', border: 'none', borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, cursor: tareaLoading || !nuevaTarea.trim() ? 'not-allowed' : 'pointer' }}
+              >
+                {tareaLoading ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
+                Agregar
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Pagos */}
@@ -435,12 +450,14 @@ export default function ServicioDetalleClient({
           <h3 style={{ margin: 0, fontSize: theme.fontSizes.base, fontWeight: theme.fontWeights.bold, color: theme.colors.text }}>
             Pagos
           </h3>
-          <button
-            onClick={() => setShowAddPago((v) => !v)}
-            style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', backgroundColor: theme.colors.primary, color: '#fff', border: 'none', borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, cursor: 'pointer' }}
-          >
-            <Plus size={13} /> Agregar pago
-          </button>
+          {permisos.can_create && (
+            <button
+              onClick={() => setShowAddPago((v) => !v)}
+              style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', backgroundColor: theme.colors.primary, color: '#fff', border: 'none', borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, cursor: 'pointer' }}
+            >
+              <Plus size={13} /> Agregar pago
+            </button>
+          )}
         </div>
 
         {showAddPago && (
@@ -532,15 +549,17 @@ export default function ServicioDetalleClient({
                 {pago.notas && (
                   <span style={{ flex: 1, fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>{pago.notas}</span>
                 )}
-                <div style={{ marginLeft: 'auto' }}>
-                  <button
-                    onClick={() => eliminarPago(pago.id)}
-                    disabled={deletingPagoId === pago.id}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.textMuted, display: 'flex', padding: '4px' }}
-                  >
-                    {deletingPagoId === pago.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
-                  </button>
-                </div>
+                {permisos.can_delete && (
+                  <div style={{ marginLeft: 'auto' }}>
+                    <button
+                      onClick={() => eliminarPago(pago.id)}
+                      disabled={deletingPagoId === pago.id}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.textMuted, display: 'flex', padding: '4px' }}
+                    >
+                      {deletingPagoId === pago.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
 

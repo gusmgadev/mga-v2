@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth'
 import { redirect, notFound } from 'next/navigation'
 import { supabaseAdmin } from '@/services/supabase-admin'
+import { getModulePermisos } from '@/lib/permisos'
 import ServicioDetalleClient from './ServicioDetalleClient'
 
 export default async function ServicioDetallePage({
@@ -10,6 +11,9 @@ export default async function ServicioDetallePage({
 }) {
   const session = await auth()
   if (!session) redirect('/auth/signin')
+
+  const permisos = await getModulePermisos(session.user.role_id, session.user.role, 'servicios')
+  if (!permisos.can_view) redirect('/dashboard')
 
   const { id } = await params
 
@@ -38,6 +42,7 @@ export default async function ServicioDetallePage({
       initialServicio={servicio}
       clientes={clientes ?? []}
       activos={activos ?? []}
+      permisos={permisos}
     />
   )
 }

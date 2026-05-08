@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { Plus, Trash2, X, Loader2, AlertCircle, Eye } from 'lucide-react'
 import Link from 'next/link'
 import { theme } from '@/lib/theme'
+import type { ModulePermisos } from '@/lib/permisos'
 
 type ServicioEstado = 'INGRESADO' | 'EN PROCESO' | 'CANCELADO' | 'RECHAZADO' | 'TERMINADO' | 'PRESUPUESTADO'
 type EstadoPago = 'PENDIENTE' | 'SIN CARGO' | 'GARANTIA' | 'PAGO PARCIAL' | 'PAGADO'
@@ -226,11 +227,13 @@ export default function ServiciosClient({
   clientes,
   activos,
   filtros,
+  permisos,
 }: {
   initialServicios: Servicio[]
   clientes: ClienteSimple[]
   activos: ActivoSimple[]
   filtros: { cliente_id: number | null; estado: string | null; estado_pago: string | null }
+  permisos: ModulePermisos
 }) {
   const router = useRouter()
   const [servicios, setServicios] = useState(initialServicios)
@@ -350,12 +353,14 @@ export default function ServiciosClient({
           </p>
         </div>
 
-        <button
-          onClick={openCreate}
-          style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 16px', backgroundColor: theme.colors.primary, color: '#fff', border: 'none', borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, cursor: 'pointer' }}
-        >
-          <Plus size={15} /> Agregar servicio
-        </button>
+        {permisos.can_create && (
+          <button
+            onClick={openCreate}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 16px', backgroundColor: theme.colors.primary, color: '#fff', border: 'none', borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, cursor: 'pointer' }}
+          >
+            <Plus size={15} /> Agregar servicio
+          </button>
+        )}
       </div>
 
       {globalError && <div style={{ marginBottom: '16px' }}><ErrorBox message={globalError} /></div>}
@@ -401,12 +406,14 @@ export default function ServiciosClient({
                     >
                       <Eye size={13} />
                     </Link>
-                    <button
-                      onClick={() => setDeleteTarget(s)}
-                      style={{ background: 'none', border: `1px solid ${theme.colors.error}44`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.error, padding: '5px 8px', display: 'flex', alignItems: 'center' }}
-                    >
-                      <Trash2 size={13} />
-                    </button>
+                    {permisos.can_delete && (
+                      <button
+                        onClick={() => setDeleteTarget(s)}
+                        style={{ background: 'none', border: `1px solid ${theme.colors.error}44`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.error, padding: '5px 8px', display: 'flex', alignItems: 'center' }}
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>

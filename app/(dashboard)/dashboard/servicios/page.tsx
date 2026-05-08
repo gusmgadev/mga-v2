@@ -1,6 +1,7 @@
 import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { supabaseAdmin } from '@/services/supabase-admin'
+import { getModulePermisos } from '@/lib/permisos'
 import ServiciosClient from './ServiciosClient'
 
 export default async function ServiciosPage({
@@ -10,6 +11,9 @@ export default async function ServiciosPage({
 }) {
   const session = await auth()
   if (!session) redirect('/auth/signin')
+
+  const permisos = await getModulePermisos(session.user.role_id, session.user.role, 'servicios')
+  if (!permisos.can_view) redirect('/dashboard')
 
   const { cliente_id, estado, estado_pago } = await searchParams
 
@@ -42,6 +46,7 @@ export default async function ServiciosPage({
       clientes={clientes ?? []}
       activos={activos ?? []}
       filtros={{ cliente_id: cliente_id ? Number(cliente_id) : null, estado: estado ?? null, estado_pago: estado_pago ?? null }}
+      permisos={permisos}
     />
   )
 }

@@ -7,6 +7,7 @@ import { z } from 'zod'
 import Link from 'next/link'
 import { Plus, Pencil, Trash2, X, Loader2, AlertCircle, HardDrive } from 'lucide-react'
 import { theme } from '@/lib/theme'
+import type { ModulePermisos } from '@/lib/permisos'
 
 type Cliente = {
   id: number
@@ -180,7 +181,7 @@ function ClienteFormFields({ form }: { form: ReturnType<typeof useForm<ClienteFo
   )
 }
 
-export default function ClientesClient({ initialClientes }: { initialClientes: Cliente[] }) {
+export default function ClientesClient({ initialClientes, permisos }: { initialClientes: Cliente[]; permisos: ModulePermisos }) {
   const [clientes, setClientes] = useState(initialClientes)
   const [showCreate, setShowCreate] = useState(false)
   const [editTarget, setEditTarget] = useState<Cliente | null>(null)
@@ -272,12 +273,14 @@ export default function ClientesClient({ initialClientes }: { initialClientes: C
         <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
           {clientes.length} cliente{clientes.length !== 1 ? 's' : ''}
         </p>
-        <button
-          onClick={openCreate}
-          style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 16px', backgroundColor: theme.colors.primary, color: '#fff', border: 'none', borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, cursor: 'pointer' }}
-        >
-          <Plus size={15} /> Agregar cliente
-        </button>
+        {permisos.can_create && (
+          <button
+            onClick={openCreate}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 16px', backgroundColor: theme.colors.primary, color: '#fff', border: 'none', borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, cursor: 'pointer' }}
+          >
+            <Plus size={15} /> Agregar cliente
+          </button>
+        )}
       </div>
 
       {globalError && <div style={{ marginBottom: '16px' }}><ErrorBox message={globalError} /></div>}
@@ -335,12 +338,16 @@ export default function ClientesClient({ initialClientes }: { initialClientes: C
                     <Link href={`/dashboard/activos?cliente_id=${c.id}`} style={{ background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, padding: '5px 8px', display: 'flex', alignItems: 'center', textDecoration: 'none' }} title="Ver activos">
                       <HardDrive size={13} />
                     </Link>
-                    <button onClick={() => openEdit(c)} style={{ background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, padding: '5px 8px', display: 'flex', alignItems: 'center' }}>
-                      <Pencil size={13} />
-                    </button>
-                    <button onClick={() => setDeleteTarget(c)} style={{ background: 'none', border: `1px solid ${theme.colors.error}44`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.error, padding: '5px 8px', display: 'flex', alignItems: 'center' }}>
-                      <Trash2 size={13} />
-                    </button>
+                    {permisos.can_edit && (
+                      <button onClick={() => openEdit(c)} style={{ background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, padding: '5px 8px', display: 'flex', alignItems: 'center' }}>
+                        <Pencil size={13} />
+                      </button>
+                    )}
+                    {permisos.can_delete && (
+                      <button onClick={() => setDeleteTarget(c)} style={{ background: 'none', border: `1px solid ${theme.colors.error}44`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.error, padding: '5px 8px', display: 'flex', alignItems: 'center' }}>
+                        <Trash2 size={13} />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
