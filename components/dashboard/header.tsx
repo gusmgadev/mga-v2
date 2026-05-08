@@ -7,6 +7,7 @@ const titles: Record<string, string> = {
   '/dashboard': 'Dashboard',
   '/dashboard/clientes': 'Clientes',
   '/dashboard/activos': 'Activos',
+  '/dashboard/servicios': 'Servicios',
   '/dashboard/admin/usuarios': 'Usuarios',
   '/dashboard/admin/roles': 'Roles',
   '/dashboard/admin/permisos': 'Permisos',
@@ -14,7 +15,9 @@ const titles: Record<string, string> = {
 
 export default function DashboardHeader() {
   const pathname = usePathname()
-  const title = titles[pathname] ?? 'Dashboard'
+  const title =
+    titles[pathname] ??
+    (pathname.startsWith('/dashboard/servicios') ? 'Servicios' : 'Dashboard')
 
   return (
     <header
