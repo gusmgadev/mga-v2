@@ -1,22 +1,30 @@
 "use client"
 
 import { theme } from "@/lib/theme"
-import { clientes } from "@/lib/clientes"
 import Image from "next/image"
 import { useState } from "react"
 import { Phone, MapPin } from "lucide-react"
 import { motion } from "framer-motion"
 
-export default function Clients() {
+type ClienteDB = {
+  id: number
+  name: string
+  rubro: string | null
+  phone: string | null
+  address: string | null
+  imagen: string | null
+  pagina_web: string | null
+}
+
+export default function Clients({ clientes }: { clientes: ClienteDB[] }) {
   const { clients } = theme
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
-  const visibleClients = clientes.filter(c => c.show)
 
   return (
     <section
       id="clientes"
       className="py-20 px-6 md:px-12"
-      style={{ 
+      style={{
         background: `linear-gradient(180deg, #1C1C1E 0%, #F5F5F3 100%)`,
         scrollMarginTop: "180px"
       }}
@@ -38,12 +46,12 @@ export default function Clients() {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {visibleClients.map((client, idx) => (
+          {clientes.map((client, idx) => (
             <motion.div
-              key={idx}
+              key={client.id}
               className="relative h-56 sm:h-52 rounded-xl overflow-hidden cursor-pointer"
-              style={{ 
-                backgroundColor: "#fff", 
+              style={{
+                backgroundColor: "#fff",
                 boxShadow: theme.shadows.md,
                 border: hoveredIdx === idx ? "4px solid #2979FF" : `1px solid ${theme.colors.border}`,
               }}
@@ -62,12 +70,18 @@ export default function Clients() {
             >
               <div className="absolute inset-0 p-2 flex flex-col items-center justify-center">
                 <div className="w-22 h-22 relative mb-1 flex-shrink-0">
-                  <Image
-                    src={client.logo}
-                    alt={client.name}
-                    fill
-                    className="object-contain"
-                  />
+                  {client.imagen ? (
+                    <Image
+                      src={client.imagen}
+                      alt={client.name}
+                      fill
+                      className="object-contain"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-xs text-center font-semibold" style={{ color: theme.colors.textMuted }}>
+                      {client.name}
+                    </div>
+                  )}
                 </div>
                 <h3
                   className="text-sm font-semibold text-center leading-tight"
@@ -77,31 +91,27 @@ export default function Clients() {
                 </h3>
                 <p
                   className="text-sm text-center"
-                  style={{ color: theme.colors.text }}
-                >
-                  {client.category}
-                </p>
-                <p
-                  className="text-sm text-center"
                   style={{ color: theme.colors.textMuted }}
                 >
-                  {client.location}
+                  {client.rubro}
                 </p>
-                
-                <div 
+
+                <div
                   className="absolute inset-0 p-2 flex flex-col justify-center transition-opacity duration-200"
-                  style={{ 
+                  style={{
                     backgroundColor: "#fff",
                     opacity: hoveredIdx === idx ? 1 : 0,
                   }}
                 >
                   <div className="w-22 h-22 relative mx-auto mb-1 flex-shrink-0">
-                    <Image
-                      src={client.logo}
-                      alt={client.name}
-                      fill
-                      className="object-contain"
-                    />
+                    {client.imagen ? (
+                      <Image
+                        src={client.imagen}
+                        alt={client.name}
+                        fill
+                        className="object-contain"
+                      />
+                    ) : null}
                   </div>
                   <h3
                     className="text-sm font-bold text-center leading-tight"
@@ -113,23 +123,21 @@ export default function Clients() {
                     className="text-sm text-center"
                     style={{ color: theme.colors.textMuted }}
                   >
-                    {client.category}
-                  </p>
-                  <p
-                    className="text-sm text-center"
-                    style={{ color: theme.colors.textMuted }}
-                  >
-                    {client.location}
+                    {client.rubro}
                   </p>
                   <div className="mt-1 pt-1 border-t" style={{ borderColor: theme.colors.border }}>
-                    <div className="flex items-center gap-1 justify-center">
-                      <MapPin size={10} />
-                      <span className="text-[10px] truncate max-w-full">{client.address}</span>
-                    </div>
-                    <div className="flex items-center gap-1 justify-center">
-                      <Phone size={10} />
-                      <span className="text-[10px]">{client.phone}</span>
-                    </div>
+                    {client.address && (
+                      <div className="flex items-center gap-1 justify-center">
+                        <MapPin size={10} />
+                        <span className="text-[10px] truncate max-w-full">{client.address}</span>
+                      </div>
+                    )}
+                    {client.phone && (
+                      <div className="flex items-center gap-1 justify-center">
+                        <Phone size={10} />
+                        <span className="text-[10px]">{client.phone}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

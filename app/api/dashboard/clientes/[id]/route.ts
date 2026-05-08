@@ -10,8 +10,12 @@ const updateSchema = z.object({
   phone: z.string().optional(),
   address: z.string().optional(),
   cuit: z.string().optional(),
+  rubro: z.string().optional(),
   notes: z.string().optional(),
   active: z.boolean().optional(),
+  imagen: z.string().optional(),
+  pagina_web: z.string().url('URL inválida').optional().or(z.literal('')),
+  mostrar_en_landing: z.boolean().optional(),
 })
 
 async function requireSession() {

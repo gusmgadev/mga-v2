@@ -15,8 +15,12 @@ type Cliente = {
   phone: string | null
   address: string | null
   cuit: string | null
+  rubro: string | null
   notes: string | null
   active: boolean
+  imagen: string | null
+  pagina_web: string | null
+  mostrar_en_landing: boolean
   created_at: string
 }
 
@@ -27,8 +31,12 @@ const clienteSchema = z.object({
   phone: z.string().optional(),
   address: z.string().optional(),
   cuit: z.string().optional(),
+  rubro: z.string().optional(),
   notes: z.string().optional(),
   active: z.boolean(),
+  imagen: z.string().optional(),
+  pagina_web: z.string().url('URL inválida').optional().or(z.literal('')),
+  mostrar_en_landing: z.boolean(),
 })
 type ClienteForm = z.infer<typeof clienteSchema>
 
@@ -108,6 +116,10 @@ function ClienteFormFields({ form }: { form: ReturnType<typeof useForm<ClienteFo
           <input {...form.register('cuit')} style={inputStyle} placeholder="20-12345678-9" />
         </div>
         <div>
+          <label style={labelStyle}>Rubro</label>
+          <input {...form.register('rubro')} style={inputStyle} placeholder="Ej: Indumentaria, Óptica..." />
+        </div>
+        <div>
           <label style={labelStyle}>Email</label>
           <input {...form.register('email')} type="email" style={inputStyle} placeholder="cliente@email.com" />
           {form.formState.errors.email && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.email.message}</p>}
@@ -129,16 +141,38 @@ function ClienteFormFields({ form }: { form: ReturnType<typeof useForm<ClienteFo
             placeholder="Observaciones, condiciones especiales..."
           />
         </div>
-        <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <input
-            type="checkbox"
-            id="active-check"
-            {...form.register('active')}
-            style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: theme.colors.primary }}
-          />
-          <label htmlFor="active-check" style={{ ...labelStyle, marginBottom: 0, cursor: 'pointer' }}>
-            Cliente activo
-          </label>
+        <div>
+          <label style={labelStyle}>Imagen (URL del logo)</label>
+          <input {...form.register('imagen')} style={inputStyle} placeholder="https://..." />
+        </div>
+        <div>
+          <label style={labelStyle}>Página web</label>
+          <input {...form.register('pagina_web')} type="url" style={inputStyle} placeholder="https://www.ejemplo.com" />
+          {form.formState.errors.pagina_web && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.pagina_web.message}</p>}
+        </div>
+        <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <input
+              type="checkbox"
+              id="active-check"
+              {...form.register('active')}
+              style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: theme.colors.primary }}
+            />
+            <label htmlFor="active-check" style={{ ...labelStyle, marginBottom: 0, cursor: 'pointer' }}>
+              Cliente activo
+            </label>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <input
+              type="checkbox"
+              id="landing-check"
+              {...form.register('mostrar_en_landing')}
+              style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: theme.colors.primary }}
+            />
+            <label htmlFor="landing-check" style={{ ...labelStyle, marginBottom: 0, cursor: 'pointer' }}>
+              Mostrar en landing
+            </label>
+          </div>
         </div>
       </div>
     </div>
@@ -168,7 +202,7 @@ export default function ClientesClient({ initialClientes }: { initialClientes: C
   const [editLoading, setEditLoading] = useState(false)
 
   const openCreate = () => {
-    createForm.reset({ type: 'PARTICULAR', active: true, name: '', email: '', phone: '', address: '', cuit: '', notes: '' })
+    createForm.reset({ type: 'PARTICULAR', active: true, mostrar_en_landing: false, name: '', email: '', phone: '', address: '', cuit: '', rubro: '', notes: '', imagen: '', pagina_web: '' })
     setCreateError(null)
     setShowCreate(true)
   }
@@ -182,8 +216,12 @@ export default function ClientesClient({ initialClientes }: { initialClientes: C
       phone: c.phone ?? '',
       address: c.address ?? '',
       cuit: c.cuit ?? '',
+      rubro: c.rubro ?? '',
       notes: c.notes ?? '',
       active: c.active,
+      imagen: c.imagen ?? '',
+      pagina_web: c.pagina_web ?? '',
+      mostrar_en_landing: c.mostrar_en_landing,
     })
     setEditError(null)
   }
@@ -249,16 +287,17 @@ export default function ClientesClient({ initialClientes }: { initialClientes: C
             <tr>
               <th style={thStyle}>Nombre</th>
               <th style={thStyle}>Tipo</th>
-              <th style={thStyle}>Email</th>
+              <th style={thStyle}>Rubro</th>
               <th style={thStyle}>Teléfono</th>
               <th style={thStyle}>Estado</th>
+              <th style={thStyle}>Landing</th>
               <th style={{ ...thStyle, textAlign: 'right' }}>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {clientes.length === 0 && (
               <tr>
-                <td colSpan={6} style={{ ...tdStyle, textAlign: 'center', color: theme.colors.textMuted }}>
+                <td colSpan={7} style={{ ...tdStyle, textAlign: 'center', color: theme.colors.textMuted }}>
                   No hay clientes registrados
                 </td>
               </tr>
@@ -271,7 +310,7 @@ export default function ClientesClient({ initialClientes }: { initialClientes: C
                     {TYPE_LABELS[c.type] ?? c.type}
                   </span>
                 </td>
-                <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{c.email || '—'}</td>
+                <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{c.rubro || '—'}</td>
                 <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{c.phone || '—'}</td>
                 <td style={tdStyle}>
                   <span style={{
@@ -282,6 +321,13 @@ export default function ClientesClient({ initialClientes }: { initialClientes: C
                   }}>
                     {c.active ? 'Activo' : 'Inactivo'}
                   </span>
+                </td>
+                <td style={tdStyle}>
+                  {c.mostrar_en_landing ? (
+                    <span style={{ padding: '3px 10px', borderRadius: theme.radii.full, fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium, backgroundColor: `${theme.colors.primary}14`, color: theme.colors.primary }}>
+                      Sí
+                    </span>
+                  ) : <span style={{ color: theme.colors.textMuted }}>—</span>}
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right' }}>
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>

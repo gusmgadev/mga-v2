@@ -8,8 +8,16 @@ import Clients from "@/components/landing/clients"
 import Contact from "@/components/landing/contact"
 import Footer from "@/components/landing/footer"
 import JsonLd from "@/components/landing/json-ld"
+import { supabaseAdmin } from "@/services/supabase-admin"
 
-export default function Home() {
+export default async function Home() {
+  const { data: clientes } = await supabaseAdmin
+    .from('clientes')
+    .select('id, name, rubro, phone, address, imagen, pagina_web')
+    .eq('mostrar_en_landing', true)
+    .eq('active', true)
+    .order('name')
+
   return (
     <>
       <JsonLd />
@@ -20,7 +28,7 @@ export default function Home() {
         <Services />
         <Process />
         <SistemasZoologic />
-        <Clients />
+        <Clients clientes={clientes ?? []} />
         <Contact />
       </main>
       <Footer />
