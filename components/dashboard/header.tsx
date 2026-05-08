@@ -5,6 +5,7 @@ import { theme } from '@/lib/theme'
 
 const titles: Record<string, string> = {
   '/dashboard': 'Dashboard',
+  '/dashboard/clientes': 'Clientes',
   '/dashboard/admin/usuarios': 'Usuarios',
   '/dashboard/admin/roles': 'Roles',
   '/dashboard/admin/permisos': 'Permisos',
