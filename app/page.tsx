@@ -10,6 +10,8 @@ import Footer from "@/components/landing/footer"
 import JsonLd from "@/components/landing/json-ld"
 import { supabaseAdmin } from "@/services/supabase-admin"
 
+export const dynamic = 'force-dynamic'
+
 export default async function Home() {
   const { data: clientes } = await supabaseAdmin
     .from('clientes')
