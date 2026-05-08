@@ -28,9 +28,7 @@ export const clientes: Client[] = [
   { name: "New Wine", location: "Comodoro Rivadavia", category: "Vinoteca", address: "España 539", phone: "297 4299368", show: true, logo: "/images/clientes/newwine.jpg" },
     { name: "Ambientar", location: "Rada Tilly", category: "Vinoteca", address: "Juan Guteff 2075", phone: "2975904444", show: true, logo: "/images/clientes/ambientar.jpg" },
     { name: "Las Otillas", location: "Trelew", category: "Indumentaria", address: "Belgrano 394", phone: " 2804-42-9311", show: true, logo: "/images/clientes/otillas.jpg" },
-    
-
-    { name: "Todo Luz", location: "Rada Tilly", category: "Electricidad", address: "Lago Menéndez 2255", phone: "297 4190187", show: true, logo: "/images/clientes/todoluz.jpg" },
+     { name: "Todo Luz", location: "Rada Tilly", category: "Electricidad", address: "Lago Menéndez 2255", phone: "297 4190187", show: true, logo: "/images/clientes/todoluz.jpg" },
      { name: "Tijuana", location: "Comodoro Rivadavia", category: "Indumentaria", address: "Av.Kenedy 2226", phone: "2974214475", show: true, logo: "/images/clientes/tijuana.jpg" },
   { name: "Iveco", location: "Rada Tilly", category: "Venta de camiones", address: "Av. Hipólito Yrigoyen 5150", phone: "297 541-3893", show: true, logo: "/images/clientes/iveco.jpg" },
        { name: "Buddies CR", location: "Comodoro Rivadavia", category: "Indumentaria", address: "San Martin 548", phone: "2974529526", show: true, logo: "/images/clientes/buddies.jpg" },
