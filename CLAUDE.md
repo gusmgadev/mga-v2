@@ -113,7 +113,9 @@ mga-v2/
 │   ├── landing/                        # 9 componentes (Navbar, Hero, Services, etc.)
 │   └── dashboard/
 │       ├── sidebar.tsx                 # Sidebar con nav items
-│       └── header.tsx
+│       ├── header.tsx
+│       ├── QuickCreateClienteModal.tsx # Mini-modal para crear cliente inline (createPortal)
+│       └── QuickCreateActivoModal.tsx  # Mini-modal para crear activo inline (createPortal)
 ├── lib/
 │   ├── theme.ts                        # FUENTE DE VERDAD — colores, tipografía, datos de contacto
 │   ├── auth.ts                         # Configuración NextAuth
@@ -308,6 +310,24 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 - El total se calcula: `items.reduce((sum, i) => sum + i.cantidad * i.precio_unitario, 0)`
 - Sin campo `valor` en la tabla — siempre calculado desde ítems
 
+### Quick-create inline (modales dentro de formularios)
+Patrón para crear entidades relacionadas sin salir del formulario actual.
+
+**Componentes:** `QuickCreateClienteModal` y `QuickCreateActivoModal` en `components/dashboard/`.
+- Reciben `onClose` y `onCreated(entidad)` como props
+- **Usan `createPortal(jsx, document.body)`** — OBLIGATORIO para evitar `<form>` anidados en el DOM (HTML no lo permite y causa error de hidratación)
+- Se renderizan con `zIndex: 60` (sobre los modales padre que usan `zIndex: 50`)
+- El cliente que los usa mantiene el array de entidades en estado local (`localClientes`, `localActivos`) y llama `form.setValue(campo, id)` en el callback `onCreated`
+
+**Dónde están integrados:**
+| Lugar | Quick-create disponible |
+|-------|------------------------|
+| Nuevo presupuesto / nuevo servicio | + Cliente + Activo (activo requiere cliente seleccionado) |
+| Editar presupuesto / servicio (detalle) | + Activo (cliente fijo, pre-rellenado) |
+| Nuevo / editar activo | + Cliente |
+
+**Botón `+` deshabilitado:** cuando no hay `cliente_id` seleccionado y el activo lo necesita → `opacity: 0.35, cursor: not-allowed`.
+
 ---
 
 ## Landing pública — componentes
@@ -360,3 +380,4 @@ RESEND_FROM_EMAIL=
 4. **Presupuestos sin `valor`** — el total es calculado, no guardado. No agregar esa columna.
 5. **Módulo nuevo** → recordar agregar en: (a) SQL `role_permissions`, (b) `sidebar.tsx`, (c) `permissions/route.ts` array de admin.
 6. **`params` en Next.js 16** → siempre `const { id } = await params`, nunca `params.id` directo.
+7. **Modales dentro de `<form>`** → usar siempre `createPortal(jsx, document.body)`. HTML prohíbe `<form>` anidados; sin portal causa error de hidratación. Aplica a `QuickCreateClienteModal` y `QuickCreateActivoModal`.
