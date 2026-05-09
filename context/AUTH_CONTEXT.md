@@ -226,12 +226,13 @@ declare module 'next-auth' {
 | `app/auth/registro/page.tsx` | Página de registro |
 | `app/api/auth/registro/route.ts` | Endpoint de registro |
 | `app/api/permissions/route.ts` | Endpoint de consulta de permisos |
-| `app/dashboard/admin/usuarios/` | Panel gestión de usuarios (solo Administrador) |
-| `app/api/admin/usuarios/[id]/route.ts` | Endpoint cambio de rol |
-| `app/dashboard/admin/roles/` | Panel gestión de roles (solo Administrador) |
-| `app/api/admin/roles/route.ts` | Endpoint CRUD de roles |
-| `app/dashboard/admin/permisos/` | Panel gestión de permisos (solo Administrador) |
-| `app/api/admin/permisos/route.ts` | Endpoint GET/PATCH de permisos |
+| `app/(dashboard)/dashboard/admin/usuarios/` | Panel gestión de usuarios (solo Administrador) ✅ |
+| `app/api/dashboard/usuarios/[id]/route.ts` | Endpoint CRUD usuarios ✅ |
+| `app/(dashboard)/dashboard/admin/roles/` | Panel gestión de roles (solo Administrador) ✅ |
+| `app/api/dashboard/roles/route.ts` | Endpoint CRUD de roles ✅ |
+| `app/(dashboard)/dashboard/admin/permisos/` | Panel gestión de permisos (solo Administrador) ✅ |
+| `app/api/dashboard/permisos/route.ts` | Endpoint GET/PATCH de permisos ✅ |
+| `hooks/usePermissions.ts` | Hook cliente para leer permisos del rol ❌ pendiente |
 
 ---
 
@@ -239,24 +240,22 @@ declare module 'next-auth' {
 
 Seguir este orden evita errores de dependencias entre archivos.
 
-| # | Tarea | Commit antes? |
+| # | Tarea | Estado |
 |---|---|---|
-| 1 | Crear tablas SQL en Supabase (roles → users → role_permissions) | — |
-| 2 | Variables de entorno (.env.local + Vercel) | — |
-| 3 | types/auth.ts | — |
-| 4 | lib/auth.ts (NextAuth config) | — |
-| 5 | proxy.ts | ✓ commit limpio |
-| 6 | Página de Login | ✓ commit limpio |
-| 7 | Página de Registro + endpoint | ✓ commit limpio |
-| 8 | Botón de logout en el dashboard | ✓ commit limpio |
-| 9 | hook usePermissions + endpoint | ✓ commit limpio |
-| 10 | Panel admin/usuarios | ✓ commit limpio |
-| 11 | Endpoint cambio de rol | ✓ commit limpio |
-| 12 | Panel admin/roles (CRUD de roles) | ✓ commit limpio |
-| 13 | Panel admin/permisos | ✓ commit limpio |
-| 14 | Aplicar usePermissions en todos los módulos | ✓ commit limpio |
-| 15 | Probar flujo completo en local | — |
-| 16 | Deploy y probar en producción | — |
+| 1 | Crear tablas SQL en Supabase (roles → users → role_permissions) | ✅ |
+| 2 | Variables de entorno (.env.local + Vercel) | ✅ |
+| 3 | types/auth.ts | ✅ |
+| 4 | lib/auth.ts (NextAuth config) | ✅ |
+| 5 | middleware.ts | ✅ |
+| 6 | Página de Login | ✅ |
+| 7 | Página de Registro + endpoint | ✅ |
+| 8 | Sidebar, Header y logout en el dashboard | ✅ |
+| 9 | Panel admin/usuarios | ✅ |
+| 10 | Panel admin/roles (CRUD de roles) | ✅ |
+| 11 | Panel admin/permisos | ✅ |
+| 12 | hook usePermissions + endpoint | ❌ pendiente |
+| 13 | Aplicar usePermissions en todos los módulos | ❌ pendiente |
+| 14 | Probar flujo completo en producción | ✅ |
 
 ---
 

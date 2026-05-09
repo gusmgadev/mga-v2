@@ -15,6 +15,8 @@ export default async function PresupuestoDetallePage({
   const permisos = await getModulePermisos(session.user.role_id, session.user.role, 'presupuestos')
   if (!permisos.can_view) redirect('/dashboard')
 
+  const serviciosPermisos = await getModulePermisos(session.user.role_id, session.user.role, 'servicios')
+
   const { id } = await params
 
   const { data: presupuesto, error } = await supabaseAdmin
@@ -31,11 +33,19 @@ export default async function PresupuestoDetallePage({
     .eq('activo', true)
     .order('nombre')
 
+  const { data: servicioAsociado } = await supabaseAdmin
+    .from('servicios')
+    .select('id, titulo')
+    .eq('presupuesto_id', parseInt(id))
+    .maybeSingle()
+
   return (
     <PresupuestoDetalleClient
       initialPresupuesto={presupuesto}
       activos={activos ?? []}
       permisos={permisos}
+      serviciosPermisos={serviciosPermisos}
+      servicioAsociado={servicioAsociado ?? null}
     />
   )
 }

@@ -11,6 +11,7 @@ const createSchema = z.object({
   estado: z.enum(['INGRESADO', 'EN PROCESO', 'CANCELADO', 'RECHAZADO', 'TERMINADO', 'PRESUPUESTADO']),
   estado_pago: z.enum(['PENDIENTE', 'SIN CARGO', 'GARANTIA', 'PAGO PARCIAL', 'PAGADO']),
   valor: z.number().min(0),
+  presupuesto_id: z.number().int().positive().nullable().optional(),
 })
 
 async function requireSession() {

@@ -1,11 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Link from 'next/link'
-import { ArrowLeft, Pencil, X, Loader2, AlertCircle, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Pencil, X, Loader2, AlertCircle, Plus, Trash2, Wrench, ExternalLink } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 import QuickCreateActivoModal from '@/components/dashboard/QuickCreateActivoModal'
@@ -39,6 +40,18 @@ type Presupuesto = {
 type ActivoSimple = { id: number; nombre: string; cliente_id: number }
 
 const ESTADOS: PresupuestoEstado[] = ['BORRADOR', 'ENVIADO', 'APROBADO', 'RECHAZADO', 'VENCIDO']
+
+const ESTADOS_SERVICIO = ['INGRESADO', 'EN PROCESO', 'CANCELADO', 'RECHAZADO', 'TERMINADO', 'PRESUPUESTADO'] as const
+const ESTADOS_PAGO = ['PENDIENTE', 'SIN CARGO', 'GARANTIA', 'PAGO PARCIAL', 'PAGADO'] as const
+
+const genServicioSchema = z.object({
+  titulo: z.string().min(2, 'Mínimo 2 caracteres'),
+  descripcion: z.string().optional(),
+  estado: z.enum(ESTADOS_SERVICIO),
+  estado_pago: z.enum(ESTADOS_PAGO),
+  valor: z.number().min(0, 'El valor no puede ser negativo'),
+})
+type GenServicioForm = z.infer<typeof genServicioSchema>
 
 const ESTADO_COLORS: Record<PresupuestoEstado, { bg: string; text: string }> = {
   BORRADOR:  { bg: '#F3F4F6', text: '#6B7280' },
@@ -123,20 +136,29 @@ export default function PresupuestoDetalleClient({
   initialPresupuesto,
   activos,
   permisos,
+  serviciosPermisos,
+  servicioAsociado,
 }: {
   initialPresupuesto: Presupuesto
   activos: ActivoSimple[]
   permisos: ModulePermisos
+  serviciosPermisos: ModulePermisos
+  servicioAsociado: { id: number; titulo: string } | null
 }) {
+  const router = useRouter()
   const [presupuesto, setPresupuesto] = useState(initialPresupuesto)
   const [items, setItems] = useState<Item[]>(
     [...initialPresupuesto.presupuesto_items].sort((a, b) => a.id - b.id)
   )
   const [localActivos, setLocalActivos] = useState(activos)
+  const [localServicioAsociado, setLocalServicioAsociado] = useState(servicioAsociado)
   const [showEdit, setShowEdit] = useState(false)
   const [showQCActivo, setShowQCActivo] = useState(false)
+  const [showGenServicio, setShowGenServicio] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
   const [editLoading, setEditLoading] = useState(false)
+  const [genServicioLoading, setGenServicioLoading] = useState(false)
+  const [genServicioError, setGenServicioError] = useState<string | null>(null)
 
   // New item form state
   const [newDesc, setNewDesc] = useState('')
@@ -166,6 +188,50 @@ export default function PresupuestoDetalleClient({
       fecha_vencimiento: presupuesto.fecha_vencimiento ?? '',
     },
   })
+
+  const genServicioForm = useForm<GenServicioForm>({
+    resolver: zodResolver(genServicioSchema),
+    defaultValues: {
+      titulo: presupuesto.titulo,
+      descripcion: presupuesto.descripcion ?? '',
+      estado: 'INGRESADO',
+      estado_pago: 'PENDIENTE',
+      valor: total,
+    },
+  })
+
+  const openGenServicio = () => {
+    genServicioForm.reset({
+      titulo: presupuesto.titulo,
+      descripcion: presupuesto.descripcion ?? '',
+      estado: 'INGRESADO',
+      estado_pago: 'PENDIENTE',
+      valor: total,
+    })
+    setGenServicioError(null)
+    setShowGenServicio(true)
+  }
+
+  const onGenServicioSubmit = async (data: GenServicioForm) => {
+    setGenServicioLoading(true)
+    setGenServicioError(null)
+    const res = await fetch('/api/dashboard/servicios', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...data,
+        cliente_id: presupuesto.cliente_id,
+        activo_id: presupuesto.activo_id ?? null,
+        presupuesto_id: presupuesto.id,
+      }),
+    })
+    const json = await res.json()
+    setGenServicioLoading(false)
+    if (!res.ok) { setGenServicioError(json.error); return }
+    setLocalServicioAsociado({ id: json.id, titulo: json.titulo })
+    setShowGenServicio(false)
+    router.push(`/dashboard/servicios/${json.id}`)
+  }
 
   const openEdit = () => {
     editForm.reset({
@@ -238,22 +304,41 @@ export default function PresupuestoDetalleClient({
 
   return (
     <>
-      {/* Back + edit */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+      {/* Back + actions */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', gap: '12px', flexWrap: 'wrap' }}>
         <Link
           href="/dashboard/presupuestos"
           style={{ display: 'flex', alignItems: 'center', gap: '6px', color: theme.colors.textMuted, textDecoration: 'none', fontSize: theme.fontSizes.sm }}
         >
           <ArrowLeft size={15} /> Volver a Presupuestos
         </Link>
-        {permisos.can_edit && (
-          <button
-            onClick={openEdit}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', backgroundColor: '#fff', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, cursor: 'pointer', color: theme.colors.text }}
-          >
-            <Pencil size={13} /> Editar presupuesto
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {presupuesto.estado === 'APROBADO' && (
+            localServicioAsociado ? (
+              <Link
+                href={`/dashboard/servicios/${localServicioAsociado.id}`}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', backgroundColor: `${theme.colors.success}14`, border: `1px solid ${theme.colors.success}`, borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, color: theme.colors.success, textDecoration: 'none' }}
+              >
+                <ExternalLink size={13} /> Ver servicio asociado
+              </Link>
+            ) : serviciosPermisos.can_create ? (
+              <button
+                onClick={openGenServicio}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', backgroundColor: theme.colors.success, border: 'none', borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, cursor: 'pointer', color: '#fff' }}
+              >
+                <Wrench size={13} /> Generar Servicio
+              </button>
+            ) : null
+          )}
+          {permisos.can_edit && (
+            <button
+              onClick={openEdit}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', backgroundColor: '#fff', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, cursor: 'pointer', color: theme.colors.text }}
+            >
+              <Pencil size={13} /> Editar presupuesto
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Info card */}
@@ -433,6 +518,86 @@ export default function PresupuestoDetalleClient({
           clienteIdPreset={presupuesto.cliente_id}
           clientes={[]}
         />
+      )}
+
+      {/* Generar Servicio modal */}
+      {showGenServicio && (
+        <ModalOverlay onClose={() => setShowGenServicio(false)}>
+          <ModalCard title="Generar Servicio desde Presupuesto" onClose={() => setShowGenServicio(false)}>
+            <p style={{ margin: '0 0 16px', fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
+              Cliente: <strong style={{ color: theme.colors.text }}>{presupuesto.clientes?.name}</strong>
+              {presupuesto.activos && <> · Activo: <strong style={{ color: theme.colors.text }}>{presupuesto.activos.nombre}</strong></>}
+            </p>
+            <form onSubmit={genServicioForm.handleSubmit(onGenServicioSubmit)}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <label style={labelStyle}>Título <span style={{ color: theme.colors.error }}>*</span></label>
+                  <input {...genServicioForm.register('titulo')} style={inputStyle} />
+                  {genServicioForm.formState.errors.titulo && (
+                    <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+                      {genServicioForm.formState.errors.titulo.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Descripción</label>
+                  <textarea
+                    {...genServicioForm.register('descripcion')}
+                    rows={3}
+                    style={{ ...inputStyle, resize: 'vertical' }}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div>
+                    <label style={labelStyle}>Estado</label>
+                    <select {...genServicioForm.register('estado')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+                      {ESTADOS_SERVICIO.map((e) => <option key={e} value={e}>{e}</option>)}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={labelStyle}>Estado de pago</label>
+                    <select {...genServicioForm.register('estado_pago')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+                      {ESTADOS_PAGO.map((e) => <option key={e} value={e}>{e}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={labelStyle}>
+                    Valor <span style={{ color: theme.colors.textMuted, fontWeight: theme.fontWeights.regular }}>
+                      (pre-cargado desde total del presupuesto)
+                    </span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    {...genServicioForm.register('valor', { valueAsNumber: true })}
+                    style={inputStyle}
+                  />
+                  {genServicioForm.formState.errors.valor && (
+                    <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+                      {genServicioForm.formState.errors.valor.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {genServicioError && <div style={{ marginTop: '14px' }}><ErrorBox message={genServicioError} /></div>}
+              <button
+                type="submit"
+                disabled={genServicioLoading}
+                style={{ width: '100%', padding: '11px', marginTop: '20px', backgroundColor: genServicioLoading ? `${theme.colors.success}99` : theme.colors.success, color: '#fff', fontSize: theme.fontSizes.base, fontWeight: theme.fontWeights.medium, border: 'none', borderRadius: theme.radii.sm, cursor: genServicioLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              >
+                {genServicioLoading && <Loader2 size={15} className="animate-spin" />}
+                {genServicioLoading ? 'Creando servicio...' : 'Crear Servicio'}
+              </button>
+            </form>
+          </ModalCard>
+        </ModalOverlay>
       )}
 
       {/* Edit modal */}
