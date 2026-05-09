@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { ArrowLeft, Pencil, X, Loader2, AlertCircle, Plus, Trash2, CheckCircle2 } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
+import QuickCreateActivoModal from '@/components/dashboard/QuickCreateActivoModal'
 
 type ServicioEstado = 'INGRESADO' | 'EN PROCESO' | 'CANCELADO' | 'RECHAZADO' | 'TERMINADO' | 'PRESUPUESTADO'
 type EstadoPago = 'PENDIENTE' | 'SIN CARGO' | 'GARANTIA' | 'PAGO PARCIAL' | 'PAGADO'
@@ -100,6 +101,11 @@ const labelStyle = {
   display: 'block', fontSize: theme.fontSizes.sm,
   fontWeight: theme.fontWeights.medium, color: theme.colors.text, marginBottom: '6px',
 }
+const quickAddBtnStyle: React.CSSProperties = {
+  padding: '10px 10px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm,
+  backgroundColor: '#fff', cursor: 'pointer', color: theme.colors.primary,
+  display: 'flex', alignItems: 'center', flexShrink: 0,
+}
 const cardStyle = {
   backgroundColor: '#fff', borderRadius: theme.radii.md,
   border: `1px solid ${theme.colors.border}`, overflow: 'hidden', marginBottom: '20px',
@@ -160,7 +166,9 @@ export default function ServicioDetalleClient({
   const [servicio, setServicio] = useState(initialServicio)
   const [tareas, setTareas] = useState<Tarea[]>(initialServicio.servicio_tareas ?? [])
   const [pagos, setPagos] = useState<Pago[]>(initialServicio.servicio_pagos ?? [])
+  const [localActivos, setLocalActivos] = useState(activos)
   const [showEdit, setShowEdit] = useState(false)
+  const [showQCActivo, setShowQCActivo] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
   const [editLoading, setEditLoading] = useState(false)
 
@@ -181,7 +189,13 @@ export default function ServicioDetalleClient({
   const [pagoError, setPagoError] = useState<string | null>(null)
   const [deletingPagoId, setDeletingPagoId] = useState<number | null>(null)
 
-  const activosFiltrados = activos.filter((a) => a.cliente_id === servicio.cliente_id)
+  const activosFiltrados = localActivos.filter((a) => a.cliente_id === servicio.cliente_id)
+
+  const handleActivoCreado = (a: { id: number; nombre: string; cliente_id: number }) => {
+    setLocalActivos((prev) => [...prev, a].sort((a, b) => a.nombre.localeCompare(b.nombre)))
+    editForm.setValue('activo_id', a.id)
+    setShowQCActivo(false)
+  }
 
   const editForm = useForm<EditForm>({
     resolver: zodResolver(editSchema),
@@ -574,6 +588,15 @@ export default function ServicioDetalleClient({
         )}
       </div>
 
+      {showQCActivo && (
+        <QuickCreateActivoModal
+          onClose={() => setShowQCActivo(false)}
+          onCreated={handleActivoCreado}
+          clienteIdPreset={servicio.cliente_id}
+          clientes={[]}
+        />
+      )}
+
       {/* Edit modal */}
       {showEdit && (
         <ModalOverlay onClose={() => setShowEdit(false)}>
@@ -583,15 +606,20 @@ export default function ServicioDetalleClient({
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={labelStyle}>Activo (opcional)</label>
-                    <select
-                      {...editForm.register('activo_id', { setValueAs: (v) => (v === '' || v === '0' || v === 0) ? null : Number(v) })}
-                      style={{ ...inputStyle, backgroundColor: '#fff' }}
-                    >
-                      <option value="">Sin activo</option>
-                      {activosFiltrados.map((a) => (
-                        <option key={a.id} value={a.id}>{a.nombre}</option>
-                      ))}
-                    </select>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <select
+                        {...editForm.register('activo_id', { setValueAs: (v) => (v === '' || v === '0' || v === 0) ? null : Number(v) })}
+                        style={{ ...inputStyle, flex: 1, backgroundColor: '#fff' }}
+                      >
+                        <option value="">Sin activo</option>
+                        {activosFiltrados.map((a) => (
+                          <option key={a.id} value={a.id}>{a.nombre}</option>
+                        ))}
+                      </select>
+                      <button type="button" title="Crear nuevo activo" onClick={() => setShowQCActivo(true)} style={quickAddBtnStyle}>
+                        <Plus size={14} />
+                      </button>
+                    </div>
                   </div>
 
                   <div style={{ gridColumn: '1 / -1' }}>

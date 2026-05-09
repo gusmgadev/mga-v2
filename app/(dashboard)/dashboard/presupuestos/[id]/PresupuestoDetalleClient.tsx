@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { ArrowLeft, Pencil, X, Loader2, AlertCircle, Plus, Trash2 } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
+import QuickCreateActivoModal from '@/components/dashboard/QuickCreateActivoModal'
 
 type PresupuestoEstado = 'BORRADOR' | 'ENVIADO' | 'APROBADO' | 'RECHAZADO' | 'VENCIDO'
 
@@ -64,6 +65,11 @@ const inputStyle = {
 const labelStyle = {
   display: 'block', fontSize: theme.fontSizes.sm,
   fontWeight: theme.fontWeights.medium, color: theme.colors.text, marginBottom: '6px',
+}
+const quickAddBtnStyle: React.CSSProperties = {
+  padding: '10px 10px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm,
+  backgroundColor: '#fff', cursor: 'pointer', color: theme.colors.primary,
+  display: 'flex', alignItems: 'center', flexShrink: 0,
 }
 const cardStyle = {
   backgroundColor: '#fff', borderRadius: theme.radii.md,
@@ -126,7 +132,9 @@ export default function PresupuestoDetalleClient({
   const [items, setItems] = useState<Item[]>(
     [...initialPresupuesto.presupuesto_items].sort((a, b) => a.id - b.id)
   )
+  const [localActivos, setLocalActivos] = useState(activos)
   const [showEdit, setShowEdit] = useState(false)
+  const [showQCActivo, setShowQCActivo] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
   const [editLoading, setEditLoading] = useState(false)
 
@@ -138,7 +146,13 @@ export default function PresupuestoDetalleClient({
   const [itemError, setItemError] = useState<string | null>(null)
   const [deletingItemId, setDeletingItemId] = useState<number | null>(null)
 
-  const activosFiltrados = activos.filter((a) => a.cliente_id === presupuesto.cliente_id)
+  const activosFiltrados = localActivos.filter((a) => a.cliente_id === presupuesto.cliente_id)
+
+  const handleActivoCreado = (a: { id: number; nombre: string; cliente_id: number }) => {
+    setLocalActivos((prev) => [...prev, a].sort((a, b) => a.nombre.localeCompare(b.nombre)))
+    editForm.setValue('activo_id', a.id)
+    setShowQCActivo(false)
+  }
   const total = items.reduce((sum, i) => sum + Number(i.cantidad) * Number(i.precio_unitario), 0)
   const newSubtotal = Number(newQty) * Number(newPrice)
 
@@ -412,6 +426,15 @@ export default function PresupuestoDetalleClient({
         )}
       </div>
 
+      {showQCActivo && (
+        <QuickCreateActivoModal
+          onClose={() => setShowQCActivo(false)}
+          onCreated={handleActivoCreado}
+          clienteIdPreset={presupuesto.cliente_id}
+          clientes={[]}
+        />
+      )}
+
       {/* Edit modal */}
       {showEdit && (
         <ModalOverlay onClose={() => setShowEdit(false)}>
@@ -421,15 +444,20 @@ export default function PresupuestoDetalleClient({
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={labelStyle}>Activo (opcional)</label>
-                    <select
-                      {...editForm.register('activo_id', { setValueAs: (v) => (v === '' || v === '0' || v === 0) ? null : Number(v) })}
-                      style={{ ...inputStyle, backgroundColor: '#fff' }}
-                    >
-                      <option value="">Sin activo asociado</option>
-                      {activosFiltrados.map((a) => (
-                        <option key={a.id} value={a.id}>{a.nombre}</option>
-                      ))}
-                    </select>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <select
+                        {...editForm.register('activo_id', { setValueAs: (v) => (v === '' || v === '0' || v === 0) ? null : Number(v) })}
+                        style={{ ...inputStyle, flex: 1, backgroundColor: '#fff' }}
+                      >
+                        <option value="">Sin activo asociado</option>
+                        {activosFiltrados.map((a) => (
+                          <option key={a.id} value={a.id}>{a.nombre}</option>
+                        ))}
+                      </select>
+                      <button type="button" title="Crear nuevo activo" onClick={() => setShowQCActivo(true)} style={quickAddBtnStyle}>
+                        <Plus size={14} />
+                      </button>
+                    </div>
                   </div>
 
                   <div style={{ gridColumn: '1 / -1' }}>

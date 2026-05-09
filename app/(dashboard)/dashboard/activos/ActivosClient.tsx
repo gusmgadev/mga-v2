@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { Plus, Pencil, Trash2, X, Loader2, AlertCircle } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
+import QuickCreateClienteModal from '@/components/dashboard/QuickCreateClienteModal'
 
 type Activo = {
   id: number
@@ -42,6 +43,11 @@ const inputStyle = {
 const labelStyle = {
   display: 'block', fontSize: theme.fontSizes.sm,
   fontWeight: theme.fontWeights.medium, color: theme.colors.text, marginBottom: '6px',
+}
+const quickAddBtnStyle: React.CSSProperties = {
+  padding: '10px 10px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm,
+  backgroundColor: '#fff', cursor: 'pointer', color: theme.colors.primary,
+  display: 'flex', alignItems: 'center', flexShrink: 0,
 }
 const thStyle: React.CSSProperties = {
   textAlign: 'left', padding: '12px 16px', fontSize: theme.fontSizes.xs,
@@ -85,24 +91,40 @@ function ErrorBox({ message }: { message: string }) {
 function ActivoFormFields({
   form,
   clientes,
+  setClientes,
 }: {
   form: ReturnType<typeof useForm<ActivoForm>>
   clientes: ClienteSimple[]
+  setClientes: React.Dispatch<React.SetStateAction<ClienteSimple[]>>
 }) {
+  const [showQCCliente, setShowQCCliente] = useState(false)
+
+  const handleClienteCreado = (c: { id: number; name: string }) => {
+    setClientes((prev) => [...prev, c].sort((a, b) => a.name.localeCompare(b.name)))
+    form.setValue('cliente_id', c.id)
+    setShowQCCliente(false)
+  }
+
   return (
+    <>
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
         <div style={{ gridColumn: '1 / -1' }}>
           <label style={labelStyle}>Cliente <span style={{ color: theme.colors.error }}>*</span></label>
-          <select
-            {...form.register('cliente_id', { valueAsNumber: true })}
-            style={{ ...inputStyle, backgroundColor: '#fff' }}
-          >
-            <option value={0}>Seleccioná un cliente...</option>
-            {clientes.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <select
+              {...form.register('cliente_id', { valueAsNumber: true })}
+              style={{ ...inputStyle, flex: 1, backgroundColor: '#fff' }}
+            >
+              <option value={0}>Seleccioná un cliente...</option>
+              {clientes.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            <button type="button" title="Crear nuevo cliente" onClick={() => setShowQCCliente(true)} style={quickAddBtnStyle}>
+              <Plus size={14} />
+            </button>
+          </div>
           {form.formState.errors.cliente_id && (
             <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
               {form.formState.errors.cliente_id.message}
@@ -150,6 +172,10 @@ function ActivoFormFields({
         </div>
       </div>
     </div>
+    {showQCCliente && (
+      <QuickCreateClienteModal onClose={() => setShowQCCliente(false)} onCreated={handleClienteCreado} />
+    )}
+    </>
   )
 }
 
@@ -166,13 +192,14 @@ export default function ActivosClient({
 }) {
   const router = useRouter()
   const [activos, setActivos] = useState(initialActivos)
+  const [localClientes, setLocalClientes] = useState(clientes)
   const [showCreate, setShowCreate] = useState(false)
   const [editTarget, setEditTarget] = useState<Activo | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Activo | null>(null)
   const [globalError, setGlobalError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
 
-  const clienteMap = Object.fromEntries(clientes.map((c) => [c.id, c.name]))
+  const clienteMap = Object.fromEntries(localClientes.map((c) => [c.id, c.name]))
 
   const createForm = useForm<ActivoForm>({
     resolver: zodResolver(activoSchema),
@@ -351,7 +378,7 @@ export default function ActivosClient({
         <ModalOverlay onClose={() => setShowCreate(false)}>
           <ModalCard title="Nuevo activo" onClose={() => setShowCreate(false)}>
             <form onSubmit={createForm.handleSubmit(onCreateSubmit)}>
-              <ActivoFormFields form={createForm} clientes={clientes} />
+              <ActivoFormFields form={createForm} clientes={localClientes} setClientes={setLocalClientes} />
               {createError && <div style={{ marginTop: '14px' }}><ErrorBox message={createError} /></div>}
               <button
                 type="submit"
@@ -371,7 +398,7 @@ export default function ActivosClient({
         <ModalOverlay onClose={() => setEditTarget(null)}>
           <ModalCard title="Editar activo" onClose={() => setEditTarget(null)}>
             <form onSubmit={editForm.handleSubmit(onEditSubmit)}>
-              <ActivoFormFields form={editForm} clientes={clientes} />
+              <ActivoFormFields form={editForm} clientes={localClientes} setClientes={setLocalClientes} />
               {editError && <div style={{ marginTop: '14px' }}><ErrorBox message={editError} /></div>}
               <button
                 type="submit"

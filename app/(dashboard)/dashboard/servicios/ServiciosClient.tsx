@@ -9,6 +9,8 @@ import { Plus, Trash2, X, Loader2, AlertCircle, Eye } from 'lucide-react'
 import Link from 'next/link'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
+import QuickCreateClienteModal from '@/components/dashboard/QuickCreateClienteModal'
+import QuickCreateActivoModal from '@/components/dashboard/QuickCreateActivoModal'
 
 type ServicioEstado = 'INGRESADO' | 'EN PROCESO' | 'CANCELADO' | 'RECHAZADO' | 'TERMINADO' | 'PRESUPUESTADO'
 type EstadoPago = 'PENDIENTE' | 'SIN CARGO' | 'GARANTIA' | 'PAGO PARCIAL' | 'PAGADO'
@@ -68,6 +70,11 @@ const inputStyle = {
 const labelStyle = {
   display: 'block', fontSize: theme.fontSizes.sm,
   fontWeight: theme.fontWeights.medium, color: theme.colors.text, marginBottom: '6px',
+}
+const quickAddBtnStyle: React.CSSProperties = {
+  padding: '10px 10px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm,
+  backgroundColor: '#fff', cursor: 'pointer', color: theme.colors.primary,
+  display: 'flex', alignItems: 'center', flexShrink: 0,
 }
 const thStyle: React.CSSProperties = {
   textAlign: 'left', padding: '12px 16px', fontSize: theme.fontSizes.xs,
@@ -129,29 +136,53 @@ function PagoBadge({ estado }: { estado: EstadoPago }) {
 function ServicioFormFields({
   form,
   clientes,
+  setClientes,
   activos,
+  setActivos,
 }: {
   form: ReturnType<typeof useForm<ServicioForm>>
   clientes: ClienteSimple[]
+  setClientes: React.Dispatch<React.SetStateAction<ClienteSimple[]>>
   activos: ActivoSimple[]
+  setActivos: React.Dispatch<React.SetStateAction<ActivoSimple[]>>
 }) {
+  const [showQCCliente, setShowQCCliente] = useState(false)
+  const [showQCActivo, setShowQCActivo] = useState(false)
   const clienteId = form.watch('cliente_id')
   const activosFiltrados = activos.filter((a) => a.cliente_id === clienteId)
 
+  const handleClienteCreado = (c: { id: number; name: string }) => {
+    setClientes((prev) => [...prev, c].sort((a, b) => a.name.localeCompare(b.name)))
+    form.setValue('cliente_id', c.id)
+    setShowQCCliente(false)
+  }
+
+  const handleActivoCreado = (a: { id: number; nombre: string; cliente_id: number }) => {
+    setActivos((prev) => [...prev, a].sort((a, b) => a.nombre.localeCompare(b.nombre)))
+    form.setValue('activo_id', a.id)
+    setShowQCActivo(false)
+  }
+
   return (
+    <>
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
         <div style={{ gridColumn: '1 / -1' }}>
           <label style={labelStyle}>Cliente <span style={{ color: theme.colors.error }}>*</span></label>
-          <select
-            {...form.register('cliente_id', { valueAsNumber: true })}
-            style={{ ...inputStyle, backgroundColor: '#fff' }}
-          >
-            <option value={0}>Seleccioná un cliente...</option>
-            {clientes.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <select
+              {...form.register('cliente_id', { valueAsNumber: true })}
+              style={{ ...inputStyle, flex: 1, backgroundColor: '#fff' }}
+            >
+              <option value={0}>Seleccioná un cliente...</option>
+              {clientes.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            <button type="button" title="Crear nuevo cliente" onClick={() => setShowQCCliente(true)} style={quickAddBtnStyle}>
+              <Plus size={14} />
+            </button>
+          </div>
           {form.formState.errors.cliente_id && (
             <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
               {form.formState.errors.cliente_id.message}
@@ -161,15 +192,26 @@ function ServicioFormFields({
 
         <div style={{ gridColumn: '1 / -1' }}>
           <label style={labelStyle}>Activo (opcional)</label>
-          <select
-            {...form.register('activo_id', { setValueAs: (v) => (v === '' || v === '0' || v === 0) ? null : Number(v) })}
-            style={{ ...inputStyle, backgroundColor: '#fff' }}
-          >
-            <option value="">Sin activo</option>
-            {activosFiltrados.map((a) => (
-              <option key={a.id} value={a.id}>{a.nombre}</option>
-            ))}
-          </select>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <select
+              {...form.register('activo_id', { setValueAs: (v) => (v === '' || v === '0' || v === 0) ? null : Number(v) })}
+              style={{ ...inputStyle, flex: 1, backgroundColor: '#fff' }}
+            >
+              <option value="">Sin activo</option>
+              {activosFiltrados.map((a) => (
+                <option key={a.id} value={a.id}>{a.nombre}</option>
+              ))}
+            </select>
+            <button
+              type="button"
+              title={clienteId ? 'Crear nuevo activo' : 'Seleccioná primero un cliente'}
+              onClick={() => setShowQCActivo(true)}
+              disabled={!clienteId}
+              style={{ ...quickAddBtnStyle, opacity: clienteId ? 1 : 0.35, cursor: clienteId ? 'pointer' : 'not-allowed' }}
+            >
+              <Plus size={14} />
+            </button>
+          </div>
         </div>
 
         <div style={{ gridColumn: '1 / -1' }}>
@@ -219,6 +261,18 @@ function ServicioFormFields({
         </div>
       </div>
     </div>
+    {showQCCliente && (
+      <QuickCreateClienteModal onClose={() => setShowQCCliente(false)} onCreated={handleClienteCreado} />
+    )}
+    {showQCActivo && (
+      <QuickCreateActivoModal
+        onClose={() => setShowQCActivo(false)}
+        onCreated={handleActivoCreado}
+        clienteIdPreset={clienteId || undefined}
+        clientes={clientes}
+      />
+    )}
+    </>
   )
 }
 
@@ -237,6 +291,8 @@ export default function ServiciosClient({
 }) {
   const router = useRouter()
   const [servicios, setServicios] = useState(initialServicios)
+  const [localClientes, setLocalClientes] = useState(clientes)
+  const [localActivos, setLocalActivos] = useState(activos)
   const [showCreate, setShowCreate] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Servicio | null>(null)
   const [globalError, setGlobalError] = useState<string | null>(null)
@@ -427,7 +483,7 @@ export default function ServiciosClient({
         <ModalOverlay onClose={() => setShowCreate(false)}>
           <ModalCard title="Nuevo servicio" onClose={() => setShowCreate(false)}>
             <form onSubmit={createForm.handleSubmit(onCreateSubmit)}>
-              <ServicioFormFields form={createForm} clientes={clientes} activos={activos} />
+              <ServicioFormFields form={createForm} clientes={localClientes} setClientes={setLocalClientes} activos={localActivos} setActivos={setLocalActivos} />
               {createError && <div style={{ marginTop: '14px' }}><ErrorBox message={createError} /></div>}
               <button
                 type="submit"
