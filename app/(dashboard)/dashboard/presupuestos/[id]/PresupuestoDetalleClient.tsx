@@ -30,6 +30,7 @@ type Presupuesto = {
   titulo: string
   descripcion: string | null
   estado: PresupuestoEstado
+  fecha: string
   fecha_vencimiento: string | null
   created_at: string
   clientes: { name: string } | null
@@ -66,6 +67,7 @@ const editSchema = z.object({
   titulo: z.string().min(2, 'Mínimo 2 caracteres'),
   descripcion: z.string().nullable().optional(),
   estado: z.enum(['BORRADOR', 'ENVIADO', 'APROBADO', 'RECHAZADO', 'VENCIDO']),
+  fecha: z.string().min(1, 'La fecha es requerida'),
   fecha_vencimiento: z.string().nullable().optional(),
 })
 type EditForm = z.infer<typeof editSchema>
@@ -185,6 +187,7 @@ export default function PresupuestoDetalleClient({
       titulo: presupuesto.titulo,
       descripcion: presupuesto.descripcion ?? '',
       estado: presupuesto.estado,
+      fecha: presupuesto.fecha,
       fecha_vencimiento: presupuesto.fecha_vencimiento ?? '',
     },
   })
@@ -239,6 +242,7 @@ export default function PresupuestoDetalleClient({
       titulo: presupuesto.titulo,
       descripcion: presupuesto.descripcion ?? '',
       estado: presupuesto.estado,
+      fecha: presupuesto.fecha,
       fecha_vencimiento: presupuesto.fecha_vencimiento ?? '',
     })
     setEditError(null)
@@ -357,14 +361,14 @@ export default function PresupuestoDetalleClient({
                 <span style={{ padding: '3px 10px', backgroundColor: bg, color: textColor, borderRadius: theme.radii.full, fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium }}>
                   {presupuesto.estado}
                 </span>
+                <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>
+                  Fecha: {formatVencimiento(presupuesto.fecha)}
+                </span>
                 {formatVencimiento(presupuesto.fecha_vencimiento) && (
                   <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>
-                    Vence: {formatVencimiento(presupuesto.fecha_vencimiento)}
+                    · Vence: {formatVencimiento(presupuesto.fecha_vencimiento)}
                   </span>
                 )}
-                <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>
-                  Creado: {formatFecha(presupuesto.created_at)}
-                </span>
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
@@ -644,20 +648,31 @@ export default function PresupuestoDetalleClient({
                     />
                   </div>
 
-                  <div>
-                    <label style={labelStyle}>Estado</label>
-                    <select {...editForm.register('estado')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
-                      {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
-                    </select>
-                  </div>
+                  <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={labelStyle}>Estado</label>
+                      <select {...editForm.register('estado')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+                        {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
+                      </select>
+                    </div>
 
-                  <div>
-                    <label style={labelStyle}>Vencimiento</label>
-                    <input
-                      type="date"
-                      {...editForm.register('fecha_vencimiento', { setValueAs: (v) => v || null })}
-                      style={inputStyle}
-                    />
+                    <div>
+                      <label style={labelStyle}>Fecha del presupuesto <span style={{ color: theme.colors.error }}>*</span></label>
+                      <input
+                        type="date"
+                        {...editForm.register('fecha')}
+                        style={inputStyle}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={labelStyle}>Vencimiento</label>
+                      <input
+                        type="date"
+                        {...editForm.register('fecha_vencimiento', { setValueAs: (v) => v || null })}
+                        style={inputStyle}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

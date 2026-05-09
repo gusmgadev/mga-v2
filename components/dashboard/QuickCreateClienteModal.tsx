@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { X, Loader2, AlertCircle } from 'lucide-react'
 import { theme } from '@/lib/theme'
 
@@ -9,6 +11,22 @@ interface Props {
   onClose: () => void
   onCreated: (c: { id: number; name: string }) => void
 }
+
+const clienteSchema = z.object({
+  name: z.string().min(2, 'Mínimo 2 caracteres'),
+  type: z.enum(['PARTICULAR', 'EMPRESA', 'COMERCIO']),
+  email: z.string().email('Email inválido').optional().or(z.literal('')),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  cuit: z.string().optional(),
+  rubro: z.string().optional(),
+  notes: z.string().optional(),
+  active: z.boolean(),
+  imagen: z.string().optional(),
+  pagina_web: z.string().url('URL inválida').optional().or(z.literal('')),
+  mostrar_en_landing: z.boolean(),
+})
+type ClienteForm = z.infer<typeof clienteSchema>
 
 const inputStyle = {
   width: '100%', padding: '9px 12px', fontSize: theme.fontSizes.sm,
@@ -21,31 +39,30 @@ const labelStyle = {
 }
 
 export default function QuickCreateClienteModal({ onClose, onCreated }: Props) {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const form = useForm<ClienteForm>({
+    resolver: zodResolver(clienteSchema),
+    defaultValues: {
+      type: 'PARTICULAR', active: true, mostrar_en_landing: false,
+      name: '', email: '', phone: '', address: '', cuit: '', rubro: '', notes: '', imagen: '', pagina_web: '',
+    },
+  })
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!name.trim()) { setError('El nombre es requerido'); return }
-    setLoading(true)
-    setError(null)
+  const isSubmitting = form.formState.isSubmitting
+  const rootError = form.formState.errors.root?.message
+
+  const handleSubmit = form.handleSubmit(async (data) => {
     const res = await fetch('/api/dashboard/clientes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: name.trim(),
-        email: email.trim() || undefined,
-        phone: phone.trim() || undefined,
-      }),
+      body: JSON.stringify(data),
     })
     const json = await res.json()
-    setLoading(false)
-    if (!res.ok) { setError(json.error ?? 'Error al crear el cliente'); return }
+    if (!res.ok) {
+      form.setError('root', { message: json.error ?? 'Error al crear el cliente' })
+      return
+    }
     onCreated(json)
-  }
+  })
 
   return createPortal(
     <div
@@ -54,9 +71,10 @@ export default function QuickCreateClienteModal({ onClose, onCreated }: Props) {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{ width: '100%', maxWidth: '400px', backgroundColor: '#fff', borderRadius: theme.radii.md, boxShadow: '0 12px 40px rgba(0,0,0,0.22)', overflow: 'hidden' }}
+        style={{ width: '100%', maxWidth: '520px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', backgroundColor: '#fff', borderRadius: theme.radii.md, boxShadow: '0 12px 40px rgba(0,0,0,0.22)' }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: `1px solid ${theme.colors.border}` }}>
+        {/* Header fijo */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: `1px solid ${theme.colors.border}`, flexShrink: 0 }}>
           <h3 style={{ margin: 0, fontSize: theme.fontSizes.base, fontWeight: theme.fontWeights.bold, color: theme.colors.text }}>
             Nuevo cliente
           </h3>
@@ -65,40 +83,86 @@ export default function QuickCreateClienteModal({ onClose, onCreated }: Props) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div>
-            <label style={labelStyle}>Nombre <span style={{ color: theme.colors.error }}>*</span></label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Nombre o razón social..."
-              style={inputStyle}
-              autoFocus
-            />
-          </div>
-          <div>
-            <label style={labelStyle}>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="contacto@empresa.com"
-              style={inputStyle}
-            />
-          </div>
-          <div>
-            <label style={labelStyle}>Teléfono</label>
-            <input
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+54 11 1234-5678"
-              style={inputStyle}
-            />
+        {/* Contenido scrolleable */}
+        <form onSubmit={handleSubmit} style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={labelStyle}>Nombre <span style={{ color: theme.colors.error }}>*</span></label>
+              <input {...form.register('name')} autoFocus style={inputStyle} placeholder="Nombre completo o razón social" />
+              {form.formState.errors.name && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{form.formState.errors.name.message}</p>}
+            </div>
+
+            <div>
+              <label style={labelStyle}>Tipo <span style={{ color: theme.colors.error }}>*</span></label>
+              <select {...form.register('type')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+                <option value="PARTICULAR">Particular</option>
+                <option value="EMPRESA">Empresa</option>
+                <option value="COMERCIO">Comercio</option>
+              </select>
+            </div>
+
+            <div>
+              <label style={labelStyle}>CUIT / DNI</label>
+              <input {...form.register('cuit')} style={inputStyle} placeholder="20-12345678-9" />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Rubro</label>
+              <input {...form.register('rubro')} style={inputStyle} placeholder="Ej: Indumentaria, Óptica..." />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Email</label>
+              <input {...form.register('email')} type="email" style={inputStyle} placeholder="cliente@email.com" />
+              {form.formState.errors.email && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{form.formState.errors.email.message}</p>}
+            </div>
+
+            <div>
+              <label style={labelStyle}>Teléfono</label>
+              <input {...form.register('phone')} style={inputStyle} placeholder="2664-123456" />
+            </div>
+
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={labelStyle}>Dirección</label>
+              <input {...form.register('address')} style={inputStyle} placeholder="Calle, número, localidad" />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Imagen (URL del logo)</label>
+              <input {...form.register('imagen')} style={inputStyle} placeholder="https://..." />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Página web</label>
+              <input {...form.register('pagina_web')} type="url" style={inputStyle} placeholder="https://www.ejemplo.com" />
+              {form.formState.errors.pagina_web && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{form.formState.errors.pagina_web.message}</p>}
+            </div>
+
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={labelStyle}>Notas internas</label>
+              <textarea
+                {...form.register('notes')}
+                rows={2}
+                style={{ ...inputStyle, resize: 'vertical' }}
+                placeholder="Observaciones, condiciones especiales..."
+              />
+            </div>
+
+            <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '20px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: theme.fontSizes.sm, color: theme.colors.text }}>
+                <input type="checkbox" {...form.register('active')} style={{ width: '15px', height: '15px', accentColor: theme.colors.primary }} />
+                Cliente activo
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: theme.fontSizes.sm, color: theme.colors.text }}>
+                <input type="checkbox" {...form.register('mostrar_en_landing')} style={{ width: '15px', height: '15px', accentColor: theme.colors.primary }} />
+                Mostrar en landing
+              </label>
+            </div>
           </div>
 
-          {error && (
+          {rootError && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 12px', backgroundColor: `${theme.colors.error}14`, border: `1px solid ${theme.colors.error}`, borderRadius: theme.radii.sm, color: theme.colors.error, fontSize: theme.fontSizes.sm }}>
-              <AlertCircle size={13} style={{ flexShrink: 0 }} />{error}
+              <AlertCircle size={13} style={{ flexShrink: 0 }} />{rootError}
             </div>
           )}
 
@@ -112,11 +176,11 @@ export default function QuickCreateClienteModal({ onClose, onCreated }: Props) {
             </button>
             <button
               type="submit"
-              disabled={loading}
-              style={{ flex: 1, padding: '9px', backgroundColor: loading ? `${theme.colors.primary}99` : theme.colors.primary, color: '#fff', border: 'none', borderRadius: theme.radii.sm, cursor: loading ? 'not-allowed' : 'pointer', fontSize: theme.fontSizes.sm, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+              disabled={isSubmitting}
+              style={{ flex: 1, padding: '9px', backgroundColor: isSubmitting ? `${theme.colors.primary}99` : theme.colors.primary, color: '#fff', border: 'none', borderRadius: theme.radii.sm, cursor: isSubmitting ? 'not-allowed' : 'pointer', fontSize: theme.fontSizes.sm, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
             >
-              {loading && <Loader2 size={13} className="animate-spin" />}
-              {loading ? 'Creando...' : 'Crear cliente'}
+              {isSubmitting && <Loader2 size={13} className="animate-spin" />}
+              {isSubmitting ? 'Creando...' : 'Crear cliente'}
             </button>
           </div>
         </form>

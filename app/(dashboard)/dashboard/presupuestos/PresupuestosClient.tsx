@@ -22,6 +22,7 @@ type Presupuesto = {
   titulo: string
   descripcion: string | null
   estado: PresupuestoEstado
+  fecha: string
   fecha_vencimiento: string | null
   created_at: string
   clientes: { name: string } | null
@@ -39,6 +40,7 @@ const presupuestoSchema = z.object({
   titulo: z.string().min(2, 'Mínimo 2 caracteres'),
   descripcion: z.string().optional(),
   estado: z.enum(['BORRADOR', 'ENVIADO', 'APROBADO', 'RECHAZADO', 'VENCIDO']),
+  fecha: z.string().min(1, 'La fecha es requerida'),
   fecha_vencimiento: z.string().nullable().optional(),
 })
 type PresupuestoForm = z.infer<typeof presupuestoSchema>
@@ -221,20 +223,31 @@ function PresupuestoFormFields({
           />
         </div>
 
-        <div>
-          <label style={labelStyle}>Estado</label>
-          <select {...form.register('estado')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
-            {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
-          </select>
-        </div>
+        <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+          <div>
+            <label style={labelStyle}>Estado</label>
+            <select {...form.register('estado')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+              {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
+            </select>
+          </div>
 
-        <div>
-          <label style={labelStyle}>Vencimiento</label>
-          <input
-            type="date"
-            {...form.register('fecha_vencimiento', { setValueAs: (v) => v || null })}
-            style={inputStyle}
-          />
+          <div>
+            <label style={labelStyle}>Fecha del presupuesto <span style={{ color: theme.colors.error }}>*</span></label>
+            <input
+              type="date"
+              {...form.register('fecha')}
+              style={inputStyle}
+            />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Vencimiento</label>
+            <input
+              type="date"
+              {...form.register('fecha_vencimiento', { setValueAs: (v) => v || null })}
+              style={inputStyle}
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -277,6 +290,8 @@ export default function PresupuestosClient({
   const [createError, setCreateError] = useState<string | null>(null)
   const [createLoading, setCreateLoading] = useState(false)
 
+  const todayISO = () => new Date().toISOString().split('T')[0]
+
   const createForm = useForm<PresupuestoForm>({
     resolver: zodResolver(presupuestoSchema),
     defaultValues: {
@@ -285,6 +300,7 @@ export default function PresupuestosClient({
       titulo: '',
       descripcion: '',
       estado: 'BORRADOR',
+      fecha: todayISO(),
       fecha_vencimiento: null,
     },
   })
@@ -296,6 +312,7 @@ export default function PresupuestosClient({
       titulo: '',
       descripcion: '',
       estado: 'BORRADOR',
+      fecha: todayISO(),
       fecha_vencimiento: null,
     })
     setCreateError(null)
@@ -428,7 +445,7 @@ export default function PresupuestosClient({
                     ${total.toLocaleString('es-AR')}
                   </td>
                   <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{formatVencimiento(p.fecha_vencimiento)}</td>
-                  <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{formatFecha(p.created_at)}</td>
+                  <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{formatVencimiento(p.fecha)}</td>
                   <td style={{ ...tdStyle, textAlign: 'right' }}>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
                       <Link

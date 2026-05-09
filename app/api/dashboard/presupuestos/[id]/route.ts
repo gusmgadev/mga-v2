@@ -8,6 +8,7 @@ const updateSchema = z.object({
   titulo: z.string().min(2, 'Mínimo 2 caracteres').optional(),
   descripcion: z.string().nullable().optional(),
   estado: z.enum(['BORRADOR', 'ENVIADO', 'APROBADO', 'RECHAZADO', 'VENCIDO']).optional(),
+  fecha: z.string().optional(),
   fecha_vencimiento: z.string().nullable().optional(),
 })
 

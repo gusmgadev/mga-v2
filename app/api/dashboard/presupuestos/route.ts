@@ -9,6 +9,7 @@ const createSchema = z.object({
   titulo: z.string().min(2, 'Mínimo 2 caracteres'),
   descripcion: z.string().optional(),
   estado: z.enum(['BORRADOR', 'ENVIADO', 'APROBADO', 'RECHAZADO', 'VENCIDO']),
+  fecha: z.string().min(1, 'La fecha es requerida'),
   fecha_vencimiento: z.string().nullable().optional(),
 })
 
