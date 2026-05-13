@@ -709,6 +709,11 @@ export default function RemitoDetalleClient({
                         {vi.producto_match && (
                           <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>
                             → {vi.producto_match.nombre}
+                            {vi.producto_match.codigo && (
+                              <span style={{ fontFamily: 'monospace', backgroundColor: '#f3f4f6', padding: '1px 4px', borderRadius: '2px', marginLeft: '4px' }}>
+                                [{vi.producto_match.codigo}]
+                              </span>
+                            )}
                           </span>
                         )}
                       </>
@@ -781,16 +786,30 @@ export default function RemitoDetalleClient({
                   >
                     <td style={{ padding: '8px 12px', borderBottom: `1px solid ${theme.colors.border}`, verticalAlign: 'middle' }}>
                       {canEdit ? (
-                        <input
-                          defaultValue={item.nombre_detectado ?? item.productos?.nombre ?? ''}
-                          onBlur={(e) => updateItem(item.id, 'nombre_detectado', e.target.value)}
-                          style={{ ...inputStyle, fontSize: theme.fontSizes.sm, padding: '4px 8px' }}
-                        />
+                        <div>
+                          <input
+                            defaultValue={item.nombre_detectado ?? item.productos?.nombre ?? ''}
+                            onBlur={(e) => updateItem(item.id, 'nombre_detectado', e.target.value)}
+                            style={{ ...inputStyle, fontSize: theme.fontSizes.sm, padding: '4px 8px' }}
+                          />
+                          {item.productos?.codigo && (
+                            <span style={{ display: 'inline-block', marginTop: '3px', fontSize: '11px', color: theme.colors.textMuted, fontFamily: 'monospace', backgroundColor: '#f3f4f6', padding: '1px 5px', borderRadius: '3px' }}>
+                              {item.productos.codigo}
+                            </span>
+                          )}
+                        </div>
                       ) : (
                         <div>
-                          <span style={{ fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium }}>
-                            {item.nombre_detectado ?? item.productos?.nombre ?? '—'}
-                          </span>
+                          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium }}>
+                              {item.nombre_detectado ?? item.productos?.nombre ?? '—'}
+                            </span>
+                            {item.productos?.codigo && (
+                              <span style={{ fontSize: '11px', color: theme.colors.textMuted, fontFamily: 'monospace', backgroundColor: '#f3f4f6', padding: '1px 5px', borderRadius: '3px', whiteSpace: 'nowrap' }}>
+                                {item.productos.codigo}
+                              </span>
+                            )}
+                          </div>
                           {item.productos?.marca && (
                             <span style={{ display: 'block', fontSize: '11px', color: theme.colors.textMuted }}>
                               {item.productos.marca}

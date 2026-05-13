@@ -87,6 +87,7 @@ export interface ProductoConMatch extends ProductoDetectado {
   producto_match?: {
     id: string
     nombre: string
+    codigo?: string | null
     marca?: string | null
     unidad: string
     stock_actual: number

@@ -114,30 +114,46 @@ export async function POST(req: Request) {
   // 4. Buscar matches para cada producto detectado
   const itemsConMatch: ProductoConMatch[] = []
   for (const prod of productosDetectados) {
-    let bestMatch: { id: string; nombre: string; marca: string | null; unidad: string; stock_actual: number; costo: number | null; precio_venta: number | null; confianza: number } | null = null
+    let bestMatch: { id: string; nombre: string; codigo: string | null; marca: string | null; unidad: string; stock_actual: number; costo: number | null; precio_venta: number | null; confianza: number } | null = null
 
-    // Intento 1: búsqueda por similaridad (pg_trgm)
-    const { data: matches, error: rpcError } = await supabaseAdmin.rpc('buscar_productos_por_nombre', {
-      p_nombre: prod.nombre_detectado,
-      p_limit: 1,
-    })
+    // Intento 0: coincidencia exacta de código (confianza 100%)
+    const codigoQuery = prod.nombre_detectado.trim()
+    if (codigoQuery.length > 0) {
+      const { data: codeExact } = await supabaseAdmin
+        .from('productos')
+        .select('id, nombre, codigo, marca, unidad, stock_actual, costo, precio_venta')
+        .eq('activo', true)
+        .ilike('codigo', codigoQuery)
+        .limit(1)
+        .maybeSingle()
+      if (codeExact) {
+        bestMatch = { ...codeExact, codigo: codeExact.codigo ?? null, confianza: 1.0 }
+      }
+    }
 
-    if (!rpcError && matches?.[0]) {
-      bestMatch = { ...matches[0], confianza: Number(matches[0].confianza) }
-    } else {
-      // Fallback: búsqueda por ILIKE — divide el nombre detectado en palabras
-      const palabras = prod.nombre_detectado.trim().split(/\s+/).filter((w) => w.length > 2)
-      if (palabras.length > 0) {
-        // busca que el nombre contenga al menos la primera palabra significativa
-        const { data: fallback } = await supabaseAdmin
-          .from('productos')
-          .select('id, nombre, marca, unidad, stock_actual, costo, precio_venta')
-          .eq('activo', true)
-          .ilike('nombre', `%${palabras[0]}%`)
-          .limit(1)
-          .single()
-        if (fallback) {
-          bestMatch = { ...fallback, confianza: 0.5 }
+    if (!bestMatch) {
+      // Intento 1: búsqueda por similaridad (pg_trgm)
+      const { data: matches, error: rpcError } = await supabaseAdmin.rpc('buscar_productos_por_nombre', {
+        p_nombre: prod.nombre_detectado,
+        p_limit: 1,
+      })
+
+      if (!rpcError && matches?.[0]) {
+        bestMatch = { ...matches[0], codigo: matches[0].codigo ?? null, confianza: Number(matches[0].confianza) }
+      } else {
+        // Fallback: búsqueda por ILIKE — divide el nombre detectado en palabras
+        const palabras = prod.nombre_detectado.trim().split(/\s+/).filter((w) => w.length > 2)
+        if (palabras.length > 0) {
+          const { data: fallback } = await supabaseAdmin
+            .from('productos')
+            .select('id, nombre, codigo, marca, unidad, stock_actual, costo, precio_venta')
+            .eq('activo', true)
+            .ilike('nombre', `%${palabras[0]}%`)
+            .limit(1)
+            .maybeSingle()
+          if (fallback) {
+            bestMatch = { ...fallback, codigo: fallback.codigo ?? null, confianza: 0.5 }
+          }
         }
       }
     }
@@ -150,6 +166,7 @@ export async function POST(req: Request) {
         ? {
             id: bestMatch.id,
             nombre: bestMatch.nombre,
+            codigo: bestMatch.codigo,
             marca: bestMatch.marca,
             unidad: bestMatch.unidad,
             stock_actual: bestMatch.stock_actual,
