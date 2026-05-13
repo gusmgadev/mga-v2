@@ -13,7 +13,7 @@ export default async function RemitoDetallePage({ params }: { params: Promise<{ 
 
   const { id } = await params
 
-  const [{ data: remito }, { data: origenes }] = await Promise.all([
+  const [{ data: remito }, { data: origenes }, { data: productos }] = await Promise.all([
     supabaseAdmin
       .from('remitos')
       .select('*, origenes_destinos(*), remito_items(*, productos(*))')
@@ -21,6 +21,11 @@ export default async function RemitoDetallePage({ params }: { params: Promise<{ 
       .single(),
     supabaseAdmin
       .from('origenes_destinos')
+      .select('*')
+      .eq('activo', true)
+      .order('nombre'),
+    supabaseAdmin
+      .from('productos')
       .select('*')
       .eq('activo', true)
       .order('nombre'),
@@ -32,6 +37,7 @@ export default async function RemitoDetallePage({ params }: { params: Promise<{ 
     <RemitoDetalleClient
       remito={remito}
       origenes={origenes ?? []}
+      productos={productos ?? []}
       permisos={permisos}
     />
   )

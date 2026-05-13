@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -8,6 +8,15 @@ import { Plus, Pencil, X, Loader2, AlertCircle, Package } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import type { Producto } from '@/types/stock'
 import type { ModulePermisos } from '@/lib/permisos'
+
+function generarCodigo(): string {
+  const L = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  const D = '0123456789'
+  let c = ''
+  for (let i = 0; i < 4; i++) c += L[Math.floor(Math.random() * 26)]
+  for (let i = 0; i < 4; i++) c += D[Math.floor(Math.random() * 10)]
+  return c
+}
 
 const productoSchema = z.object({
   nombre: z.string().min(2, 'Mínimo 2 caracteres'),
@@ -25,6 +34,8 @@ type ProductoForm = z.infer<typeof productoSchema>
 interface Props {
   initialProductos: Producto[]
   permisos: ModulePermisos
+  initialMarcas: string[]
+  initialRubros: string[]
 }
 
 const inputStyle: React.CSSProperties = {
@@ -36,6 +47,7 @@ const inputStyle: React.CSSProperties = {
   color: theme.colors.text,
   outline: 'none',
   boxSizing: 'border-box',
+  fontFamily: 'inherit',
 }
 
 const labelStyle: React.CSSProperties = {
@@ -87,7 +99,7 @@ function ModalCard({ title, onClose, children }: { title: string; onClose: () =>
   return (
     <div style={{
       backgroundColor: '#fff', borderRadius: theme.radii.md,
-      padding: '24px', width: '100%', maxWidth: '520px',
+      padding: '24px', width: '100%', maxWidth: '540px',
       boxShadow: theme.shadows.md, maxHeight: '90vh', overflowY: 'auto',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -118,8 +130,108 @@ function StockBadge({ value }: { value: number }) {
   )
 }
 
-export default function ProductosClient({ initialProductos, permisos }: Props) {
+function CatalogoCombobox({
+  value,
+  onChange,
+  opciones,
+  onNewOption,
+  placeholder,
+}: {
+  value: string
+  onChange: (v: string) => void
+  opciones: string[]
+  onNewOption: (v: string) => Promise<void>
+  placeholder?: string
+}) {
+  const [open, setOpen] = useState(false)
+  const [input, setInput] = useState(value)
+  const [saving, setSaving] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => { setInput(value) }, [value])
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const filtered = opciones.filter((o) => o.toLowerCase().includes(input.toLowerCase()))
+  const isNew = input.trim().length > 0 && !opciones.some((o) => o.toLowerCase() === input.trim().toLowerCase())
+  const showDropdown = open && (filtered.length > 0 || isNew)
+
+  function select(o: string) {
+    setInput(o)
+    onChange(o)
+    setOpen(false)
+  }
+
+  async function addNew() {
+    const trimmed = input.trim()
+    if (!trimmed || saving) return
+    setSaving(true)
+    await onNewOption(trimmed)
+    onChange(trimmed)
+    setSaving(false)
+    setOpen(false)
+  }
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <input
+        value={input}
+        onChange={(e) => { setInput(e.target.value); onChange(e.target.value); setOpen(true) }}
+        onFocus={() => setOpen(true)}
+        style={inputStyle}
+        placeholder={placeholder}
+        autoComplete="off"
+      />
+      {showDropdown && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 2px)', left: 0, right: 0,
+          backgroundColor: '#fff', border: `1px solid ${theme.colors.border}`,
+          borderRadius: theme.radii.sm, boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+          zIndex: 200, maxHeight: '180px', overflowY: 'auto',
+        }}>
+          {filtered.map((o) => (
+            <div
+              key={o}
+              onMouseDown={() => select(o)}
+              style={{ padding: '8px 12px', cursor: 'pointer', fontSize: theme.fontSizes.sm, color: theme.colors.text }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '')}
+            >
+              {o}
+            </div>
+          ))}
+          {isNew && (
+            <div
+              onMouseDown={addNew}
+              style={{
+                padding: '8px 12px', cursor: saving ? 'wait' : 'pointer',
+                fontSize: theme.fontSizes.sm, color: theme.colors.primary,
+                fontWeight: theme.fontWeights.medium,
+                borderTop: filtered.length > 0 ? `1px solid ${theme.colors.border}` : 'none',
+                opacity: saving ? 0.6 : 1,
+              }}
+              onMouseEnter={(e) => { if (!saving) e.currentTarget.style.backgroundColor = `${theme.colors.primary}0a` }}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '')}
+            >
+              {saving ? 'Guardando...' : `+ Agregar "${input.trim()}"`}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default function ProductosClient({ initialProductos, permisos, initialMarcas, initialRubros }: Props) {
   const [productos, setProductos] = useState<Producto[]>(initialProductos)
+  const [localMarcas, setLocalMarcas] = useState<string[]>(initialMarcas)
+  const [localRubros, setLocalRubros] = useState<string[]>(initialRubros)
   const [showModal, setShowModal] = useState(false)
   const [editTarget, setEditTarget] = useState<Producto | null>(null)
   const [loading, setLoading] = useState(false)
@@ -130,8 +242,13 @@ export default function ProductosClient({ initialProductos, permisos }: Props) {
     register,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<ProductoForm>({ resolver: zodResolver(productoSchema) })
+
+  const marcaValue = watch('marca') ?? ''
+  const rubroValue = watch('rubro') ?? ''
 
   const productosFiltrados = productos.filter((p) => {
     if (filtro === 'activos') return p.activo
@@ -139,9 +256,27 @@ export default function ProductosClient({ initialProductos, permisos }: Props) {
     return true
   })
 
+  async function handleNewMarca(nombre: string) {
+    await fetch('/api/dashboard/marcas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre }),
+    })
+    setLocalMarcas((prev) => prev.includes(nombre) ? prev : [...prev, nombre].sort())
+  }
+
+  async function handleNewRubro(nombre: string) {
+    await fetch('/api/dashboard/rubros-productos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre }),
+    })
+    setLocalRubros((prev) => prev.includes(nombre) ? prev : [...prev, nombre].sort())
+  }
+
   function openCreate() {
     setEditTarget(null)
-    reset({ nombre: '', codigo: '', marca: '', unidad: 'unidad', rubro: '', stock_actual: 0, costo: null, precio_venta: null, activo: true })
+    reset({ nombre: '', codigo: generarCodigo(), marca: '', unidad: 'unidad', rubro: '', stock_actual: 0, costo: null, precio_venta: null, activo: true })
     setFormError(null)
     setShowModal(true)
   }
@@ -185,6 +320,8 @@ export default function ProductosClient({ initialProductos, permisos }: Props) {
         const json = await res.json()
         if (!res.ok) { setFormError(json.error); return }
         setProductos((prev) => prev.map((p) => (p.id === editTarget.id ? json : p)))
+        if (payload.marca) setLocalMarcas((prev) => prev.includes(payload.marca!) ? prev : [...prev, payload.marca!].sort())
+        if (payload.rubro) setLocalRubros((prev) => prev.includes(payload.rubro!) ? prev : [...prev, payload.rubro!].sort())
       } else {
         const res = await fetch('/api/dashboard/productos', {
           method: 'POST',
@@ -194,6 +331,8 @@ export default function ProductosClient({ initialProductos, permisos }: Props) {
         const json = await res.json()
         if (!res.ok) { setFormError(json.error); return }
         setProductos((prev) => [json, ...prev])
+        if (payload.marca) setLocalMarcas((prev) => prev.includes(payload.marca!) ? prev : [...prev, payload.marca!].sort())
+        if (payload.rubro) setLocalRubros((prev) => prev.includes(payload.rubro!) ? prev : [...prev, payload.rubro!].sort())
       }
       setShowModal(false)
     } finally {
@@ -272,7 +411,7 @@ export default function ProductosClient({ initialProductos, permisos }: Props) {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                <th style={thStyle}>Nombre</th>
+                <th style={thStyle}>Nombre / Rubro</th>
                 <th style={thStyle}>Código</th>
                 <th style={thStyle}>Marca</th>
                 <th style={thStyle}>Unidad</th>
@@ -288,9 +427,9 @@ export default function ProductosClient({ initialProductos, permisos }: Props) {
                 <tr key={p.id}>
                   <td style={{ ...tdStyle, fontWeight: theme.fontWeights.medium }}>
                     {p.nombre}
-                    {p.rubro && <span style={{ display: 'block', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>{p.rubro}</span>}
+                    {p.rubro && <span style={{ display: 'block', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, fontWeight: 'normal', marginTop: '1px' }}>{p.rubro}</span>}
                   </td>
-                  <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{p.codigo ?? '—'}</td>
+                  <td style={{ ...tdStyle, color: theme.colors.textMuted, fontFamily: 'monospace', fontSize: theme.fontSizes.xs }}>{p.codigo ?? '—'}</td>
                   <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{p.marca ?? '—'}</td>
                   <td style={tdStyle}>{p.unidad}</td>
                   <td style={{ ...tdStyle, textAlign: 'right' }}><StockBadge value={p.stock_actual} /></td>
@@ -347,23 +486,25 @@ export default function ProductosClient({ initialProductos, permisos }: Props) {
         <ModalOverlay onClose={() => setShowModal(false)}>
           <ModalCard title={editTarget ? 'Editar producto' : 'Nuevo producto'} onClose={() => setShowModal(false)}>
             <form onSubmit={handleSubmit(onSubmit)}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
+
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={labelStyle}>Nombre *</label>
                   <input {...register('nombre')} style={inputStyle} placeholder="Ej: Alimento Excellent cachorro 20kg" />
                   {errors.nombre && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{errors.nombre.message}</p>}
                 </div>
+
                 <div>
                   <label style={labelStyle}>Código</label>
-                  <input {...register('codigo')} style={inputStyle} placeholder="Ej: ALI-001" />
+                  <input {...register('codigo')} style={{ ...inputStyle, fontFamily: 'monospace' }} placeholder="Ej: ABCD1234" />
+                  <p style={{ fontSize: '11px', color: theme.colors.textMuted, marginTop: '3px' }}>
+                    Auto-generado, editable
+                  </p>
                 </div>
-                <div>
-                  <label style={labelStyle}>Marca</label>
-                  <input {...register('marca')} style={inputStyle} placeholder="Ej: Excellent" />
-                </div>
+
                 <div>
                   <label style={labelStyle}>Unidad *</label>
-                  <select {...register('unidad')} style={inputStyle}>
+                  <select {...register('unidad')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
                     <option value="unidad">unidad</option>
                     <option value="kg">kg</option>
                     <option value="bolsa">bolsa</option>
@@ -373,23 +514,47 @@ export default function ProductosClient({ initialProductos, permisos }: Props) {
                     <option value="par">par</option>
                   </select>
                 </div>
+
+                <div>
+                  <label style={labelStyle}>Marca</label>
+                  <CatalogoCombobox
+                    value={marcaValue}
+                    onChange={(v) => setValue('marca', v || null, { shouldDirty: true })}
+                    opciones={localMarcas}
+                    onNewOption={handleNewMarca}
+                    placeholder="Ej: Excellent, Royal Canin..."
+                  />
+                </div>
+
                 <div>
                   <label style={labelStyle}>Rubro</label>
-                  <input {...register('rubro')} style={inputStyle} placeholder="Ej: Alimentos" />
+                  <CatalogoCombobox
+                    value={rubroValue}
+                    onChange={(v) => setValue('rubro', v || null, { shouldDirty: true })}
+                    opciones={localRubros}
+                    onNewOption={handleNewRubro}
+                    placeholder="Ej: Alimentos, Accesorios..."
+                  />
                 </div>
+
                 <div>
                   <label style={labelStyle}>Stock actual</label>
                   <input type="number" {...register('stock_actual', { valueAsNumber: true })} style={inputStyle} step="any" />
                   {errors.stock_actual && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{errors.stock_actual.message}</p>}
                 </div>
+
+                <div />
+
                 <div>
                   <label style={labelStyle}>Costo</label>
                   <input type="number" {...register('costo', { valueAsNumber: true, setValueAs: (v) => (v === '' || isNaN(v) ? null : Number(v)) })} style={inputStyle} step="any" placeholder="0.00" />
                 </div>
+
                 <div>
                   <label style={labelStyle}>Precio venta</label>
                   <input type="number" {...register('precio_venta', { valueAsNumber: true, setValueAs: (v) => (v === '' || isNaN(v) ? null : Number(v)) })} style={inputStyle} step="any" placeholder="0.00" />
                 </div>
+
               </div>
 
               {formError && (
@@ -422,6 +587,8 @@ export default function ProductosClient({ initialProductos, permisos }: Props) {
           </ModalCard>
         </ModalOverlay>
       )}
+
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }

@@ -1,15 +1,24 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { ArrowLeft, Plus, Trash2, AlertCircle, Loader2, Check, Mic } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, AlertCircle, Loader2, Check, Mic, Search, X } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import VoiceRecorder from '@/components/dashboard/VoiceRecorder'
-import type { Remito, RemitoItem, OrigenDestino, ProductoConMatch } from '@/types/stock'
+import type { Remito, RemitoItem, OrigenDestino, Producto, ProductoConMatch } from '@/types/stock'
 import type { ModulePermisos } from '@/lib/permisos'
+
+function generarCodigo(): string {
+  const L = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  const D = '0123456789'
+  let c = ''
+  for (let i = 0; i < 4; i++) c += L[Math.floor(Math.random() * 26)]
+  for (let i = 0; i < 4; i++) c += D[Math.floor(Math.random() * 10)]
+  return c
+}
 
 const encabezadoSchema = z.object({
   tipo: z.enum(['entrada', 'salida']),
@@ -30,6 +39,7 @@ type OrigenForm = z.infer<typeof origenSchema>
 interface Props {
   remito: Remito
   origenes: OrigenDestino[]
+  productos: Producto[]
   permisos: ModulePermisos
 }
 
@@ -38,6 +48,7 @@ const inputStyle: React.CSSProperties = {
   border: `1px solid ${theme.colors.border}`,
   borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm,
   color: theme.colors.text, outline: 'none', boxSizing: 'border-box',
+  fontFamily: 'inherit',
 }
 
 const labelStyle: React.CSSProperties = {
@@ -100,11 +111,131 @@ function ConfianzaBadge({ confianza }: { confianza?: number | null }) {
   )
 }
 
-export default function RemitoDetalleClient({ remito: initialRemito, origenes: initialOrigenes, permisos }: Props) {
+function ProductoSearchPanel({
+  productos,
+  onSelect,
+  onCrearNuevo,
+  onClose,
+}: {
+  productos: Producto[]
+  onSelect: (p: Producto) => Promise<void>
+  onCrearNuevo: () => void
+  onClose: () => void
+}) {
+  const [query, setQuery] = useState('')
+  const [selecting, setSelecting] = useState<string | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => { inputRef.current?.focus() }, [])
+
+  const filtered = query.trim()
+    ? productos.filter((p) =>
+        p.nombre.toLowerCase().includes(query.toLowerCase()) ||
+        (p.codigo ?? '').toLowerCase().includes(query.toLowerCase()) ||
+        (p.marca ?? '').toLowerCase().includes(query.toLowerCase())
+      )
+    : productos.slice(0, 12)
+
+  async function handleSelect(p: Producto) {
+    setSelecting(p.id)
+    await onSelect(p)
+    setSelecting(null)
+  }
+
+  return (
+    <div style={{ marginBottom: '16px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, overflow: 'hidden' }}>
+      {/* Search input */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', borderBottom: `1px solid ${theme.colors.border}`, backgroundColor: '#fafafa' }}>
+        <Search size={15} style={{ color: theme.colors.textMuted, flexShrink: 0 }} />
+        <input
+          ref={inputRef}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Buscar producto por nombre, código o marca..."
+          style={{ flex: 1, border: 'none', outline: 'none', fontSize: theme.fontSizes.sm, color: theme.colors.text, background: 'transparent' }}
+        />
+        <button
+          onClick={onClose}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.textMuted, padding: '2px', display: 'flex' }}
+        >
+          <X size={16} />
+        </button>
+      </div>
+
+      {/* Product list */}
+      <div style={{ maxHeight: '220px', overflowY: 'auto' }}>
+        {filtered.length === 0 ? (
+          <div style={{ padding: '16px', textAlign: 'center', color: theme.colors.textMuted, fontSize: theme.fontSizes.sm }}>
+            Sin resultados
+          </div>
+        ) : (
+          filtered.map((p) => (
+            <div
+              key={p.id}
+              onClick={() => selecting ? undefined : handleSelect(p)}
+              style={{
+                padding: '10px 14px', cursor: selecting ? 'wait' : 'pointer',
+                borderBottom: `1px solid ${theme.colors.border}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                opacity: selecting && selecting !== p.id ? 0.5 : 1,
+              }}
+              onMouseEnter={(e) => { if (!selecting) e.currentTarget.style.backgroundColor = '#f3f4f6' }}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '')}
+            >
+              <div>
+                <span style={{ fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, color: theme.colors.text }}>
+                  {p.nombre}
+                </span>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '2px' }}>
+                  {p.marca && <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>{p.marca}</span>}
+                  {p.codigo && <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, fontFamily: 'monospace' }}>[{p.codigo}]</span>}
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
+                <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>
+                  Stock: {p.stock_actual} {p.unidad}
+                </span>
+                {selecting === p.id && <Loader2 size={13} style={{ animation: 'spin 1s linear infinite', color: theme.colors.primary }} />}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Footer: create new */}
+      <div style={{ padding: '10px 14px', borderTop: `1px solid ${theme.colors.border}`, backgroundColor: '#fafafa' }}>
+        <button
+          onClick={onCrearNuevo}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: theme.colors.primary, fontSize: theme.fontSizes.sm,
+            fontWeight: theme.fontWeights.medium, padding: 0,
+            display: 'flex', alignItems: 'center', gap: '6px',
+          }}
+        >
+          <Plus size={14} />
+          Crear nuevo producto
+        </button>
+      </div>
+    </div>
+  )
+}
+
+type CrearProductoData = {
+  nombre: string
+  codigo: string
+  marca: string
+  unidad: string
+  costo: string
+  precio_venta: string
+}
+
+export default function RemitoDetalleClient({ remito: initialRemito, origenes: initialOrigenes, productos: initialProductos, permisos }: Props) {
   const router = useRouter()
   const [remito, setRemito] = useState(initialRemito)
   const [items, setItems] = useState<RemitoItem[]>((initialRemito.remito_items as RemitoItem[]) ?? [])
   const [origenes, setOrigenes] = useState<OrigenDestino[]>(initialOrigenes)
+  const [localProductos, setLocalProductos] = useState<Producto[]>(initialProductos)
 
   const [savingEncabezado, setSavingEncabezado] = useState(false)
   const [encabezadoError, setEncabezadoError] = useState<string | null>(null)
@@ -119,6 +250,14 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
 
   const [deletingItemId, setDeletingItemId] = useState<string | null>(null)
   const [showVoice, setShowVoice] = useState(false)
+  const [showProductSearch, setShowProductSearch] = useState(false)
+
+  const [showCrearProducto, setShowCrearProducto] = useState(false)
+  const [crearProductoData, setCrearProductoData] = useState<CrearProductoData>({
+    nombre: '', codigo: generarCodigo(), marca: '', unidad: 'unidad', costo: '', precio_venta: '',
+  })
+  const [creandoProducto, setCreandoProducto] = useState(false)
+  const [crearProductoError, setCrearProductoError] = useState<string | null>(null)
 
   const esBorrador = remito.estado === 'borrador'
   const canEdit = permisos.can_edit && esBorrador
@@ -213,16 +352,66 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
     setShowVoice(false)
   }, [items.length, remito.id])
 
-  async function addItemManual() {
+  async function selectProductoParaItem(p: Producto) {
     const res = await fetch(`/api/dashboard/remitos/${remito.id}/items`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nombre_detectado: 'Nuevo ítem', cantidad: 1, cantidad_asumida: false, unidad: 'unidad', orden: items.length }),
+      body: JSON.stringify({
+        producto_id: p.id,
+        nombre_detectado: p.nombre,
+        cantidad: 1,
+        cantidad_asumida: false,
+        unidad: p.unidad,
+        costo: p.costo ?? null,
+        precio_venta: p.precio_venta ?? null,
+        confianza: null,
+        es_producto_nuevo: false,
+        orden: items.length,
+      }),
     })
     if (res.ok) {
       const json = await res.json()
-      setItems((prev) => [...prev, ...(Array.isArray(json) ? json : [json])])
+      const item = Array.isArray(json) ? json[0] : json
+      setItems((prev) => [...prev, { ...item, productos: p }])
+      setShowProductSearch(false)
     }
+  }
+
+  async function handleCrearProducto() {
+    if (!crearProductoData.nombre.trim()) return
+    setCreandoProducto(true)
+    setCrearProductoError(null)
+    try {
+      const res = await fetch('/api/dashboard/productos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: crearProductoData.nombre,
+          codigo: crearProductoData.codigo || null,
+          marca: crearProductoData.marca || null,
+          unidad: crearProductoData.unidad,
+          costo: crearProductoData.costo ? parseFloat(crearProductoData.costo) : null,
+          precio_venta: crearProductoData.precio_venta ? parseFloat(crearProductoData.precio_venta) : null,
+          stock_actual: 0,
+          activo: true,
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok) { setCrearProductoError(json.error); return }
+      const newProduct: Producto = json
+      setLocalProductos((prev) => [...prev, newProduct].sort((a, b) => a.nombre.localeCompare(b.nombre)))
+      await selectProductoParaItem(newProduct)
+      setShowCrearProducto(false)
+      setShowProductSearch(false)
+    } finally {
+      setCreandoProducto(false)
+    }
+  }
+
+  function openCrearProducto() {
+    setCrearProductoData({ nombre: '', codigo: generarCodigo(), marca: '', unidad: 'unidad', costo: '', precio_venta: '' })
+    setCrearProductoError(null)
+    setShowCrearProducto(true)
   }
 
   async function updateItem(itemId: string, field: string, value: string | number | null) {
@@ -233,7 +422,7 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
     })
     if (res.ok) {
       const json = await res.json()
-      setItems((prev) => prev.map((it) => (it.id === itemId ? json : it)))
+      setItems((prev) => prev.map((it) => (it.id === itemId ? { ...it, ...json } : it)))
     }
   }
 
@@ -259,8 +448,6 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
       setConfirming(false)
     }
   }
-
-  const origenActual = origenes.find((o) => o.id === remito.origenes_destinos?.id)
 
   return (
     <div style={{ padding: theme.spacing.lg, maxWidth: '900px' }}>
@@ -299,7 +486,6 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
       <SectionCard title="Encabezado">
         <form onBlur={handleEnc(saveEncabezado)}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            {/* Selector entrada/salida */}
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Tipo *</label>
               <div style={{ display: 'flex', gap: '8px' }}>
@@ -323,7 +509,6 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
               </div>
             </div>
 
-            {/* Numeración */}
             <div>
               <label style={labelStyle}>Tipo de número</label>
               <select {...regEnc('numero_tipo')} disabled={!canEdit} style={inputStyle}>
@@ -346,20 +531,13 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
               <input type="date" {...regEnc('fecha')} disabled={!canEdit} style={inputStyle} />
             </div>
 
-            {/* Origen/Destino */}
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Origen / Destino</label>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <select
-                  {...regEnc('origen_destino_id')}
-                  disabled={!canEdit}
-                  style={{ ...inputStyle, flex: 1 }}
-                >
+                <select {...regEnc('origen_destino_id')} disabled={!canEdit} style={{ ...inputStyle, flex: 1 }}>
                   <option value="">Sin especificar</option>
                   {origenes.map((o) => (
-                    <option key={o.id} value={o.id}>
-                      {o.nombre} ({o.tipo})
-                    </option>
+                    <option key={o.id} value={o.id}>{o.nombre} ({o.tipo})</option>
                   ))}
                 </select>
                 {canEdit && (
@@ -369,8 +547,7 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
                     style={{
                       padding: '8px 12px', border: `1px solid ${theme.colors.border}`,
                       borderRadius: theme.radii.sm, background: '#fff', cursor: 'pointer',
-                      color: theme.colors.textMuted, fontSize: theme.fontSizes.sm,
-                      whiteSpace: 'nowrap',
+                      color: theme.colors.textMuted, fontSize: theme.fontSizes.sm, whiteSpace: 'nowrap',
                     }}
                   >
                     + Nuevo
@@ -397,7 +574,6 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
               <span style={{ fontSize: theme.fontSizes.sm, color: theme.colors.error }}>{encabezadoError}</span>
             </div>
           )}
-
           {savingEncabezado && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>
               <Loader2 size={12} style={{ animation: 'spin 1s linear infinite' }} />
@@ -409,11 +585,10 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
 
       {/* Ítems */}
       <SectionCard title={`Ítems (${items.length})`}>
-        {/* Acciones carga */}
         {canEdit && (
           <div style={{ display: 'flex', gap: '10px', marginBottom: '16px', flexWrap: 'wrap' }}>
             <button
-              onClick={() => setShowVoice(!showVoice)}
+              onClick={() => { setShowVoice(!showVoice); setShowProductSearch(false) }}
               style={{
                 display: 'flex', alignItems: 'center', gap: '8px',
                 padding: '8px 16px',
@@ -428,13 +603,14 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
               Carga por voz
             </button>
             <button
-              onClick={addItemManual}
+              onClick={() => { setShowProductSearch(!showProductSearch); setShowVoice(false) }}
               style={{
                 display: 'flex', alignItems: 'center', gap: '8px',
-                padding: '8px 16px', backgroundColor: '#fff',
-                border: `1px solid ${theme.colors.border}`,
+                padding: '8px 16px',
+                backgroundColor: showProductSearch ? `${theme.colors.primary}12` : '#fff',
+                border: `1px solid ${showProductSearch ? theme.colors.primary : theme.colors.border}`,
                 borderRadius: theme.radii.sm, cursor: 'pointer',
-                fontSize: theme.fontSizes.sm, color: theme.colors.text,
+                fontSize: theme.fontSizes.sm, color: showProductSearch ? theme.colors.primary : theme.colors.text,
               }}
             >
               <Plus size={15} />
@@ -445,12 +621,17 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
 
         {showVoice && canEdit && (
           <div style={{ marginBottom: '16px', padding: '16px', backgroundColor: '#f8f9fa', borderRadius: theme.radii.sm }}>
-            <VoiceRecorder
-              remitoId={remito.id}
-              onItemsDetected={handleVoiceItems}
-              disabled={!esBorrador}
-            />
+            <VoiceRecorder remitoId={remito.id} onItemsDetected={handleVoiceItems} disabled={!esBorrador} />
           </div>
+        )}
+
+        {showProductSearch && canEdit && (
+          <ProductoSearchPanel
+            productos={localProductos}
+            onSelect={selectProductoParaItem}
+            onCrearNuevo={openCrearProducto}
+            onClose={() => setShowProductSearch(false)}
+          />
         )}
 
         {items.length === 0 ? (
@@ -488,7 +669,14 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
                         />
                       ) : (
                         <div>
-                          <span style={{ fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium }}>{item.nombre_detectado ?? item.productos?.nombre ?? '—'}</span>
+                          <span style={{ fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium }}>
+                            {item.nombre_detectado ?? item.productos?.nombre ?? '—'}
+                          </span>
+                          {item.productos?.marca && (
+                            <span style={{ display: 'block', fontSize: '11px', color: theme.colors.textMuted }}>
+                              {item.productos.marca}
+                            </span>
+                          )}
                           {item.es_producto_nuevo && (
                             <span style={{ display: 'block', fontSize: '11px', color: theme.colors.warning }}>Producto nuevo</span>
                           )}
@@ -508,8 +696,7 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
                             defaultValue={item.cantidad}
                             onBlur={(e) => updateItem(item.id, 'cantidad', parseFloat(e.target.value))}
                             style={{ ...inputStyle, width: '80px', textAlign: 'right', padding: '4px 8px', fontSize: theme.fontSizes.sm }}
-                            step="any"
-                            min="0"
+                            step="any" min="0"
                           />
                           <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>{item.unidad}</span>
                         </div>
@@ -592,11 +779,7 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
       {/* Modal confirmar */}
       {showConfirmar && (
         <ModalOverlay onClose={() => !confirming && setShowConfirmar(false)}>
-          <div style={{
-            backgroundColor: '#fff', borderRadius: theme.radii.md,
-            padding: '28px', width: '100%', maxWidth: '440px',
-            boxShadow: theme.shadows.md,
-          }}>
+          <div style={{ backgroundColor: '#fff', borderRadius: theme.radii.md, padding: '28px', width: '100%', maxWidth: '440px', boxShadow: theme.shadows.md }}>
             <h2 style={{ fontSize: theme.fontSizes.lg, fontWeight: theme.fontWeights.bold, margin: '0 0 12px' }}>
               Confirmar remito
             </h2>
@@ -613,32 +796,20 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
                 </p>
               )}
             </div>
-
             {confirmError && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', backgroundColor: `${theme.colors.error}12`, borderRadius: theme.radii.sm, marginBottom: '16px' }}>
                 <AlertCircle size={15} color={theme.colors.error} />
                 <span style={{ fontSize: theme.fontSizes.sm, color: theme.colors.error }}>{confirmError}</span>
               </div>
             )}
-
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-              <button
-                onClick={() => setShowConfirmar(false)}
-                disabled={confirming}
-                style={{ padding: '9px 18px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, background: '#fff', color: theme.colors.text, fontSize: theme.fontSizes.sm, cursor: 'pointer' }}
-              >
+              <button onClick={() => setShowConfirmar(false)} disabled={confirming} style={{ padding: '9px 18px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, background: '#fff', color: theme.colors.text, fontSize: theme.fontSizes.sm, cursor: 'pointer' }}>
                 Cancelar
               </button>
               <button
                 onClick={confirmarRemito}
                 disabled={confirming}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '8px',
-                  padding: '9px 18px', backgroundColor: theme.colors.success,
-                  border: 'none', borderRadius: theme.radii.sm, color: '#fff',
-                  fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium,
-                  cursor: confirming ? 'not-allowed' : 'pointer', opacity: confirming ? 0.7 : 1,
-                }}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 18px', backgroundColor: theme.colors.success, border: 'none', borderRadius: theme.radii.sm, color: '#fff', fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, cursor: confirming ? 'not-allowed' : 'pointer', opacity: confirming ? 0.7 : 1 }}
               >
                 {confirming && <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />}
                 Confirmar y actualizar stock
@@ -651,11 +822,7 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
       {/* Modal nuevo origen/destino */}
       {showNuevoOrigen && (
         <ModalOverlay onClose={() => !creandoOrigen && setShowNuevoOrigen(false)}>
-          <div style={{
-            backgroundColor: '#fff', borderRadius: theme.radii.md,
-            padding: '24px', width: '100%', maxWidth: '400px',
-            boxShadow: theme.shadows.md,
-          }}>
+          <div style={{ backgroundColor: '#fff', borderRadius: theme.radii.md, padding: '24px', width: '100%', maxWidth: '400px', boxShadow: theme.shadows.md }}>
             <h2 style={{ fontSize: theme.fontSizes.lg, fontWeight: theme.fontWeights.bold, margin: '0 0 20px' }}>
               Nuevo origen / destino
             </h2>
@@ -695,9 +862,109 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
         </ModalOverlay>
       )}
 
-      <style>{`
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      `}</style>
+      {/* Modal crear producto nuevo */}
+      {showCrearProducto && (
+        <ModalOverlay onClose={() => !creandoProducto && setShowCrearProducto(false)}>
+          <div style={{ backgroundColor: '#fff', borderRadius: theme.radii.md, padding: '24px', width: '100%', maxWidth: '460px', boxShadow: theme.shadows.md }}>
+            <h2 style={{ fontSize: theme.fontSizes.lg, fontWeight: theme.fontWeights.bold, margin: '0 0 20px' }}>
+              Nuevo producto
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={labelStyle}>Nombre *</label>
+                <input
+                  value={crearProductoData.nombre}
+                  onChange={(e) => setCrearProductoData((d) => ({ ...d, nombre: e.target.value }))}
+                  style={inputStyle}
+                  placeholder="Nombre del producto"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Código</label>
+                <input
+                  value={crearProductoData.codigo}
+                  onChange={(e) => setCrearProductoData((d) => ({ ...d, codigo: e.target.value }))}
+                  style={{ ...inputStyle, fontFamily: 'monospace' }}
+                  placeholder="ABCD1234"
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Unidad</label>
+                <select
+                  value={crearProductoData.unidad}
+                  onChange={(e) => setCrearProductoData((d) => ({ ...d, unidad: e.target.value }))}
+                  style={{ ...inputStyle, backgroundColor: '#fff' }}
+                >
+                  <option value="unidad">unidad</option>
+                  <option value="kg">kg</option>
+                  <option value="bolsa">bolsa</option>
+                  <option value="caja">caja</option>
+                  <option value="litro">litro</option>
+                  <option value="metro">metro</option>
+                  <option value="par">par</option>
+                </select>
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={labelStyle}>Marca</label>
+                <input
+                  value={crearProductoData.marca}
+                  onChange={(e) => setCrearProductoData((d) => ({ ...d, marca: e.target.value }))}
+                  style={inputStyle}
+                  placeholder="Ej: Excellent"
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Costo</label>
+                <input
+                  type="number"
+                  value={crearProductoData.costo}
+                  onChange={(e) => setCrearProductoData((d) => ({ ...d, costo: e.target.value }))}
+                  style={inputStyle}
+                  step="any" min="0" placeholder="0.00"
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Precio venta</label>
+                <input
+                  type="number"
+                  value={crearProductoData.precio_venta}
+                  onChange={(e) => setCrearProductoData((d) => ({ ...d, precio_venta: e.target.value }))}
+                  style={inputStyle}
+                  step="any" min="0" placeholder="0.00"
+                />
+              </div>
+            </div>
+
+            {crearProductoError && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', backgroundColor: `${theme.colors.error}12`, borderRadius: theme.radii.sm, marginBottom: '16px' }}>
+                <AlertCircle size={15} color={theme.colors.error} />
+                <span style={{ fontSize: theme.fontSizes.sm, color: theme.colors.error }}>{crearProductoError}</span>
+              </div>
+            )}
+
+            <p style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, margin: '0 0 16px' }}>
+              El stock inicial será 0. Podés ajustarlo desde el módulo Productos.
+            </p>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button type="button" onClick={() => setShowCrearProducto(false)} disabled={creandoProducto} style={{ padding: '9px 18px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, background: '#fff', color: theme.colors.text, fontSize: theme.fontSizes.sm, cursor: 'pointer' }}>
+                Cancelar
+              </button>
+              <button
+                onClick={handleCrearProducto}
+                disabled={creandoProducto || !crearProductoData.nombre.trim()}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 18px', backgroundColor: theme.colors.primary, border: 'none', borderRadius: theme.radii.sm, color: '#fff', fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, cursor: (creandoProducto || !crearProductoData.nombre.trim()) ? 'not-allowed' : 'pointer', opacity: (creandoProducto || !crearProductoData.nombre.trim()) ? 0.6 : 1 }}
+              >
+                {creandoProducto && <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} />}
+                Crear y agregar
+              </button>
+            </div>
+          </div>
+        </ModalOverlay>
+      )}
+
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   )
 }
