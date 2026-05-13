@@ -342,10 +342,10 @@ export default function RemitoDetalleClient({
   const handleVoiceItems = useCallback(async (voiceItems: ProductoConMatch[]) => {
     if (voiceItems.length === 0) return
 
-    // Solo auto-insertar coincidencias exactas de código (confianza 1.0)
-    // Todo lo demás (coincidencia por nombre o sin match) va al panel de confirmación
-    const codeMatches = voiceItems.filter((vi) => !vi.es_producto_nuevo && vi.confianza === 1.0)
-    const pending = voiceItems.filter((vi) => vi.es_producto_nuevo || vi.confianza < 1.0)
+    // Auto-insertar coincidencias con confianza >= 70% (exactas por código o por nombre con alta certeza)
+    // Por debajo de 0.7 va al panel de confirmación para que el usuario decida
+    const codeMatches = voiceItems.filter((vi) => !vi.es_producto_nuevo && vi.confianza >= 0.7)
+    const pending = voiceItems.filter((vi) => vi.es_producto_nuevo || vi.confianza < 0.7)
 
     if (codeMatches.length > 0) {
       const payload = codeMatches.map((vi, i) => ({
