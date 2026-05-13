@@ -42,6 +42,7 @@ type Servicio = {
   estado: ServicioEstado
   estado_pago: EstadoPago
   valor: number
+  fecha: string | null
   created_at: string
   clientes: { name: string } | null
   activos: { nombre: string } | null
@@ -89,6 +90,7 @@ const editSchema = z.object({
   estado: z.enum(['INGRESADO', 'EN PROCESO', 'CANCELADO', 'RECHAZADO', 'TERMINADO', 'PRESUPUESTADO']),
   estado_pago: z.enum(['PENDIENTE', 'SIN CARGO', 'GARANTIA', 'PAGO PARCIAL', 'PAGADO']),
   valor: z.number().min(0),
+  fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida'),
 })
 type EditForm = z.infer<typeof editSchema>
 
@@ -206,6 +208,7 @@ export default function ServicioDetalleClient({
       estado: servicio.estado,
       estado_pago: servicio.estado_pago,
       valor: Number(servicio.valor),
+      fecha: servicio.fecha ?? new Date().toISOString().split('T')[0],
     },
   })
 
@@ -217,6 +220,7 @@ export default function ServicioDetalleClient({
       estado: servicio.estado,
       estado_pago: servicio.estado_pago,
       valor: Number(servicio.valor),
+      fecha: servicio.fecha ?? new Date().toISOString().split('T')[0],
     })
     setEditError(null)
     setShowEdit(true)
@@ -287,6 +291,7 @@ export default function ServicioDetalleClient({
   // Pagos
   const totalPagado = pagos.reduce((sum, p) => sum + Number(p.monto), 0)
   const valor = Number(servicio.valor)
+  const saldo = Math.max(0, valor - totalPagado)
 
   const agregarPago = async () => {
     const monto = parseFloat(pagoMonto)
@@ -361,6 +366,7 @@ export default function ServicioDetalleClient({
               <p style={{ margin: '0 0 12px', fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
                 {servicio.clientes?.name ?? '—'}
                 {servicio.activos ? ` · ${servicio.activos.nombre}` : ''}
+                {servicio.fecha && ` · ${servicio.fecha.split('-').reverse().join('/')}`}
               </p>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                 <Badge label={servicio.estado} {...ESTADO_COLORS[servicio.estado]} />
@@ -372,11 +378,25 @@ export default function ServicioDetalleClient({
                 )}
               </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <p style={{ margin: 0, fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>Valor</p>
-              <p style={{ margin: 0, fontSize: theme.fontSizes.xl, fontWeight: theme.fontWeights.bold, color: theme.colors.text }}>
-                ${Number(servicio.valor).toLocaleString('es-AR')}
-              </p>
+            <div style={{ display: 'flex', gap: '20px', textAlign: 'right' }}>
+              <div>
+                <p style={{ margin: 0, fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>Valor</p>
+                <p style={{ margin: 0, fontSize: theme.fontSizes.lg, fontWeight: theme.fontWeights.bold, color: theme.colors.text }}>
+                  ${valor.toLocaleString('es-AR')}
+                </p>
+              </div>
+              <div>
+                <p style={{ margin: 0, fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>Pagado</p>
+                <p style={{ margin: 0, fontSize: theme.fontSizes.lg, fontWeight: theme.fontWeights.bold, color: totalPagado > 0 ? theme.colors.success : theme.colors.textMuted }}>
+                  ${totalPagado.toLocaleString('es-AR')}
+                </p>
+              </div>
+              <div>
+                <p style={{ margin: 0, fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>Saldo</p>
+                <p style={{ margin: 0, fontSize: theme.fontSizes.lg, fontWeight: theme.fontWeights.bold, color: saldo > 0 ? '#B45309' : theme.colors.success }}>
+                  ${saldo.toLocaleString('es-AR')}
+                </p>
+              </div>
             </div>
           </div>
           {servicio.descripcion && (
@@ -675,6 +695,20 @@ export default function ServicioDetalleClient({
                       {...editForm.register('valor', { valueAsNumber: true })}
                       style={inputStyle}
                     />
+                  </div>
+
+                  <div>
+                    <label style={labelStyle}>Fecha <span style={{ color: theme.colors.error }}>*</span></label>
+                    <input
+                      type="date"
+                      {...editForm.register('fecha')}
+                      style={inputStyle}
+                    />
+                    {editForm.formState.errors.fecha && (
+                      <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+                        {editForm.formState.errors.fecha.message}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>

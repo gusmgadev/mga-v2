@@ -24,9 +24,11 @@ type Servicio = {
   estado: ServicioEstado
   estado_pago: EstadoPago
   valor: number
+  fecha: string | null
   created_at: string
   clientes: { name: string } | null
   activos: { nombre: string } | null
+  servicio_pagos: { monto: number }[]
 }
 type ClienteSimple = { id: number; name: string }
 type ActivoSimple = { id: number; nombre: string; cliente_id: number }
@@ -42,6 +44,7 @@ const servicioSchema = z.object({
   estado: z.enum(['INGRESADO', 'EN PROCESO', 'CANCELADO', 'RECHAZADO', 'TERMINADO', 'PRESUPUESTADO']),
   estado_pago: z.enum(['PENDIENTE', 'SIN CARGO', 'GARANTIA', 'PAGO PARCIAL', 'PAGADO']),
   valor: z.number().min(0),
+  fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida'),
 })
 type ServicioForm = z.infer<typeof servicioSchema>
 
@@ -52,6 +55,7 @@ const editSchema = z.object({
   estado: z.enum(['INGRESADO', 'EN PROCESO', 'CANCELADO', 'RECHAZADO', 'TERMINADO', 'PRESUPUESTADO']),
   estado_pago: z.enum(['PENDIENTE', 'SIN CARGO', 'GARANTIA', 'PAGO PARCIAL', 'PAGADO']),
   valor: z.number().min(0),
+  fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida'),
 })
 type EditForm = z.infer<typeof editSchema>
 
@@ -269,6 +273,20 @@ function ServicioFormFields({
             placeholder="0.00"
           />
         </div>
+
+        <div>
+          <label style={labelStyle}>Fecha <span style={{ color: theme.colors.error }}>*</span></label>
+          <input
+            type="date"
+            {...form.register('fecha')}
+            style={inputStyle}
+          />
+          {form.formState.errors.fecha && (
+            <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+              {form.formState.errors.fecha.message}
+            </p>
+          )}
+        </div>
       </div>
     </div>
     {showQCCliente && (
@@ -319,6 +337,7 @@ export default function ServiciosClient({
       estado: 'INGRESADO',
       estado_pago: 'PENDIENTE',
       valor: 0,
+      fecha: new Date().toISOString().split('T')[0],
     },
   })
   const [createError, setCreateError] = useState<string | null>(null)
@@ -326,7 +345,7 @@ export default function ServiciosClient({
 
   const editForm = useForm<EditForm>({
     resolver: zodResolver(editSchema),
-    defaultValues: { activo_id: null, titulo: '', descripcion: '', estado: 'INGRESADO', estado_pago: 'PENDIENTE', valor: 0 },
+    defaultValues: { activo_id: null, titulo: '', descripcion: '', estado: 'INGRESADO', estado_pago: 'PENDIENTE', valor: 0, fecha: new Date().toISOString().split('T')[0] },
   })
   const [editError, setEditError] = useState<string | null>(null)
   const [editLoading, setEditLoading] = useState(false)
@@ -340,6 +359,7 @@ export default function ServiciosClient({
       estado: 'INGRESADO',
       estado_pago: 'PENDIENTE',
       valor: 0,
+      fecha: new Date().toISOString().split('T')[0],
     })
     setCreateError(null)
     setShowCreate(true)
@@ -356,7 +376,7 @@ export default function ServiciosClient({
     const json = await res.json()
     setCreateLoading(false)
     if (!res.ok) { setCreateError(json.error); return }
-    setServicios((prev) => [json, ...prev])
+    setServicios((prev) => [{ ...json, servicio_pagos: json.servicio_pagos ?? [] }, ...prev])
     setShowCreate(false)
   }
 
@@ -368,6 +388,7 @@ export default function ServiciosClient({
       estado: s.estado,
       estado_pago: s.estado_pago,
       valor: Number(s.valor),
+      fecha: s.fecha ?? new Date().toISOString().split('T')[0],
     })
     setEditError(null)
     setEditTarget(s)
@@ -390,7 +411,7 @@ export default function ServiciosClient({
       const nuevoActivo = data.activo_id
         ? (localActivos.find((a) => a.id === data.activo_id) ?? null)
         : null
-      return { ...s, ...json, clientes: s.clientes, activos: nuevoActivo ? { nombre: nuevoActivo.nombre } : null }
+      return { ...s, ...json, clientes: s.clientes, activos: nuevoActivo ? { nombre: nuevoActivo.nombre } : null, servicio_pagos: s.servicio_pagos }
     }))
     setEditTarget(null)
   }
@@ -421,8 +442,11 @@ export default function ServiciosClient({
     router.push(buildUrl({ [key]: value || null }))
   }
 
-  const formatFecha = (iso: string) =>
-    new Date(iso).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' })
+  const formatFecha = (fecha: string | null | undefined) => {
+    if (!fecha) return '—'
+    const [y, m, d] = fecha.split('-')
+    return `${d}/${m}/${y.slice(2)}`
+  }
 
   return (
     <>
@@ -478,35 +502,47 @@ export default function ServiciosClient({
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr>
+              <th style={thStyle}>Fecha</th>
               <th style={thStyle}>Cliente</th>
               <th style={thStyle}>Título</th>
               <th style={thStyle}>Activo</th>
               <th style={thStyle}>Estado</th>
               <th style={thStyle}>Pago</th>
               <th style={{ ...thStyle, textAlign: 'right' }}>Valor</th>
-              <th style={thStyle}>Fecha</th>
+              <th style={{ ...thStyle, textAlign: 'right' }}>Pagado</th>
+              <th style={{ ...thStyle, textAlign: 'right' }}>Saldo</th>
               <th style={{ ...thStyle, textAlign: 'right' }}>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {servicios.length === 0 && (
               <tr>
-                <td colSpan={8} style={{ ...tdStyle, textAlign: 'center', color: theme.colors.textMuted }}>
+                <td colSpan={10} style={{ ...tdStyle, textAlign: 'center', color: theme.colors.textMuted }}>
                   No hay servicios registrados
                 </td>
               </tr>
             )}
-            {servicios.map((s) => (
+            {servicios.map((s) => {
+              const totalPagado = (s.servicio_pagos ?? []).reduce((sum, p) => sum + Number(p.monto), 0)
+              const valor = Number(s.valor)
+              const saldo = Math.max(0, valor - totalPagado)
+              return (
               <tr key={s.id}>
+                <td style={{ ...tdStyle, color: theme.colors.textMuted, whiteSpace: 'nowrap' }}>{formatFecha(s.fecha)}</td>
                 <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{s.clientes?.name ?? '—'}</td>
                 <td style={{ ...tdStyle, fontWeight: theme.fontWeights.medium }}>{s.titulo}</td>
                 <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{s.activos?.nombre ?? '—'}</td>
                 <td style={tdStyle}><EstadoBadge estado={s.estado} /></td>
                 <td style={tdStyle}><PagoBadge estado={s.estado_pago} /></td>
                 <td style={{ ...tdStyle, textAlign: 'right', fontWeight: theme.fontWeights.medium }}>
-                  ${Number(s.valor).toLocaleString('es-AR')}
+                  ${valor.toLocaleString('es-AR')}
                 </td>
-                <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{formatFecha(s.created_at)}</td>
+                <td style={{ ...tdStyle, textAlign: 'right', color: totalPagado > 0 ? theme.colors.success : theme.colors.textMuted }}>
+                  ${totalPagado.toLocaleString('es-AR')}
+                </td>
+                <td style={{ ...tdStyle, textAlign: 'right', color: saldo > 0 ? '#B45309' : theme.colors.textMuted }}>
+                  ${saldo.toLocaleString('es-AR')}
+                </td>
                 <td style={{ ...tdStyle, textAlign: 'right' }}>
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
                     <Link
@@ -534,7 +570,8 @@ export default function ServiciosClient({
                   </div>
                 </td>
               </tr>
-            ))}
+              )
+            })}
           </tbody>
         </table>
       </div>
@@ -622,6 +659,15 @@ export default function ServiciosClient({
                       min={0}
                       step="0.01"
                       {...editForm.register('valor', { valueAsNumber: true })}
+                      style={inputStyle}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={labelStyle}>Fecha <span style={{ color: theme.colors.error }}>*</span></label>
+                    <input
+                      type="date"
+                      {...editForm.register('fecha')}
                       style={inputStyle}
                     />
                   </div>

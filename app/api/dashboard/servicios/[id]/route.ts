@@ -10,6 +10,7 @@ const updateSchema = z.object({
   estado: z.enum(['INGRESADO', 'EN PROCESO', 'CANCELADO', 'RECHAZADO', 'TERMINADO', 'PRESUPUESTADO']).optional(),
   estado_pago: z.enum(['PENDIENTE', 'SIN CARGO', 'GARANTIA', 'PAGO PARCIAL', 'PAGADO']).optional(),
   valor: z.number().min(0).optional(),
+  fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 })
 
 async function requireSession() {

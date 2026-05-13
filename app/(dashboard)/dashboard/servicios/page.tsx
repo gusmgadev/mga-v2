@@ -31,8 +31,8 @@ export default async function ServiciosPage({
 
   let query = supabaseAdmin
     .from('servicios')
-    .select('*, clientes(name), activos(nombre)')
-    .order('created_at', { ascending: false })
+    .select('*, clientes(name), activos(nombre), servicio_pagos(monto)')
+    .order('fecha', { ascending: false, nullsFirst: false })
 
   if (cliente_id) query = query.eq('cliente_id', Number(cliente_id))
   if (estado) query = query.eq('estado', estado)

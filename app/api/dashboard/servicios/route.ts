@@ -11,6 +11,7 @@ const createSchema = z.object({
   estado: z.enum(['INGRESADO', 'EN PROCESO', 'CANCELADO', 'RECHAZADO', 'TERMINADO', 'PRESUPUESTADO']),
   estado_pago: z.enum(['PENDIENTE', 'SIN CARGO', 'GARANTIA', 'PAGO PARCIAL', 'PAGADO']),
   valor: z.number().min(0),
+  fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   presupuesto_id: z.number().int().positive().nullable().optional(),
 })
 
@@ -31,8 +32,8 @@ export async function GET(req: Request) {
 
   let query = supabaseAdmin
     .from('servicios')
-    .select('*, clientes(name), activos(nombre)')
-    .order('created_at', { ascending: false })
+    .select('*, clientes(name), activos(nombre), servicio_pagos(monto)')
+    .order('fecha', { ascending: false, nullsFirst: false })
 
   if (clienteId) query = query.eq('cliente_id', Number(clienteId))
   if (estado) query = query.eq('estado', estado)
@@ -55,7 +56,7 @@ export async function POST(req: Request) {
   const { data, error } = await supabaseAdmin
     .from('servicios')
     .insert(parsed.data)
-    .select('*, clientes(name), activos(nombre)')
+    .select('*, clientes(name), activos(nombre), servicio_pagos(monto)')
     .single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data, { status: 201 })
