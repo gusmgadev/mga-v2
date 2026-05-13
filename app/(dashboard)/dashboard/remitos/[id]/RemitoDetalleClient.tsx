@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { ArrowLeft, Plus, Trash2, AlertCircle, Loader2, Check, Mic, Search, X } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import VoiceRecorder from '@/components/dashboard/VoiceRecorder'
+import CatalogoCombobox from '@/components/dashboard/CatalogoCombobox'
 import type { Remito, RemitoItem, OrigenDestino, Producto, ProductoConMatch } from '@/types/stock'
 import type { ModulePermisos } from '@/lib/permisos'
 
@@ -41,6 +42,8 @@ interface Props {
   origenes: OrigenDestino[]
   productos: Producto[]
   permisos: ModulePermisos
+  initialMarcas: string[]
+  initialRubros: string[]
 }
 
 const inputStyle: React.CSSProperties = {
@@ -144,7 +147,6 @@ function ProductoSearchPanel({
 
   return (
     <div style={{ marginBottom: '16px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, overflow: 'hidden' }}>
-      {/* Search input */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 12px', borderBottom: `1px solid ${theme.colors.border}`, backgroundColor: '#fafafa' }}>
         <Search size={15} style={{ color: theme.colors.textMuted, flexShrink: 0 }} />
         <input
@@ -162,7 +164,6 @@ function ProductoSearchPanel({
         </button>
       </div>
 
-      {/* Product list */}
       <div style={{ maxHeight: '220px', overflowY: 'auto' }}>
         {filtered.length === 0 ? (
           <div style={{ padding: '16px', textAlign: 'center', color: theme.colors.textMuted, fontSize: theme.fontSizes.sm }}>
@@ -202,7 +203,6 @@ function ProductoSearchPanel({
         )}
       </div>
 
-      {/* Footer: create new */}
       <div style={{ padding: '10px 14px', borderTop: `1px solid ${theme.colors.border}`, backgroundColor: '#fafafa' }}>
         <button
           onClick={onCrearNuevo}
@@ -225,17 +225,27 @@ type CrearProductoData = {
   nombre: string
   codigo: string
   marca: string
+  rubro: string
   unidad: string
   costo: string
   precio_venta: string
 }
 
-export default function RemitoDetalleClient({ remito: initialRemito, origenes: initialOrigenes, productos: initialProductos, permisos }: Props) {
+export default function RemitoDetalleClient({
+  remito: initialRemito,
+  origenes: initialOrigenes,
+  productos: initialProductos,
+  permisos,
+  initialMarcas,
+  initialRubros,
+}: Props) {
   const router = useRouter()
   const [remito, setRemito] = useState(initialRemito)
   const [items, setItems] = useState<RemitoItem[]>((initialRemito.remito_items as RemitoItem[]) ?? [])
   const [origenes, setOrigenes] = useState<OrigenDestino[]>(initialOrigenes)
   const [localProductos, setLocalProductos] = useState<Producto[]>(initialProductos)
+  const [localMarcas, setLocalMarcas] = useState<string[]>(initialMarcas)
+  const [localRubros, setLocalRubros] = useState<string[]>(initialRubros)
 
   const [savingEncabezado, setSavingEncabezado] = useState(false)
   const [encabezadoError, setEncabezadoError] = useState<string | null>(null)
@@ -252,9 +262,12 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
   const [showVoice, setShowVoice] = useState(false)
   const [showProductSearch, setShowProductSearch] = useState(false)
 
+  // Items detectados por voz con baja confianza, esperando decisión del usuario
+  const [pendingVoiceItems, setPendingVoiceItems] = useState<ProductoConMatch[]>([])
+
   const [showCrearProducto, setShowCrearProducto] = useState(false)
   const [crearProductoData, setCrearProductoData] = useState<CrearProductoData>({
-    nombre: '', codigo: generarCodigo(), marca: '', unidad: 'unidad', costo: '', precio_venta: '',
+    nombre: '', codigo: generarCodigo(), marca: '', rubro: '', unidad: 'unidad', costo: '', precio_venta: '',
   })
   const [creandoProducto, setCreandoProducto] = useState(false)
   const [crearProductoError, setCrearProductoError] = useState<string | null>(null)
@@ -328,27 +341,39 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
 
   const handleVoiceItems = useCallback(async (voiceItems: ProductoConMatch[]) => {
     if (voiceItems.length === 0) return
-    const payload = voiceItems.map((vi, i) => ({
-      producto_id: vi.producto_match?.id ?? null,
-      nombre_detectado: vi.nombre_detectado,
-      cantidad: vi.cantidad,
-      cantidad_asumida: vi.cantidad_asumida,
-      unidad: vi.unidad ?? vi.producto_match?.unidad ?? 'unidad',
-      costo: vi.costo ?? vi.producto_match?.costo ?? null,
-      precio_venta: vi.precio_venta ?? vi.producto_match?.precio_venta ?? null,
-      confianza: vi.confianza,
-      es_producto_nuevo: vi.es_producto_nuevo,
-      orden: items.length + i,
-    }))
-    const res = await fetch(`/api/dashboard/remitos/${remito.id}/items`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    })
-    if (res.ok) {
-      const json = await res.json()
-      setItems((prev) => [...prev, ...json])
+
+    // Separar por confianza: >= 50% se insertan automáticamente, el resto va al panel de pendientes
+    const autoItems = voiceItems.filter((vi) => !vi.es_producto_nuevo && vi.confianza >= 0.5)
+    const pending = voiceItems.filter((vi) => vi.es_producto_nuevo || vi.confianza < 0.5)
+
+    if (autoItems.length > 0) {
+      const payload = autoItems.map((vi, i) => ({
+        producto_id: vi.producto_match?.id ?? null,
+        nombre_detectado: vi.nombre_detectado,
+        cantidad: vi.cantidad,
+        cantidad_asumida: vi.cantidad_asumida,
+        unidad: vi.unidad ?? vi.producto_match?.unidad ?? 'unidad',
+        costo: vi.costo ?? vi.producto_match?.costo ?? null,
+        precio_venta: vi.precio_venta ?? vi.producto_match?.precio_venta ?? null,
+        confianza: vi.confianza,
+        es_producto_nuevo: false,
+        orden: items.length + i,
+      }))
+      const res = await fetch(`/api/dashboard/remitos/${remito.id}/items`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setItems((prev) => [...prev, ...json])
+      }
     }
+
+    if (pending.length > 0) {
+      setPendingVoiceItems((prev) => [...prev, ...pending])
+    }
+
     setShowVoice(false)
   }, [items.length, remito.id])
 
@@ -377,6 +402,24 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
     }
   }
 
+  async function handleNewMarca(nombre: string) {
+    await fetch('/api/dashboard/marcas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre }),
+    })
+    setLocalMarcas((prev) => prev.includes(nombre) ? prev : [...prev, nombre].sort())
+  }
+
+  async function handleNewRubro(nombre: string) {
+    await fetch('/api/dashboard/rubros-productos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre }),
+    })
+    setLocalRubros((prev) => prev.includes(nombre) ? prev : [...prev, nombre].sort())
+  }
+
   async function handleCrearProducto() {
     if (!crearProductoData.nombre.trim()) return
     setCreandoProducto(true)
@@ -389,6 +432,7 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
           nombre: crearProductoData.nombre,
           codigo: crearProductoData.codigo || null,
           marca: crearProductoData.marca || null,
+          rubro: crearProductoData.rubro || null,
           unidad: crearProductoData.unidad,
           costo: crearProductoData.costo ? parseFloat(crearProductoData.costo) : null,
           precio_venta: crearProductoData.precio_venta ? parseFloat(crearProductoData.precio_venta) : null,
@@ -400,6 +444,8 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
       if (!res.ok) { setCrearProductoError(json.error); return }
       const newProduct: Producto = json
       setLocalProductos((prev) => [...prev, newProduct].sort((a, b) => a.nombre.localeCompare(b.nombre)))
+      if (crearProductoData.marca) setLocalMarcas((prev) => prev.includes(crearProductoData.marca) ? prev : [...prev, crearProductoData.marca].sort())
+      if (crearProductoData.rubro) setLocalRubros((prev) => prev.includes(crearProductoData.rubro) ? prev : [...prev, crearProductoData.rubro].sort())
       await selectProductoParaItem(newProduct)
       setShowCrearProducto(false)
       setShowProductSearch(false)
@@ -408,10 +454,19 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
     }
   }
 
-  function openCrearProducto() {
-    setCrearProductoData({ nombre: '', codigo: generarCodigo(), marca: '', unidad: 'unidad', costo: '', precio_venta: '' })
+  function openCrearProducto(nombreInicial = '') {
+    setCrearProductoData({ nombre: nombreInicial, codigo: generarCodigo(), marca: '', rubro: '', unidad: 'unidad', costo: '', precio_venta: '' })
     setCrearProductoError(null)
     setShowCrearProducto(true)
+  }
+
+  function descartarPendiente(index: number) {
+    setPendingVoiceItems((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  function crearDesddePendiente(vi: ProductoConMatch, index: number) {
+    setPendingVoiceItems((prev) => prev.filter((_, i) => i !== index))
+    openCrearProducto(vi.nombre_detectado)
   }
 
   async function updateItem(itemId: string, field: string, value: string | number | null) {
@@ -625,11 +680,75 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
           </div>
         )}
 
+        {/* Panel de items pendientes (baja confianza) */}
+        {pendingVoiceItems.length > 0 && canEdit && (
+          <div style={{ marginBottom: '16px', border: `1px solid ${theme.colors.warning}`, borderRadius: theme.radii.sm, overflow: 'hidden' }}>
+            <div style={{ padding: '10px 14px', backgroundColor: `${theme.colors.warning}10`, borderBottom: `1px solid ${theme.colors.warning}` }}>
+              <span style={{ fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, color: theme.colors.warning }}>
+                Productos detectados sin coincidencia suficiente ({pendingVoiceItems.length})
+              </span>
+            </div>
+            {pendingVoiceItems.map((vi, index) => (
+              <div
+                key={index}
+                style={{
+                  padding: '12px 14px',
+                  borderBottom: index < pendingVoiceItems.length - 1 ? `1px solid ${theme.colors.border}` : 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, color: theme.colors.text }}>
+                    &ldquo;{vi.nombre_detectado}&rdquo;
+                  </span>
+                  <div style={{ marginTop: '3px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {vi.confianza > 0 ? (
+                      <>
+                        <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>Coincidencia:</span>
+                        <ConfianzaBadge confianza={vi.confianza} />
+                        {vi.producto_match && (
+                          <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>
+                            → {vi.producto_match.nombre}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>Sin coincidencia en catálogo</span>
+                    )}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                  <button
+                    onClick={() => crearDesddePendiente(vi, index)}
+                    style={{
+                      padding: '6px 12px', backgroundColor: theme.colors.primary,
+                      color: '#fff', border: 'none', borderRadius: theme.radii.sm,
+                      fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium, cursor: 'pointer',
+                    }}
+                  >
+                    Crear producto
+                  </button>
+                  <button
+                    onClick={() => descartarPendiente(index)}
+                    style={{
+                      padding: '6px 12px', backgroundColor: '#fff',
+                      color: theme.colors.textMuted, border: `1px solid ${theme.colors.border}`,
+                      borderRadius: theme.radii.sm, fontSize: theme.fontSizes.xs, cursor: 'pointer',
+                    }}
+                  >
+                    Descartar
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {showProductSearch && canEdit && (
           <ProductoSearchPanel
             productos={localProductos}
             onSelect={selectProductoParaItem}
-            onCrearNuevo={openCrearProducto}
+            onCrearNuevo={() => openCrearProducto()}
             onClose={() => setShowProductSearch(false)}
           />
         )}
@@ -676,9 +795,6 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
                             <span style={{ display: 'block', fontSize: '11px', color: theme.colors.textMuted }}>
                               {item.productos.marca}
                             </span>
-                          )}
-                          {item.es_producto_nuevo && (
-                            <span style={{ display: 'block', fontSize: '11px', color: theme.colors.warning }}>Producto nuevo</span>
                           )}
                         </div>
                       )}
@@ -865,7 +981,7 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
       {/* Modal crear producto nuevo */}
       {showCrearProducto && (
         <ModalOverlay onClose={() => !creandoProducto && setShowCrearProducto(false)}>
-          <div style={{ backgroundColor: '#fff', borderRadius: theme.radii.md, padding: '24px', width: '100%', maxWidth: '460px', boxShadow: theme.shadows.md }}>
+          <div style={{ backgroundColor: '#fff', borderRadius: theme.radii.md, padding: '24px', width: '100%', maxWidth: '480px', boxShadow: theme.shadows.md }}>
             <h2 style={{ fontSize: theme.fontSizes.lg, fontWeight: theme.fontWeights.bold, margin: '0 0 20px' }}>
               Nuevo producto
             </h2>
@@ -905,13 +1021,24 @@ export default function RemitoDetalleClient({ remito: initialRemito, origenes: i
                   <option value="par">par</option>
                 </select>
               </div>
-              <div style={{ gridColumn: '1 / -1' }}>
+              <div>
                 <label style={labelStyle}>Marca</label>
-                <input
+                <CatalogoCombobox
                   value={crearProductoData.marca}
-                  onChange={(e) => setCrearProductoData((d) => ({ ...d, marca: e.target.value }))}
-                  style={inputStyle}
-                  placeholder="Ej: Excellent"
+                  onChange={(v) => setCrearProductoData((d) => ({ ...d, marca: v }))}
+                  opciones={localMarcas}
+                  onNewOption={handleNewMarca}
+                  placeholder="Ej: Kingston, Logitech..."
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Rubro</label>
+                <CatalogoCombobox
+                  value={crearProductoData.rubro}
+                  onChange={(v) => setCrearProductoData((d) => ({ ...d, rubro: v }))}
+                  opciones={localRubros}
+                  onNewOption={handleNewRubro}
+                  placeholder="Ej: Periféricos, Almacenamiento..."
                 />
               </div>
               <div>

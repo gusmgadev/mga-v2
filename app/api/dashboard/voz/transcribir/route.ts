@@ -111,19 +111,41 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Error al parsear respuesta del LLM' }, { status: 500 })
   }
 
-  // 4. Buscar matches con pg_trgm para cada producto detectado
+  // 4. Buscar matches para cada producto detectado
   const itemsConMatch: ProductoConMatch[] = []
   for (const prod of productosDetectados) {
-    const { data: matches } = await supabaseAdmin.rpc('buscar_productos_por_nombre', {
+    let bestMatch: { id: string; nombre: string; marca: string | null; unidad: string; stock_actual: number; costo: number | null; precio_venta: number | null; confianza: number } | null = null
+
+    // Intento 1: búsqueda por similaridad (pg_trgm)
+    const { data: matches, error: rpcError } = await supabaseAdmin.rpc('buscar_productos_por_nombre', {
       p_nombre: prod.nombre_detectado,
       p_limit: 1,
     })
 
-    const bestMatch = matches?.[0]
+    if (!rpcError && matches?.[0]) {
+      bestMatch = { ...matches[0], confianza: Number(matches[0].confianza) }
+    } else {
+      // Fallback: búsqueda por ILIKE — divide el nombre detectado en palabras
+      const palabras = prod.nombre_detectado.trim().split(/\s+/).filter((w) => w.length > 2)
+      if (palabras.length > 0) {
+        // busca que el nombre contenga al menos la primera palabra significativa
+        const { data: fallback } = await supabaseAdmin
+          .from('productos')
+          .select('id, nombre, marca, unidad, stock_actual, costo, precio_venta')
+          .eq('activo', true)
+          .ilike('nombre', `%${palabras[0]}%`)
+          .limit(1)
+          .single()
+        if (fallback) {
+          bestMatch = { ...fallback, confianza: 0.5 }
+        }
+      }
+    }
+
     itemsConMatch.push({
       ...prod,
-      confianza: bestMatch ? Number(bestMatch.confianza) : 0,
-      es_producto_nuevo: !bestMatch || Number(bestMatch.confianza) < 0.3,
+      confianza: bestMatch ? bestMatch.confianza : 0,
+      es_producto_nuevo: !bestMatch,
       producto_match: bestMatch
         ? {
             id: bestMatch.id,

@@ -13,7 +13,7 @@ export default async function RemitoDetallePage({ params }: { params: Promise<{ 
 
   const { id } = await params
 
-  const [{ data: remito }, { data: origenes }, { data: productos }] = await Promise.all([
+  const [{ data: remito }, { data: origenes }, { data: productos }, { data: marcas }, { data: rubrosProductos }] = await Promise.all([
     supabaseAdmin
       .from('remitos')
       .select('*, origenes_destinos(*), remito_items(*, productos(*))')
@@ -29,6 +29,16 @@ export default async function RemitoDetallePage({ params }: { params: Promise<{ 
       .select('*')
       .eq('activo', true)
       .order('nombre'),
+    supabaseAdmin
+      .from('marcas')
+      .select('nombre')
+      .eq('activo', true)
+      .order('nombre'),
+    supabaseAdmin
+      .from('rubros_productos')
+      .select('nombre')
+      .eq('activo', true)
+      .order('nombre'),
   ])
 
   if (!remito) redirect('/dashboard/remitos')
@@ -39,6 +49,8 @@ export default async function RemitoDetallePage({ params }: { params: Promise<{ 
       origenes={origenes ?? []}
       productos={productos ?? []}
       permisos={permisos}
+      initialMarcas={(marcas ?? []).map((m) => m.nombre)}
+      initialRubros={(rubrosProductos ?? []).map((r) => r.nombre)}
     />
   )
 }
