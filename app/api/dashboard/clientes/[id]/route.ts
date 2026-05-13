@@ -11,6 +11,7 @@ const updateSchema = z.object({
   address: z.string().optional(),
   cuit: z.string().optional(),
   rubro: z.string().optional(),
+  localidad: z.string().optional(),
   notes: z.string().optional(),
   active: z.boolean().optional(),
   imagen: z.string().optional(),

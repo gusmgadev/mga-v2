@@ -16,5 +16,9 @@ export default async function ClientesPage() {
     .select('*')
     .order('name')
 
-  return <ClientesClient initialClientes={clientes ?? []} permisos={permisos} />
+  const initialRubros = [...new Set(
+    (clientes ?? []).map((c) => c.rubro).filter((r): r is string => Boolean(r))
+  )].sort()
+
+  return <ClientesClient initialClientes={clientes ?? []} permisos={permisos} initialRubros={initialRubros} />
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -16,6 +16,7 @@ type Cliente = {
   email: string | null
   phone: string | null
   address: string | null
+  localidad: string | null
   cuit: string | null
   rubro: string | null
   notes: string | null
@@ -32,6 +33,7 @@ const clienteSchema = z.object({
   email: z.string().email('Email inválido').optional().or(z.literal('')),
   phone: z.string().optional(),
   address: z.string().optional(),
+  localidad: z.string().optional(),
   cuit: z.string().optional(),
   rubro: z.string().optional(),
   notes: z.string().optional(),
@@ -96,7 +98,109 @@ function ErrorBox({ message }: { message: string }) {
   )
 }
 
-function ClienteFormFields({ form }: { form: ReturnType<typeof useForm<ClienteForm>> }) {
+function RubroCombobox({
+  value,
+  onChange,
+  rubros,
+  onNewRubro,
+}: {
+  value: string
+  onChange: (v: string) => void
+  rubros: string[]
+  onNewRubro: (r: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [input, setInput] = useState(value)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => { setInput(value) }, [value])
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const filtered = rubros.filter((r) => r.toLowerCase().includes(input.toLowerCase()))
+  const isNew = input.trim().length > 0 && !rubros.some((r) => r.toLowerCase() === input.trim().toLowerCase())
+  const showDropdown = open && (filtered.length > 0 || isNew)
+
+  function select(rubro: string) {
+    setInput(rubro)
+    onChange(rubro)
+    setOpen(false)
+  }
+
+  function addNew() {
+    const trimmed = input.trim()
+    if (!trimmed) return
+    onNewRubro(trimmed)
+    onChange(trimmed)
+    setOpen(false)
+  }
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative' }}>
+      <input
+        value={input}
+        onChange={(e) => { setInput(e.target.value); onChange(e.target.value); setOpen(true) }}
+        onFocus={() => setOpen(true)}
+        style={inputStyle}
+        placeholder="Ej: Indumentaria, Óptica..."
+        autoComplete="off"
+      />
+      {showDropdown && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 2px)', left: 0, right: 0,
+          backgroundColor: '#fff', border: `1px solid ${theme.colors.border}`,
+          borderRadius: theme.radii.sm, boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+          zIndex: 200, maxHeight: '200px', overflowY: 'auto',
+        }}>
+          {filtered.map((r) => (
+            <div
+              key={r}
+              onMouseDown={() => select(r)}
+              style={{ padding: '8px 14px', cursor: 'pointer', fontSize: theme.fontSizes.sm, color: theme.colors.text }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '')}
+            >
+              {r}
+            </div>
+          ))}
+          {isNew && (
+            <div
+              onMouseDown={addNew}
+              style={{
+                padding: '8px 14px', cursor: 'pointer', fontSize: theme.fontSizes.sm,
+                color: theme.colors.primary, fontWeight: theme.fontWeights.medium,
+                borderTop: filtered.length > 0 ? `1px solid ${theme.colors.border}` : 'none',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${theme.colors.primary}0a`)}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '')}
+            >
+              + Agregar &quot;{input.trim()}&quot;
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ClienteFormFields({
+  form,
+  rubros,
+  onNewRubro,
+}: {
+  form: ReturnType<typeof useForm<ClienteForm>>
+  rubros: string[]
+  onNewRubro: (r: string) => void
+}) {
+  const rubroValue = form.watch('rubro') ?? ''
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -119,7 +223,12 @@ function ClienteFormFields({ form }: { form: ReturnType<typeof useForm<ClienteFo
         </div>
         <div>
           <label style={labelStyle}>Rubro</label>
-          <input {...form.register('rubro')} style={inputStyle} placeholder="Ej: Indumentaria, Óptica..." />
+          <RubroCombobox
+            value={rubroValue}
+            onChange={(v) => form.setValue('rubro', v, { shouldDirty: true })}
+            rubros={rubros}
+            onNewRubro={onNewRubro}
+          />
         </div>
         <div>
           <label style={labelStyle}>Email</label>
@@ -130,9 +239,13 @@ function ClienteFormFields({ form }: { form: ReturnType<typeof useForm<ClienteFo
           <label style={labelStyle}>Teléfono</label>
           <input {...form.register('phone')} style={inputStyle} placeholder="2664-123456" />
         </div>
+        <div>
+          <label style={labelStyle}>Localidad</label>
+          <input {...form.register('localidad')} style={inputStyle} placeholder="San Luis, Villa Mercedes..." />
+        </div>
         <div style={{ gridColumn: '1 / -1' }}>
           <label style={labelStyle}>Dirección</label>
-          <input {...form.register('address')} style={inputStyle} placeholder="Calle, número, localidad" />
+          <input {...form.register('address')} style={inputStyle} placeholder="Calle y número" />
         </div>
         <div style={{ gridColumn: '1 / -1' }}>
           <label style={labelStyle}>Notas internas</label>
@@ -181,13 +294,26 @@ function ClienteFormFields({ form }: { form: ReturnType<typeof useForm<ClienteFo
   )
 }
 
-export default function ClientesClient({ initialClientes, permisos }: { initialClientes: Cliente[]; permisos: ModulePermisos }) {
+export default function ClientesClient({
+  initialClientes,
+  permisos,
+  initialRubros,
+}: {
+  initialClientes: Cliente[]
+  permisos: ModulePermisos
+  initialRubros: string[]
+}) {
   const [clientes, setClientes] = useState(initialClientes)
+  const [rubros, setRubros] = useState(initialRubros)
   const [showCreate, setShowCreate] = useState(false)
   const [editTarget, setEditTarget] = useState<Cliente | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Cliente | null>(null)
   const [globalError, setGlobalError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+
+  function handleNewRubro(rubro: string) {
+    setRubros((prev) => prev.includes(rubro) ? prev : [...prev, rubro].sort())
+  }
 
   const createForm = useForm<ClienteForm>({
     resolver: zodResolver(clienteSchema),
@@ -204,7 +330,7 @@ export default function ClientesClient({ initialClientes, permisos }: { initialC
   const [editLoading, setEditLoading] = useState(false)
 
   const openCreate = () => {
-    createForm.reset({ type: 'PARTICULAR', active: true, mostrar_en_landing: false, name: '', email: '', phone: '', address: '', cuit: '', rubro: '', notes: '', imagen: '', pagina_web: '' })
+    createForm.reset({ type: 'PARTICULAR', active: true, mostrar_en_landing: false, name: '', email: '', phone: '', address: '', localidad: '', cuit: '', rubro: '', notes: '', imagen: '', pagina_web: '' })
     setCreateError(null)
     setShowCreate(true)
   }
@@ -217,6 +343,7 @@ export default function ClientesClient({ initialClientes, permisos }: { initialC
       email: c.email ?? '',
       phone: c.phone ?? '',
       address: c.address ?? '',
+      localidad: c.localidad ?? '',
       cuit: c.cuit ?? '',
       rubro: c.rubro ?? '',
       notes: c.notes ?? '',
@@ -238,6 +365,7 @@ export default function ClientesClient({ initialClientes, permisos }: { initialC
     setCreateLoading(false)
     if (!res.ok) { setCreateError(json.error); return }
     setClientes((prev) => [json, ...prev].sort((a, b) => a.name.localeCompare(b.name)))
+    if (data.rubro) handleNewRubro(data.rubro)
     setShowCreate(false)
   }
 
@@ -252,6 +380,7 @@ export default function ClientesClient({ initialClientes, permisos }: { initialC
     setEditLoading(false)
     if (!res.ok) { setEditError(json.error); return }
     setClientes((prev) => prev.map((c) => (c.id === editTarget.id ? json : c)))
+    if (data.rubro) handleNewRubro(data.rubro)
     setEditTarget(null)
   }
 
@@ -308,7 +437,14 @@ export default function ClientesClient({ initialClientes, permisos }: { initialC
             )}
             {clientes.map((c) => (
               <tr key={c.id}>
-                <td style={{ ...tdStyle, fontWeight: theme.fontWeights.medium }}>{c.name}</td>
+                <td style={{ ...tdStyle, fontWeight: theme.fontWeights.medium }}>
+                  <span style={{ display: 'block' }}>{c.name}</span>
+                  {c.localidad && (
+                    <span style={{ display: 'block', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, fontWeight: theme.fontWeights.regular, marginTop: '1px' }}>
+                      {c.localidad}
+                    </span>
+                  )}
+                </td>
                 <td style={tdStyle}>
                   <span style={{ padding: '3px 10px', backgroundColor: `${theme.colors.primary}14`, color: theme.colors.primary, borderRadius: theme.radii.full, fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium }}>
                     {TYPE_LABELS[c.type] ?? c.type}
@@ -361,7 +497,7 @@ export default function ClientesClient({ initialClientes, permisos }: { initialC
         <ModalOverlay onClose={() => setShowCreate(false)}>
           <ModalCard title="Nuevo cliente" onClose={() => setShowCreate(false)}>
             <form onSubmit={createForm.handleSubmit(onCreateSubmit)}>
-              <ClienteFormFields form={createForm} />
+              <ClienteFormFields form={createForm} rubros={rubros} onNewRubro={handleNewRubro} />
               {createError && <div style={{ marginTop: '14px' }}><ErrorBox message={createError} /></div>}
               <button
                 type="submit"
@@ -381,7 +517,7 @@ export default function ClientesClient({ initialClientes, permisos }: { initialC
         <ModalOverlay onClose={() => setEditTarget(null)}>
           <ModalCard title="Editar cliente" onClose={() => setEditTarget(null)}>
             <form onSubmit={editForm.handleSubmit(onEditSubmit)}>
-              <ClienteFormFields form={editForm} />
+              <ClienteFormFields form={editForm} rubros={rubros} onNewRubro={handleNewRubro} />
               {editError && <div style={{ marginTop: '14px' }}><ErrorBox message={editError} /></div>}
               <button
                 type="submit"
