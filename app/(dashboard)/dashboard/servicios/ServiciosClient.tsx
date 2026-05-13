@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
-import { Plus, Trash2, X, Loader2, AlertCircle, Eye } from 'lucide-react'
+import { Plus, Trash2, X, Loader2, AlertCircle, Eye, Pencil } from 'lucide-react'
 import Link from 'next/link'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
@@ -44,6 +44,16 @@ const servicioSchema = z.object({
   valor: z.number().min(0),
 })
 type ServicioForm = z.infer<typeof servicioSchema>
+
+const editSchema = z.object({
+  activo_id: z.number().int().positive().nullable().optional(),
+  titulo: z.string().min(2, 'Mínimo 2 caracteres'),
+  descripcion: z.string().optional(),
+  estado: z.enum(['INGRESADO', 'EN PROCESO', 'CANCELADO', 'RECHAZADO', 'TERMINADO', 'PRESUPUESTADO']),
+  estado_pago: z.enum(['PENDIENTE', 'SIN CARGO', 'GARANTIA', 'PAGO PARCIAL', 'PAGADO']),
+  valor: z.number().min(0),
+})
+type EditForm = z.infer<typeof editSchema>
 
 const ESTADO_COLORS: Record<ServicioEstado, { bg: string; text: string }> = {
   INGRESADO:     { bg: '#E3F2FD', text: '#1565C0' },
@@ -295,6 +305,7 @@ export default function ServiciosClient({
   const [localActivos, setLocalActivos] = useState(activos)
   const [showCreate, setShowCreate] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Servicio | null>(null)
+  const [editTarget, setEditTarget] = useState<Servicio | null>(null)
   const [globalError, setGlobalError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
 
@@ -312,6 +323,13 @@ export default function ServiciosClient({
   })
   const [createError, setCreateError] = useState<string | null>(null)
   const [createLoading, setCreateLoading] = useState(false)
+
+  const editForm = useForm<EditForm>({
+    resolver: zodResolver(editSchema),
+    defaultValues: { activo_id: null, titulo: '', descripcion: '', estado: 'INGRESADO', estado_pago: 'PENDIENTE', valor: 0 },
+  })
+  const [editError, setEditError] = useState<string | null>(null)
+  const [editLoading, setEditLoading] = useState(false)
 
   const openCreate = () => {
     createForm.reset({
@@ -340,6 +358,41 @@ export default function ServiciosClient({
     if (!res.ok) { setCreateError(json.error); return }
     setServicios((prev) => [json, ...prev])
     setShowCreate(false)
+  }
+
+  const openEdit = (s: Servicio) => {
+    editForm.reset({
+      activo_id: s.activo_id,
+      titulo: s.titulo,
+      descripcion: s.descripcion ?? '',
+      estado: s.estado,
+      estado_pago: s.estado_pago,
+      valor: Number(s.valor),
+    })
+    setEditError(null)
+    setEditTarget(s)
+  }
+
+  const onEditSubmit = async (data: EditForm) => {
+    if (!editTarget) return
+    setEditLoading(true)
+    setEditError(null)
+    const res = await fetch(`/api/dashboard/servicios/${editTarget.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    const json = await res.json()
+    setEditLoading(false)
+    if (!res.ok) { setEditError(json.error); return }
+    setServicios((prev) => prev.map((s) => {
+      if (s.id !== editTarget.id) return s
+      const nuevoActivo = data.activo_id
+        ? (localActivos.find((a) => a.id === data.activo_id) ?? null)
+        : null
+      return { ...s, ...json, clientes: s.clientes, activos: nuevoActivo ? { nombre: nuevoActivo.nombre } : null }
+    }))
+    setEditTarget(null)
   }
 
   const confirmDelete = async () => {
@@ -462,6 +515,14 @@ export default function ServiciosClient({
                     >
                       <Eye size={13} />
                     </Link>
+                    {permisos.can_edit && (
+                      <button
+                        onClick={() => openEdit(s)}
+                        style={{ background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, padding: '5px 8px', display: 'flex', alignItems: 'center' }}
+                      >
+                        <Pencil size={13} />
+                      </button>
+                    )}
                     {permisos.can_delete && (
                       <button
                         onClick={() => setDeleteTarget(s)}
@@ -492,6 +553,89 @@ export default function ServiciosClient({
               >
                 {createLoading && <Loader2 size={15} className="animate-spin" />}
                 {createLoading ? 'Guardando...' : 'Crear servicio'}
+              </button>
+            </form>
+          </ModalCard>
+        </ModalOverlay>
+      )}
+
+      {/* Edit modal */}
+      {editTarget && (
+        <ModalOverlay onClose={() => setEditTarget(null)}>
+          <ModalCard title="Editar servicio" onClose={() => setEditTarget(null)}>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={labelStyle}>Cliente</label>
+                    <div style={{ padding: '10px 14px', backgroundColor: '#F8F9FB', borderRadius: theme.radii.sm, border: `1px solid ${theme.colors.border}`, fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
+                      {editTarget.clientes?.name ?? '—'}
+                    </div>
+                  </div>
+
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={labelStyle}>Activo (opcional)</label>
+                    <select
+                      {...editForm.register('activo_id', { setValueAs: (v) => (v === '' || v === '0' || v === 0) ? null : Number(v) })}
+                      style={{ ...inputStyle, backgroundColor: '#fff' }}
+                    >
+                      <option value="">Sin activo</option>
+                      {localActivos.filter((a) => a.cliente_id === editTarget.cliente_id).map((a) => (
+                        <option key={a.id} value={a.id}>{a.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={labelStyle}>Título <span style={{ color: theme.colors.error }}>*</span></label>
+                    <input {...editForm.register('titulo')} style={inputStyle} />
+                    {editForm.formState.errors.titulo && (
+                      <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+                        {editForm.formState.errors.titulo.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <label style={labelStyle}>Descripción</label>
+                    <textarea {...editForm.register('descripcion')} rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
+                  </div>
+
+                  <div>
+                    <label style={labelStyle}>Estado</label>
+                    <select {...editForm.register('estado')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+                      {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={labelStyle}>Estado de pago</label>
+                    <select {...editForm.register('estado_pago')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+                      {ESTADOS_PAGO.map((e) => <option key={e} value={e}>{e}</option>)}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={labelStyle}>Valor ($)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      {...editForm.register('valor', { valueAsNumber: true })}
+                      style={inputStyle}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {editError && <div style={{ marginTop: '14px' }}><ErrorBox message={editError} /></div>}
+              <button
+                type="submit"
+                disabled={editLoading}
+                style={{ width: '100%', padding: '11px', marginTop: '20px', backgroundColor: editLoading ? `${theme.colors.primary}99` : theme.colors.primary, color: '#fff', fontSize: theme.fontSizes.base, fontWeight: theme.fontWeights.medium, border: 'none', borderRadius: theme.radii.sm, cursor: editLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              >
+                {editLoading && <Loader2 size={15} className="animate-spin" />}
+                {editLoading ? 'Guardando...' : 'Guardar cambios'}
               </button>
             </form>
           </ModalCard>

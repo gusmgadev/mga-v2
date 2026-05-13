@@ -7,7 +7,7 @@
 Dos productos en un mismo repo Next.js:
 
 1. **Landing pública** (`/`) — sitio de marketing de MGA Informática (empresa de servicios IT). Incluye páginas de servicios, sistemas Zoologic, clientes, contacto.
-2. **Dashboard privado** (`/dashboard`) — sistema interno de gestión. Módulos: Clientes, Activos, Servicios (con tareas y pagos), Presupuestos (con ítems), y panel Admin.
+2. **Dashboard privado** (`/dashboard`) — sistema interno de gestión. Módulos: Clientes, Activos, Servicios (con tareas y pagos), Presupuestos (con ítems), Productos/Stock, Remitos (ingreso de stock por voz), y panel Admin.
 
 **URL producción:** https://mgadigital.com.ar  
 **Repo GitHub:** https://github.com/gusmgadev/mga-v2  
@@ -30,6 +30,7 @@ Dos productos en un mismo repo Next.js:
 | Lucide React | 1.14.0 | Íconos |
 | Framer Motion | 12.x | Solo en landing |
 | Resend | 6.x | Email desde `/api/contact` |
+| Groq API | — | Whisper (STT) + Llama 3.3 (extracción de productos por voz) |
 
 **IMPORTANTE — Next.js 16 breaking changes:**
 - `params` y `searchParams` en page/route handlers son `Promise` — siempre `await params` antes de usar
@@ -78,6 +79,15 @@ mga-v2/
 │   │       │   └── [id]/
 │   │       │       ├── page.tsx
 │   │       │       └── PresupuestoDetalleClient.tsx
+│   │       ├── productos/
+│   │       │   ├── page.tsx
+│   │       │   └── ProductosClient.tsx # Catálogo con marca/rubro/stock
+│   │       ├── remitos/
+│   │       │   ├── page.tsx
+│   │       │   ├── RemitosClient.tsx
+│   │       │   └── [id]/
+│   │       │       ├── page.tsx
+│   │       │       └── RemitoDetalleClient.tsx # Ingreso por voz + tabla de ítems
 │   │       └── admin/                  # Solo rol Administrador
 │   │           ├── usuarios/
 │   │           ├── roles/
@@ -103,6 +113,16 @@ mga-v2/
 │   │       ├── presupuestos/[id]/route.ts
 │   │       ├── presupuestos/[id]/items/route.ts
 │   │       ├── presupuestos/[id]/items/[itemId]/route.ts
+│   │       ├── productos/route.ts
+│   │       ├── productos/[id]/route.ts
+│   │       ├── marcas/route.ts
+│   │       ├── rubros-productos/route.ts
+│   │       ├── remitos/route.ts
+│   │       ├── remitos/[id]/route.ts
+│   │       ├── remitos/[id]/confirmar/route.ts
+│   │       ├── remitos/[id]/items/route.ts
+│   │       ├── remitos/[id]/items/[itemId]/route.ts
+│   │       ├── voz/transcribir/route.ts # Groq Whisper + Llama 3.3 + matching
 │   │       ├── usuarios/route.ts
 │   │       ├── usuarios/[id]/route.ts
 │   │       ├── roles/route.ts
@@ -115,7 +135,9 @@ mga-v2/
 │       ├── sidebar.tsx                 # Sidebar con nav items
 │       ├── header.tsx
 │       ├── QuickCreateClienteModal.tsx # Mini-modal para crear cliente inline (createPortal)
-│       └── QuickCreateActivoModal.tsx  # Mini-modal para crear activo inline (createPortal)
+│       ├── QuickCreateActivoModal.tsx  # Mini-modal para crear activo inline (createPortal)
+│       ├── VoiceRecorder.tsx           # Grabación de audio vía MediaRecorder API
+│       └── CatalogoCombobox.tsx        # Combobox con opción de crear nueva marca/rubro
 ├── lib/
 │   ├── theme.ts                        # FUENTE DE VERDAD — colores, tipografía, datos de contacto
 │   ├── auth.ts                         # Configuración NextAuth
@@ -127,7 +149,8 @@ mga-v2/
 ├── hooks/
 │   └── usePermissions.ts               # Hook cliente para leer permisos
 ├── types/
-│   └── auth.ts                         # Tipos NextAuth extendidos
+│   ├── auth.ts                         # Tipos NextAuth extendidos
+│   └── stock.ts                        # Tipos: Producto, Remito, RemitoItem, ProductoDetectado, ProductoConMatch, etc.
 ├── context/                            # Documentación y bibliotecas de componentes
 │   ├── CONTEXT.md                      # Descripción general (desactualizado — usar CLAUDE.md)
 │   ├── AUTH_CONTEXT.md                 # Guía del sistema de auth
@@ -214,6 +237,43 @@ public.presupuesto_items {
   orden (int, default 0), created_at
 }
 -- subtotal = cantidad × precio_unitario (calculado en JS, no stored)
+
+-- Stock / Remitos
+public.marcas { id, nombre, activo (bool), created_at }
+public.rubros_productos { id, nombre, activo (bool), created_at }
+
+public.productos {
+  id, codigo (nullable), nombre, marca (nullable), rubro (nullable), subrubro (nullable),
+  unidad ('unidad'|'kg'|'bolsa'|'caja'|...), stock_actual (numeric),
+  costo (nullable), precio_venta (nullable), activo (bool), created_at
+}
+
+public.origenes_destinos { id, tipo ('proveedor'|'sucursal'|'deposito'|'cliente'|'otro'), nombre, activo (bool), created_at }
+
+public.remitos {
+  id, usuario_id (FK nullable), numero_tipo ('automatico'|'manual'|'proveedor'),
+  numero (string), tipo ('entrada'|'salida'), fecha (date),
+  origen_destino_id (FK nullable), origen_destino_texto (nullable),
+  observaciones (nullable), audio_url (nullable), transcripcion (nullable),
+  estado ('borrador'|'confirmado'|'anulado'), confirmado_at (nullable), created_at
+}
+
+public.remito_items {
+  id, remito_id (FK cascade), producto_id (FK nullable),
+  nombre_detectado (nullable), cantidad (numeric), cantidad_asumida (bool),
+  unidad (nullable), costo (nullable), precio_venta (nullable),
+  confianza (nullable, 0-1), es_producto_nuevo (bool), orden (int), created_at
+}
+
+public.movimientos_stock {
+  id, producto_id (FK), remito_id (FK), remito_item_id (FK),
+  tipo ('entrada'|'salida'|'ajuste'), cantidad (numeric),
+  costo (nullable), stock_antes (numeric), stock_despues (numeric), created_at
+}
+
+-- Función pg_trgm (requiere extensión pg_trgm activa):
+-- buscar_productos_por_nombre(p_nombre text, p_limit int) → busca por nombre, marca Y código
+-- Devuelve: id, nombre, codigo, marca, unidad, stock_actual, costo, precio_venta, confianza (0-1)
 ```
 
 ---
@@ -245,15 +305,17 @@ if (!permisos.can_view) redirect('/dashboard')
 
 ## Módulos del dashboard — estado actual
 
-| Módulo | Lista | Crear | Detalle | Editar | Tareas/Ítems | Pagos |
-|--------|-------|-------|---------|--------|--------------|-------|
-| Clientes | ✅ | ✅ | — | ✅ | — | — |
-| Activos | ✅ | ✅ | — | ✅ | — | — |
-| Servicios | ✅ | ✅ | ✅ | ✅ | ✅ tareas | ✅ pagos |
-| Presupuestos | ✅ | ✅ | ✅ | ✅ | ✅ ítems | — |
-| Admin/Usuarios | ✅ | ✅ | — | ✅ | — | — |
-| Admin/Roles | ✅ | ✅ | — | — | — | — |
-| Admin/Permisos | ✅ | — | — | ✅ | — | — |
+| Módulo | Lista | Crear | Detalle | Editar | Ítems/Extras |
+|--------|-------|-------|---------|--------|--------------|
+| Clientes | ✅ | ✅ | — | ✅ | — |
+| Activos | ✅ | ✅ | — | ✅ | — |
+| Servicios | ✅ | ✅ | ✅ | ✅ | ✅ tareas + pagos |
+| Presupuestos | ✅ | ✅ | ✅ | ✅ | ✅ ítems |
+| Productos | ✅ | ✅ | — | ✅ | marca/rubro combobox |
+| Remitos | ✅ | ✅ | ✅ | ✅ | ✅ ítems + voz + confirmar |
+| Admin/Usuarios | ✅ | ✅ | — | ✅ | — |
+| Admin/Roles | ✅ | ✅ | — | — | — |
+| Admin/Permisos | ✅ | — | — | ✅ | — |
 
 **Permisos aplicados:** todos los módulos de negocio respetan `can_view / can_create / can_edit / can_delete`.
 
@@ -304,6 +366,46 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 - Siempre `react-hook-form` + `zodResolver` + schema Zod
 - Validación en API route también (mismo schema o similar)
 - Errores de API se muestran en `<ErrorBox>` dentro del modal
+
+### Remitos — ingreso de stock por voz
+
+**Flujo completo:**
+1. `VoiceRecorder` graba audio con `MediaRecorder` API (formato `.webm`)
+2. `POST /api/dashboard/voz/transcribir` recibe el audio + `remito_id`
+3. Audio → Supabase Storage bucket `remitos-audio` (path: `{remitoId}/{timestamp}.webm`)
+4. Groq Whisper (`whisper-large-v3`) transcribe a texto en español
+5. Llama 3.3 (`llama-3.3-70b-versatile`) extrae productos del texto como JSON
+6. Por cada producto detectado, se busca coincidencia en 4 intentos:
+   - **Intento 0:** `ilike('codigo', codigoQuery)` exacto → confianza 1.0
+   - **Intento 0b:** mismo con código normalizado (sin espacios/guiones) → confianza 1.0
+   - **Intento 1:** RPC `buscar_productos_por_nombre` (pg_trgm, busca nombre+marca+código) → confianza real
+   - **Fallback nombre:** `ilike('nombre', '%palabra%')` → confianza 0.5
+   - **Fallback código:** `ilike('codigo', codigoNorm)` → confianza 0.8
+7. API devuelve `{ audio_url, transcripcion, items: ProductoConMatch[] }`
+
+**Lógica de inserción en el cliente (`RemitoDetalleClient`):**
+- `confianza >= 0.7` → auto-insertar ítem vinculado al producto existente
+- `confianza < 0.7` o producto nuevo → panel de pendientes para confirmar
+- Panel de pendientes muestra nombre detectado + posible coincidencia con badge de confianza
+- Acciones: "Usar esta coincidencia" (inserta con producto_match), "Crear producto" (abre modal), "Descartar"
+
+**Keywords opcionales en el dictado (todas actúan como separadores):**
+- `cantidad N` / `N unidad nombreProducto` — cantidad del ítem
+- `codigo X` — código del producto (alfanumérico, si no se dice → se prueba el nombre como código)
+- `costo N` / `precio de costo N` — costo unitario
+- `venta N` / `precio de venta N` — precio de venta
+
+**Tabla de ítems:** muestra `productos.nombre` (nombre real del catálogo) sobre `nombre_detectado` (texto dictado).
+
+### Productos — catálogo con marca/rubro
+
+`CatalogoCombobox` es un combobox compartido en `components/dashboard/CatalogoCombobox.tsx` que:
+- Filtra opciones existentes mientras se tipea
+- Permite crear una nueva opción con "+" guardando vía `onNewOption(valor)` 
+- Usado en el modal de crear/editar producto para los campos **Marca** y **Rubro**
+- También disponible en el modal "Crear producto" dentro de RemitoDetalleClient
+
+Para agregar marca/rubro nuevo desde el modal de remitos: `POST /api/dashboard/marcas` y `POST /api/dashboard/rubros-productos`.
 
 ### Presupuestos — flujo especial
 - Al crear → redirige inmediatamente al detalle (`router.push(/dashboard/presupuestos/${id})`)
@@ -359,6 +461,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 RESEND_API_KEY=
 RESEND_FROM_EMAIL=
+GROQ_API_KEY=          # Whisper (STT) + Llama 3.3 (extracción de productos por voz)
 ```
 
 ---
@@ -369,6 +472,7 @@ RESEND_FROM_EMAIL=
 - **Google Search Console** — enviar sitemap tras deploy
 - **OG image dedicada** — actualmente usa `hero-1.jpg`
 - **Sección Nosotros** — link en navbar apunta a `#`, sin destino real
+- **SQL `buscar_productos_por_nombre`** — debe actualizarse para incluir búsqueda por `codigo` en la función pg_trgm (ver script en historial de sesión 2026-05-13)
 
 ---
 
@@ -381,3 +485,6 @@ RESEND_FROM_EMAIL=
 5. **Módulo nuevo** → recordar agregar en: (a) SQL `role_permissions`, (b) `sidebar.tsx`, (c) `permissions/route.ts` array de admin.
 6. **`params` en Next.js 16** → siempre `const { id } = await params`, nunca `params.id` directo.
 7. **Modales dentro de `<form>`** → usar siempre `createPortal(jsx, document.body)`. HTML prohíbe `<form>` anidados; sin portal causa error de hidratación. Aplica a `QuickCreateClienteModal` y `QuickCreateActivoModal`.
+8. **Remitos — confianza auto-insert:** el umbral es `>= 0.7`. Por debajo va al panel de pendientes, no se inserta automáticamente.
+9. **Remitos — tabla de ítems:** mostrar `item.productos?.nombre` primero; `item.nombre_detectado` como fallback. Nunca al revés (el nombre detectado puede ser el código dictado, no el nombre real del producto).
+10. **`buscar_productos_por_nombre`** — si la función RPC no está actualizada para buscar por `codigo`, el fallback ILIKE en route.ts lo cubre con confianza 0.8.

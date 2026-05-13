@@ -466,7 +466,13 @@ export default function ServicioDetalleClient({
           </h3>
           {permisos.can_create && (
             <button
-              onClick={() => setShowAddPago((v) => !v)}
+              onClick={() => {
+                if (!showAddPago) {
+                  const saldo = Math.max(0, valor - totalPagado)
+                  setPagoMonto(valor > 0 && saldo > 0 ? String(saldo) : '')
+                }
+                setShowAddPago((v) => !v)
+              }}
               style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', backgroundColor: theme.colors.primary, color: '#fff', border: 'none', borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, cursor: 'pointer' }}
             >
               <Plus size={13} /> Agregar pago
@@ -489,6 +495,11 @@ export default function ServicioDetalleClient({
                   placeholder="0.00"
                   style={{ ...inputStyle, padding: '8px 12px', fontSize: theme.fontSizes.sm }}
                 />
+                {valor > 0 && (
+                  <p style={{ margin: '4px 0 0', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>
+                    Saldo: ${Math.max(0, valor - totalPagado).toLocaleString('es-AR')}
+                  </p>
+                )}
               </div>
               <div>
                 <label style={labelStyle}>Fecha</label>

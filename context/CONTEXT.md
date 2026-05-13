@@ -14,7 +14,7 @@
 - **URL producción:** https://mgadigital.com.ar
 - **Repo GitHub:** https://github.com/gusmgadev/mga-v2
 - **Deploy:** Vercel (rama `master`)
-- **Estado:** Landing completa + Dashboard de gestión implementado (auth, permisos, 4 módulos de negocio)
+- **Estado:** Landing completa + Dashboard de gestión implementado (auth, permisos, 6 módulos de negocio)
 
 ---
 
@@ -47,6 +47,7 @@
 - **Lenguaje:** TypeScript strict
 - **Estilos landing:** Tailwind CSS v4 + Framer Motion
 - **Estilos dashboard:** inline styles con `theme.*` (sin Tailwind)
+- **IA / voz:** Groq Whisper (STT) + Llama 3.3 (extracción de productos) para ingreso de stock por voz
 - **Autenticación:** NextAuth.js v5 beta — CredentialsProvider + JWT
 - **Base de datos:** Supabase PostgreSQL (dos clientes: anon y service role)
 - **Formularios:** React Hook Form + Zod
@@ -67,7 +68,7 @@ mga-v2/
 │   └── api/               # API routes (auth, contact, dashboard/*)
 ├── components/
 │   ├── landing/           # 9 componentes de la landing
-│   └── dashboard/         # Sidebar, Header, QuickCreate modals
+│   └── dashboard/         # Sidebar, Header, QuickCreate modals, VoiceRecorder, CatalogoCombobox
 ├── lib/
 │   ├── theme.ts           # FUENTE DE VERDAD — colores, tipografía, datos
 │   ├── auth.ts            # Config NextAuth
@@ -102,8 +103,15 @@ mga-v2/
 - [x] Módulo Activos: lista, crear, editar (con permisos)
 - [x] Módulo Servicios: lista, crear, detalle, editar, tareas, pagos (con permisos)
 - [x] Módulo Presupuestos: lista, crear, detalle, editar, ítems (con permisos)
+- [x] Módulo Productos: lista, crear, editar; catálogo con código, marca, rubro, unidad, stock, costo, precio venta
+- [x] Módulo Remitos: lista, crear, detalle, editar, confirmar, ítems
+  - Ingreso de stock por voz: Groq Whisper (transcripción) + Llama 3.3 (extracción de productos)
+  - Matching automático por código (exacto y normalizado) y por nombre (pg_trgm / ILIKE fallback)
+  - Auto-inserción con confianza ≥ 0.70; panel de pendientes para el resto
+  - Panel de pendientes: "Usar esta coincidencia", "Crear producto", "Descartar"
 - [x] Panel Admin: Usuarios, Roles, Permisos
 - [x] Quick-create inline: crear cliente o activo desde cualquier formulario sin salir de la pantalla
+- [x] CatalogoCombobox: combobox compartido con creación inline de marca/rubro
 
 ---
 
@@ -126,5 +134,5 @@ mga-v2/
 
 ---
 
-**Última actualización:** 2026-05-08
+**Última actualización:** 2026-05-13
 **Actualizado por:** Claude Code
