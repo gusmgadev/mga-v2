@@ -76,6 +76,7 @@ export interface MovimientoStock {
 
 export interface ProductoDetectado {
   nombre_detectado: string
+  codigo_detectado?: string | null
   cantidad: number
   cantidad_asumida: boolean
   unidad: string | null

@@ -10,12 +10,32 @@ async function requireSession() {
 }
 
 const EXTRACCION_PROMPT = `Analizá el siguiente texto dictado para un sistema de ingreso de stock.
-Extraé todos los productos mencionados. La cantidad SIEMPRE se dice ANTES del nombre.
+Extraé todos los productos mencionados.
 
-Patrones válidos:
-- "15 bolsas alimento Excellent cachorro 20 kilos" → cantidad: 15, unidad: "bolsa"
-- "5 yerbas Amanda kilo" → cantidad: 5, unidad: "kg"
-- "shampoo Petys" → cantidad: 1 (asumida), cantidad_asumida: true
+Palabras clave opcionales que actúan como SEPARADORES y aportan datos del producto que las precede:
+- "cantidad N"           → la cantidad es N
+- "codigo X"            → el código del producto es X (alfanumérico, tal cual se dice)
+- "costo N"             → el costo unitario es N
+- "precio de costo N"   → ídem anterior
+- "venta N"             → el precio de venta es N
+- "precio de venta N"   → ídem anterior
+
+Cada palabra clave señala que terminó el nombre del producto anterior. Son todas opcionales y pueden combinarse.
+
+La cantidad también puede ir ANTES del nombre (sin palabra clave):
+- "15 bolsas alimento Excellent cachorro" → cantidad: 15, unidad: "bolsa"
+
+Ejemplos:
+- "pendrive kingston 128gb cantidad 5"
+  → {nombre: "pendrive kingston 128gb", codigo: null, cantidad: 5}
+- "mouse logitech codigo ML200 cantidad 3 costo 1500 venta 2500"
+  → {nombre: "mouse logitech", codigo: "ML200", cantidad: 3, costo: 1500, precio_venta: 2500}
+- "15 bolsas alimento Excellent cachorro 20 kilos precio de costo 8000 precio de venta 12000"
+  → {nombre: "alimento Excellent cachorro 20 kilos", codigo: null, cantidad: 15, unidad: "bolsa", costo: 8000, precio_venta: 12000}
+- "shampoo Petys cantidad 2 teclado genius cantidad 1 costo 800"
+  → dos productos: shampoo Petys (cantidad 2) y teclado genius (cantidad 1, costo 800)
+- "shampoo Petys"
+  → {nombre: "shampoo Petys", codigo: null, cantidad: 1, cantidad_asumida: true}
 
 Texto: "{transcripcion}"
 
@@ -24,6 +44,7 @@ Devolvé ÚNICAMENTE este JSON sin texto adicional:
   "productos": [
     {
       "nombre_detectado": string,
+      "codigo_detectado": string | null,
       "cantidad": number,
       "cantidad_asumida": boolean,
       "unidad": string | null,
@@ -34,7 +55,8 @@ Devolvé ÚNICAMENTE este JSON sin texto adicional:
 }
 
 Reglas de unidades: kilo/kg→"kg", bolsa/s→"bolsa", caja/s→"caja", sin unidad→"unidad"
-Si no hay cantidad antes del producto: cantidad 1, cantidad_asumida: true`
+Si no hay cantidad explícita: cantidad 1, cantidad_asumida: true
+Si no se dice "codigo": codigo_detectado: null`
 
 export async function POST(req: Request) {
   const session = await requireSession()
@@ -117,7 +139,11 @@ export async function POST(req: Request) {
     let bestMatch: { id: string; nombre: string; codigo: string | null; marca: string | null; unidad: string; stock_actual: number; costo: number | null; precio_venta: number | null; confianza: number } | null = null
 
     // Intento 0: coincidencia exacta de código (confianza 100%)
-    const codigoQuery = prod.nombre_detectado.trim()
+    // Usa codigo_detectado si el LLM lo extrajo; si no, prueba si nombre_detectado parece un código
+    const codigoExplicito = prod.codigo_detectado?.trim() ?? null
+    const codigoImplicito = prod.nombre_detectado.trim()
+    const codigoQuery = codigoExplicito ?? codigoImplicito
+
     if (codigoQuery.length > 0) {
       const { data: codeExact } = await supabaseAdmin
         .from('productos')
