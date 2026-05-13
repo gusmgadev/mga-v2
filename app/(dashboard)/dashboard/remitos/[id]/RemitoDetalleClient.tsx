@@ -342,12 +342,13 @@ export default function RemitoDetalleClient({
   const handleVoiceItems = useCallback(async (voiceItems: ProductoConMatch[]) => {
     if (voiceItems.length === 0) return
 
-    // Separar por confianza: >= 50% se insertan automáticamente, el resto va al panel de pendientes
-    const autoItems = voiceItems.filter((vi) => !vi.es_producto_nuevo && vi.confianza >= 0.5)
-    const pending = voiceItems.filter((vi) => vi.es_producto_nuevo || vi.confianza < 0.5)
+    // Solo auto-insertar coincidencias exactas de código (confianza 1.0)
+    // Todo lo demás (coincidencia por nombre o sin match) va al panel de confirmación
+    const codeMatches = voiceItems.filter((vi) => !vi.es_producto_nuevo && vi.confianza === 1.0)
+    const pending = voiceItems.filter((vi) => vi.es_producto_nuevo || vi.confianza < 1.0)
 
-    if (autoItems.length > 0) {
-      const payload = autoItems.map((vi, i) => ({
+    if (codeMatches.length > 0) {
+      const payload = codeMatches.map((vi, i) => ({
         producto_id: vi.producto_match?.id ?? null,
         nombre_detectado: vi.nombre_detectado,
         cantidad: vi.cantidad,
@@ -366,7 +367,7 @@ export default function RemitoDetalleClient({
       })
       if (res.ok) {
         const json = await res.json()
-        setItems((prev) => [...prev, ...json])
+        setItems((prev) => [...prev, ...(Array.isArray(json) ? json : [json])])
       }
     }
 
@@ -467,6 +468,32 @@ export default function RemitoDetalleClient({
   function crearDesddePendiente(vi: ProductoConMatch, index: number) {
     setPendingVoiceItems((prev) => prev.filter((_, i) => i !== index))
     openCrearProducto(vi.nombre_detectado)
+  }
+
+  async function usarCoincidenciaPendiente(vi: ProductoConMatch, index: number) {
+    if (!vi.producto_match) return
+    const res = await fetch(`/api/dashboard/remitos/${remito.id}/items`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        producto_id: vi.producto_match.id,
+        nombre_detectado: vi.nombre_detectado,
+        cantidad: vi.cantidad,
+        cantidad_asumida: vi.cantidad_asumida,
+        unidad: vi.unidad ?? vi.producto_match.unidad ?? 'unidad',
+        costo: vi.costo ?? vi.producto_match.costo ?? null,
+        precio_venta: vi.precio_venta ?? vi.producto_match.precio_venta ?? null,
+        confianza: vi.confianza,
+        es_producto_nuevo: false,
+        orden: items.length,
+      }),
+    })
+    if (res.ok) {
+      const json = await res.json()
+      const item = Array.isArray(json) ? json[0] : json
+      setItems((prev) => [...prev, { ...item, productos: vi.producto_match as Producto }])
+      setPendingVoiceItems((prev) => prev.filter((_, i) => i !== index))
+    }
   }
 
   async function updateItem(itemId: string, field: string, value: string | number | null) {
@@ -680,12 +707,12 @@ export default function RemitoDetalleClient({
           </div>
         )}
 
-        {/* Panel de items pendientes (baja confianza) */}
+        {/* Panel de items pendientes de confirmación */}
         {pendingVoiceItems.length > 0 && canEdit && (
           <div style={{ marginBottom: '16px', border: `1px solid ${theme.colors.warning}`, borderRadius: theme.radii.sm, overflow: 'hidden' }}>
             <div style={{ padding: '10px 14px', backgroundColor: `${theme.colors.warning}10`, borderBottom: `1px solid ${theme.colors.warning}` }}>
               <span style={{ fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, color: theme.colors.warning }}>
-                Productos detectados sin coincidencia suficiente ({pendingVoiceItems.length})
+                Productos detectados — pendientes de confirmación ({pendingVoiceItems.length})
               </span>
             </div>
             {pendingVoiceItems.map((vi, index) => (
@@ -694,35 +721,49 @@ export default function RemitoDetalleClient({
                 style={{
                   padding: '12px 14px',
                   borderBottom: index < pendingVoiceItems.length - 1 ? `1px solid ${theme.colors.border}` : 'none',
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px',
                 }}
               >
-                <div style={{ flex: 1 }}>
+                <div style={{ marginBottom: '8px' }}>
                   <span style={{ fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, color: theme.colors.text }}>
                     &ldquo;{vi.nombre_detectado}&rdquo;
                   </span>
-                  <div style={{ marginTop: '3px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {vi.confianza > 0 ? (
+                  {vi.cantidad !== 1 && (
+                    <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, marginLeft: '8px' }}>
+                      × {vi.cantidad} {vi.unidad ?? ''}
+                    </span>
+                  )}
+                  <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    {vi.producto_match ? (
                       <>
-                        <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>Coincidencia:</span>
+                        <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>Posible coincidencia:</span>
                         <ConfianzaBadge confianza={vi.confianza} />
-                        {vi.producto_match && (
-                          <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>
-                            → {vi.producto_match.nombre}
-                            {vi.producto_match.codigo && (
-                              <span style={{ fontFamily: 'monospace', backgroundColor: '#f3f4f6', padding: '1px 4px', borderRadius: '2px', marginLeft: '4px' }}>
-                                [{vi.producto_match.codigo}]
-                              </span>
-                            )}
-                          </span>
-                        )}
+                        <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.text, fontWeight: theme.fontWeights.medium }}>
+                          {vi.producto_match.nombre}
+                          {vi.producto_match.codigo && (
+                            <span style={{ fontFamily: 'monospace', backgroundColor: '#f3f4f6', padding: '1px 4px', borderRadius: '2px', marginLeft: '4px', fontWeight: 'normal' }}>
+                              [{vi.producto_match.codigo}]
+                            </span>
+                          )}
+                        </span>
                       </>
                     ) : (
                       <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>Sin coincidencia en catálogo</span>
                     )}
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {vi.producto_match && (
+                    <button
+                      onClick={() => usarCoincidenciaPendiente(vi, index)}
+                      style={{
+                        padding: '6px 12px', backgroundColor: theme.colors.success,
+                        color: '#fff', border: 'none', borderRadius: theme.radii.sm,
+                        fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium, cursor: 'pointer',
+                      }}
+                    >
+                      Usar esta coincidencia
+                    </button>
+                  )}
                   <button
                     onClick={() => crearDesddePendiente(vi, index)}
                     style={{
@@ -788,7 +829,7 @@ export default function RemitoDetalleClient({
                       {canEdit ? (
                         <div>
                           <input
-                            defaultValue={item.nombre_detectado ?? item.productos?.nombre ?? ''}
+                            defaultValue={item.productos?.nombre ?? item.nombre_detectado ?? ''}
                             onBlur={(e) => updateItem(item.id, 'nombre_detectado', e.target.value)}
                             style={{ ...inputStyle, fontSize: theme.fontSizes.sm, padding: '4px 8px' }}
                           />
@@ -802,7 +843,7 @@ export default function RemitoDetalleClient({
                         <div>
                           <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', flexWrap: 'wrap' }}>
                             <span style={{ fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium }}>
-                              {item.nombre_detectado ?? item.productos?.nombre ?? '—'}
+                              {item.productos?.nombre ?? item.nombre_detectado ?? '—'}
                             </span>
                             {item.productos?.codigo && (
                               <span style={{ fontSize: '11px', color: theme.colors.textMuted, fontFamily: 'monospace', backgroundColor: '#f3f4f6', padding: '1px 5px', borderRadius: '3px', whiteSpace: 'nowrap' }}>
