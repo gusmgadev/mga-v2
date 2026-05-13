@@ -139,10 +139,12 @@ export async function POST(req: Request) {
     let bestMatch: { id: string; nombre: string; codigo: string | null; marca: string | null; unidad: string; stock_actual: number; costo: number | null; precio_venta: number | null; confianza: number } | null = null
 
     // Intento 0: coincidencia exacta de código (confianza 100%)
-    // Usa codigo_detectado si el LLM lo extrajo; si no, prueba si nombre_detectado parece un código
+    // "codigo" es opcional — si no se dijo, prueba nombre_detectado como código
     const codigoExplicito = prod.codigo_detectado?.trim() ?? null
     const codigoImplicito = prod.nombre_detectado.trim()
     const codigoQuery = codigoExplicito ?? codigoImplicito
+    // Versión normalizada: sin espacios ni guiones (cubre variaciones de transcripción)
+    const codigoNorm = codigoQuery.replace(/[\s\-\.]/g, '')
 
     if (codigoQuery.length > 0) {
       const { data: codeExact } = await supabaseAdmin
@@ -157,8 +159,22 @@ export async function POST(req: Request) {
       }
     }
 
+    // Intento 0b: código normalizado (cubre "KB 2400" → "KB2400", etc.)
+    if (!bestMatch && codigoNorm.length > 0 && codigoNorm !== codigoQuery) {
+      const { data: codeNorm } = await supabaseAdmin
+        .from('productos')
+        .select('id, nombre, codigo, marca, unidad, stock_actual, costo, precio_venta')
+        .eq('activo', true)
+        .ilike('codigo', codigoNorm)
+        .limit(1)
+        .maybeSingle()
+      if (codeNorm) {
+        bestMatch = { ...codeNorm, codigo: codeNorm.codigo ?? null, confianza: 1.0 }
+      }
+    }
+
     if (!bestMatch) {
-      // Intento 1: búsqueda por similaridad (pg_trgm)
+      // Intento 1: búsqueda por similaridad (pg_trgm) — la función busca por nombre Y código
       const { data: matches, error: rpcError } = await supabaseAdmin.rpc('buscar_productos_por_nombre', {
         p_nombre: prod.nombre_detectado,
         p_limit: 1,
@@ -167,18 +183,31 @@ export async function POST(req: Request) {
       if (!rpcError && matches?.[0]) {
         bestMatch = { ...matches[0], codigo: matches[0].codigo ?? null, confianza: Number(matches[0].confianza) }
       } else {
-        // Fallback: búsqueda por ILIKE — divide el nombre detectado en palabras
+        // Fallback ILIKE (cuando pg_trgm no está disponible): busca por nombre y también por código
         const palabras = prod.nombre_detectado.trim().split(/\s+/).filter((w) => w.length > 2)
         if (palabras.length > 0) {
-          const { data: fallback } = await supabaseAdmin
+          const { data: fallbackNombre } = await supabaseAdmin
             .from('productos')
             .select('id, nombre, codigo, marca, unidad, stock_actual, costo, precio_venta')
             .eq('activo', true)
             .ilike('nombre', `%${palabras[0]}%`)
             .limit(1)
             .maybeSingle()
-          if (fallback) {
-            bestMatch = { ...fallback, codigo: fallback.codigo ?? null, confianza: 0.5 }
+          if (fallbackNombre) {
+            bestMatch = { ...fallbackNombre, codigo: fallbackNombre.codigo ?? null, confianza: 0.5 }
+          }
+        }
+        // Si no encontró por nombre, buscar por código (con el texto normalizado)
+        if (!bestMatch && codigoNorm.length > 0) {
+          const { data: fallbackCodigo } = await supabaseAdmin
+            .from('productos')
+            .select('id, nombre, codigo, marca, unidad, stock_actual, costo, precio_venta')
+            .eq('activo', true)
+            .ilike('codigo', codigoNorm)
+            .limit(1)
+            .maybeSingle()
+          if (fallbackCodigo) {
+            bestMatch = { ...fallbackCodigo, codigo: fallbackCodigo.codigo ?? null, confianza: 0.8 }
           }
         }
       }
