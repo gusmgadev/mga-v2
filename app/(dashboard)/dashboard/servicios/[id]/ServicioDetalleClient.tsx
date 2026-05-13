@@ -44,13 +44,13 @@ type Servicio = {
   valor: number
   fecha: string | null
   created_at: string
-  clientes: { name: string } | null
+  clientes: { nombre: string } | null
   activos: { nombre: string } | null
   servicio_tareas: Tarea[]
   servicio_pagos: Pago[]
 }
 
-type ClienteSimple = { id: number; name: string }
+type ClienteSimple = { id: number; nombre: string }
 type ActivoSimple = { id: number; nombre: string; cliente_id: number }
 
 const ESTADOS: ServicioEstado[] = ['INGRESADO', 'EN PROCESO', 'CANCELADO', 'RECHAZADO', 'TERMINADO', 'PRESUPUESTADO']
@@ -364,7 +364,7 @@ export default function ServicioDetalleClient({
                 {servicio.titulo}
               </h2>
               <p style={{ margin: '0 0 12px', fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
-                {servicio.clientes?.name ?? '—'}
+                {servicio.clientes?.nombre ?? '—'}
                 {servicio.activos ? ` · ${servicio.activos.nombre}` : ''}
                 {servicio.fecha && ` · ${servicio.fecha.split('-').reverse().join('/')}`}
               </p>

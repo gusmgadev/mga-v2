@@ -29,7 +29,7 @@ export async function GET(req: Request) {
 
   let query = supabaseAdmin
     .from('presupuestos')
-    .select('*, clientes(name), activos(nombre), presupuesto_items(id, cantidad, precio_unitario)')
+    .select('*, clientes(nombre), activos(nombre), presupuesto_items(id, cantidad, precio_unitario)')
     .order('created_at', { ascending: false })
 
   if (clienteId) query = query.eq('cliente_id', Number(clienteId))
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
   const { data, error } = await supabaseAdmin
     .from('presupuestos')
     .insert(parsed.data)
-    .select('*, clientes(name), activos(nombre), presupuesto_items(id, cantidad, precio_unitario)')
+    .select('*, clientes(nombre), activos(nombre), presupuesto_items(id, cantidad, precio_unitario)')
     .single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data, { status: 201 })

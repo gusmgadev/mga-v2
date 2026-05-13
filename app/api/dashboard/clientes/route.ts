@@ -4,16 +4,16 @@ import { supabaseAdmin } from '@/services/supabase-admin'
 import { z } from 'zod'
 
 const createSchema = z.object({
-  name: z.string().min(2, 'Mínimo 2 caracteres'),
-  type: z.enum(['PARTICULAR', 'EMPRESA', 'COMERCIO']),
+  nombre: z.string().min(2, 'Mínimo 2 caracteres'),
+  tipo: z.enum(['PARTICULAR', 'EMPRESA', 'COMERCIO']),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
-  phone: z.string().optional(),
-  address: z.string().optional(),
+  telefono: z.string().optional(),
+  direccion: z.string().optional(),
   cuit: z.string().optional(),
   rubro: z.string().optional(),
   localidad: z.string().optional(),
-  notes: z.string().optional(),
-  active: z.boolean(),
+  notas: z.string().optional(),
+  activo: z.boolean(),
   imagen: z.string().optional(),
   pagina_web: z.string().url('URL inválida').optional().or(z.literal('')),
   mostrar_en_landing: z.boolean(),
@@ -32,7 +32,7 @@ export async function GET() {
   const { data, error } = await supabaseAdmin
     .from('clientes')
     .select('*')
-    .order('name')
+    .order('nombre')
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data)
 }

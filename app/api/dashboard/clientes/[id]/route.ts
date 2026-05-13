@@ -4,16 +4,16 @@ import { supabaseAdmin } from '@/services/supabase-admin'
 import { z } from 'zod'
 
 const updateSchema = z.object({
-  name: z.string().min(2, 'Mínimo 2 caracteres').optional(),
-  type: z.enum(['PARTICULAR', 'EMPRESA', 'COMERCIO']).optional(),
+  nombre: z.string().min(2, 'Mínimo 2 caracteres').optional(),
+  tipo: z.enum(['PARTICULAR', 'EMPRESA', 'COMERCIO']).optional(),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
-  phone: z.string().optional(),
-  address: z.string().optional(),
+  telefono: z.string().optional(),
+  direccion: z.string().optional(),
   cuit: z.string().optional(),
   rubro: z.string().optional(),
   localidad: z.string().optional(),
-  notes: z.string().optional(),
-  active: z.boolean().optional(),
+  notas: z.string().optional(),
+  activo: z.boolean().optional(),
   imagen: z.string().optional(),
   pagina_web: z.string().url('URL inválida').optional().or(z.literal('')),
   mostrar_en_landing: z.boolean().optional(),

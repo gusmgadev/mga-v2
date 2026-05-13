@@ -12,7 +12,7 @@ interface Props {
   onClose: () => void
   onCreated: (a: { id: number; nombre: string; cliente_id: number }) => void
   clienteIdPreset?: number
-  clientes: { id: number; name: string }[]
+  clientes: { id: number; nombre: string }[]
 }
 
 const inputStyle = {
@@ -78,7 +78,7 @@ export default function QuickCreateActivoModal({ onClose, onCreated, clienteIdPr
               >
                 <option value={0}>Seleccioná un cliente...</option>
                 {clientes.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <option key={c.id} value={c.id}>{c.nombre}</option>
                 ))}
               </select>
             </div>

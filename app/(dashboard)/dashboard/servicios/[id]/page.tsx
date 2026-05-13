@@ -19,7 +19,7 @@ export default async function ServicioDetallePage({
 
   const { data: servicio, error } = await supabaseAdmin
     .from('servicios')
-    .select('*, clientes(name), activos(nombre), servicio_tareas(*), servicio_pagos(*)')
+    .select('*, clientes(nombre), activos(nombre), servicio_tareas(*), servicio_pagos(*)')
     .eq('id', id)
     .single()
 
@@ -27,9 +27,9 @@ export default async function ServicioDetallePage({
 
   const { data: clientes } = await supabaseAdmin
     .from('clientes')
-    .select('id, name')
-    .eq('active', true)
-    .order('name')
+    .select('id, nombre')
+    .eq('activo', true)
+    .order('nombre')
 
   const { data: activos } = await supabaseAdmin
     .from('activos')

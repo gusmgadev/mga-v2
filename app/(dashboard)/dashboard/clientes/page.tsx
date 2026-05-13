@@ -14,7 +14,7 @@ export default async function ClientesPage() {
   const { data: clientes } = await supabaseAdmin
     .from('clientes')
     .select('*')
-    .order('name')
+    .order('nombre')
 
   const initialRubros = [...new Set(
     (clientes ?? []).map((c) => c.rubro).filter((r): r is string => Boolean(r))

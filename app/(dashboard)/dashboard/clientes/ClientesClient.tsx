@@ -11,16 +11,16 @@ import type { ModulePermisos } from '@/lib/permisos'
 
 type Cliente = {
   id: number
-  name: string
-  type: 'PARTICULAR' | 'EMPRESA' | 'COMERCIO'
+  nombre: string
+  tipo: 'PARTICULAR' | 'EMPRESA' | 'COMERCIO'
   email: string | null
-  phone: string | null
-  address: string | null
+  telefono: string | null
+  direccion: string | null
   localidad: string | null
   cuit: string | null
   rubro: string | null
-  notes: string | null
-  active: boolean
+  notas: string | null
+  activo: boolean
   imagen: string | null
   pagina_web: string | null
   mostrar_en_landing: boolean
@@ -28,16 +28,16 @@ type Cliente = {
 }
 
 const clienteSchema = z.object({
-  name: z.string().min(2, 'Mínimo 2 caracteres'),
-  type: z.enum(['PARTICULAR', 'EMPRESA', 'COMERCIO']),
+  nombre: z.string().min(2, 'Mínimo 2 caracteres'),
+  tipo: z.enum(['PARTICULAR', 'EMPRESA', 'COMERCIO']),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
-  phone: z.string().optional(),
-  address: z.string().optional(),
+  telefono: z.string().optional(),
+  direccion: z.string().optional(),
   localidad: z.string().optional(),
   cuit: z.string().optional(),
   rubro: z.string().optional(),
-  notes: z.string().optional(),
-  active: z.boolean(),
+  notas: z.string().optional(),
+  activo: z.boolean(),
   imagen: z.string().optional(),
   pagina_web: z.string().url('URL inválida').optional().or(z.literal('')),
   mostrar_en_landing: z.boolean(),
@@ -206,12 +206,12 @@ function ClienteFormFields({
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
         <div style={{ gridColumn: '1 / -1' }}>
           <label style={labelStyle}>Nombre <span style={{ color: theme.colors.error }}>*</span></label>
-          <input {...form.register('name')} style={inputStyle} placeholder="Nombre completo o razón social" />
-          {form.formState.errors.name && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.name.message}</p>}
+          <input {...form.register('nombre')} style={inputStyle} placeholder="Nombre completo o razón social" />
+          {form.formState.errors.nombre && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.nombre.message}</p>}
         </div>
         <div>
           <label style={labelStyle}>Tipo <span style={{ color: theme.colors.error }}>*</span></label>
-          <select {...form.register('type')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+          <select {...form.register('tipo')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
             <option value="PARTICULAR">Particular</option>
             <option value="EMPRESA">Empresa</option>
             <option value="COMERCIO">Comercio</option>
@@ -237,7 +237,7 @@ function ClienteFormFields({
         </div>
         <div>
           <label style={labelStyle}>Teléfono</label>
-          <input {...form.register('phone')} style={inputStyle} placeholder="2664-123456" />
+          <input {...form.register('telefono')} style={inputStyle} placeholder="2664-123456" />
         </div>
         <div>
           <label style={labelStyle}>Localidad</label>
@@ -245,12 +245,12 @@ function ClienteFormFields({
         </div>
         <div style={{ gridColumn: '1 / -1' }}>
           <label style={labelStyle}>Dirección</label>
-          <input {...form.register('address')} style={inputStyle} placeholder="Calle y número" />
+          <input {...form.register('direccion')} style={inputStyle} placeholder="Calle y número" />
         </div>
         <div style={{ gridColumn: '1 / -1' }}>
           <label style={labelStyle}>Notas internas</label>
           <textarea
-            {...form.register('notes')}
+            {...form.register('notas')}
             rows={3}
             style={{ ...inputStyle, resize: 'vertical' }}
             placeholder="Observaciones, condiciones especiales..."
@@ -270,7 +270,7 @@ function ClienteFormFields({
             <input
               type="checkbox"
               id="active-check"
-              {...form.register('active')}
+              {...form.register('activo')}
               style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: theme.colors.primary }}
             />
             <label htmlFor="active-check" style={{ ...labelStyle, marginBottom: 0, cursor: 'pointer' }}>
@@ -317,20 +317,20 @@ export default function ClientesClient({
 
   const createForm = useForm<ClienteForm>({
     resolver: zodResolver(clienteSchema),
-    defaultValues: { type: 'PARTICULAR', active: true },
+    defaultValues: { tipo: 'PARTICULAR', activo: true },
   })
   const [createError, setCreateError] = useState<string | null>(null)
   const [createLoading, setCreateLoading] = useState(false)
 
   const editForm = useForm<ClienteForm>({
     resolver: zodResolver(clienteSchema),
-    defaultValues: { type: 'PARTICULAR', active: true },
+    defaultValues: { tipo: 'PARTICULAR', activo: true },
   })
   const [editError, setEditError] = useState<string | null>(null)
   const [editLoading, setEditLoading] = useState(false)
 
   const openCreate = () => {
-    createForm.reset({ type: 'PARTICULAR', active: true, mostrar_en_landing: false, name: '', email: '', phone: '', address: '', localidad: '', cuit: '', rubro: '', notes: '', imagen: '', pagina_web: '' })
+    createForm.reset({ tipo: 'PARTICULAR', activo: true, mostrar_en_landing: false, nombre: '', email: '', telefono: '', direccion: '', localidad: '', cuit: '', rubro: '', notas: '', imagen: '', pagina_web: '' })
     setCreateError(null)
     setShowCreate(true)
   }
@@ -338,16 +338,16 @@ export default function ClientesClient({
   const openEdit = (c: Cliente) => {
     setEditTarget(c)
     editForm.reset({
-      name: c.name,
-      type: c.type,
+      nombre: c.nombre,
+      tipo: c.tipo,
       email: c.email ?? '',
-      phone: c.phone ?? '',
-      address: c.address ?? '',
+      telefono: c.telefono ?? '',
+      direccion: c.direccion ?? '',
       localidad: c.localidad ?? '',
       cuit: c.cuit ?? '',
       rubro: c.rubro ?? '',
-      notes: c.notes ?? '',
-      active: c.active,
+      notas: c.notas ?? '',
+      activo: c.activo,
       imagen: c.imagen ?? '',
       pagina_web: c.pagina_web ?? '',
       mostrar_en_landing: c.mostrar_en_landing,
@@ -364,7 +364,7 @@ export default function ClientesClient({
     const json = await res.json()
     setCreateLoading(false)
     if (!res.ok) { setCreateError(json.error); return }
-    setClientes((prev) => [json, ...prev].sort((a, b) => a.name.localeCompare(b.name)))
+    setClientes((prev) => [json, ...prev].sort((a, b) => a.nombre.localeCompare(b.nombre)))
     if (data.rubro) handleNewRubro(data.rubro)
     setShowCreate(false)
   }
@@ -438,7 +438,7 @@ export default function ClientesClient({
             {clientes.map((c) => (
               <tr key={c.id}>
                 <td style={{ ...tdStyle, fontWeight: theme.fontWeights.medium }}>
-                  <span style={{ display: 'block' }}>{c.name}</span>
+                  <span style={{ display: 'block' }}>{c.nombre}</span>
                   {c.localidad && (
                     <span style={{ display: 'block', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, fontWeight: theme.fontWeights.regular, marginTop: '1px' }}>
                       {c.localidad}
@@ -447,19 +447,19 @@ export default function ClientesClient({
                 </td>
                 <td style={tdStyle}>
                   <span style={{ padding: '3px 10px', backgroundColor: `${theme.colors.primary}14`, color: theme.colors.primary, borderRadius: theme.radii.full, fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium }}>
-                    {TYPE_LABELS[c.type] ?? c.type}
+                    {TYPE_LABELS[c.tipo] ?? c.tipo}
                   </span>
                 </td>
                 <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{c.rubro || '—'}</td>
-                <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{c.phone || '—'}</td>
+                <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{c.telefono || '—'}</td>
                 <td style={tdStyle}>
                   <span style={{
                     padding: '3px 10px', borderRadius: theme.radii.full,
                     fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium,
-                    backgroundColor: c.active ? `${theme.colors.success}18` : `${theme.colors.textMuted}18`,
-                    color: c.active ? theme.colors.success : theme.colors.textMuted,
+                    backgroundColor: c.activo ? `${theme.colors.success}18` : `${theme.colors.textMuted}18`,
+                    color: c.activo ? theme.colors.success : theme.colors.textMuted,
                   }}>
-                    {c.active ? 'Activo' : 'Inactivo'}
+                    {c.activo ? 'Activo' : 'Inactivo'}
                   </span>
                 </td>
                 <td style={tdStyle}>
@@ -537,7 +537,7 @@ export default function ClientesClient({
         <ModalOverlay onClose={() => setDeleteTarget(null)}>
           <ModalCard title="Eliminar cliente" onClose={() => setDeleteTarget(null)}>
             <p style={{ fontSize: theme.fontSizes.base, color: theme.colors.text, marginBottom: '8px' }}>
-              ¿Eliminás a <strong>{deleteTarget.name}</strong>?
+              ¿Eliminás a <strong>{deleteTarget.nombre}</strong>?
             </p>
             <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textMuted, marginBottom: '24px' }}>
               Esta acción no se puede deshacer.

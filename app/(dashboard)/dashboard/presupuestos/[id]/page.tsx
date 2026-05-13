@@ -21,7 +21,7 @@ export default async function PresupuestoDetallePage({
 
   const { data: presupuesto, error } = await supabaseAdmin
     .from('presupuestos')
-    .select('*, clientes(name), activos(nombre), presupuesto_items(*)')
+    .select('*, clientes(nombre), activos(nombre), presupuesto_items(*)')
     .eq('id', id)
     .single()
 

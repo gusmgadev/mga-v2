@@ -30,7 +30,7 @@ export async function GET(req: Request) {
 
   let query = supabaseAdmin
     .from('cobranzas')
-    .select('*, clientes(name), servicios(titulo)')
+    .select('*, clientes(nombre), servicios(titulo)')
     .order('fecha', { ascending: false })
     .order('created_at', { ascending: false })
 
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
   const { data, error } = await supabaseAdmin
     .from('cobranzas')
     .insert(parsed.data)
-    .select('*, clientes(name), servicios(titulo)')
+    .select('*, clientes(nombre), servicios(titulo)')
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

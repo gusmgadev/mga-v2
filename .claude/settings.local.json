@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(npx tsc *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(cd \"c:\\\\MGA\\\\PROYECTOSWEB\\\\mga-v2\" && sed -i 's/clientes\\(name\\)/clientes\\(nombre\\)/g' app/api/dashboard/presupuestos/route.ts app/api/dashboard/presupuestos/[id]/route.ts app/api/dashboard/cobranzas/route.ts && echo \"done\")",
+      "Bash(cd \"c:\\\\MGA\\\\PROYECTOSWEB\\\\mga-v2\" && sed -i 's/clientes\\(name\\)/clientes\\(nombre\\)/g' \"app/\\(dashboard\\)/dashboard/servicios/page.tsx\" \"app/\\(dashboard\\)/dashboard/servicios/[id]/page.tsx\" \"app/\\(dashboard\\)/dashboard/presupuestos/page.tsx\" \"app/\\(dashboard\\)/dashboard/presupuestos/[id]/page.tsx\" \"app/\\(dashboard\\)/dashboard/cobranzas/page.tsx\" && echo \"done\")"
+    ],
+    "additionalDirectories": [
+      "C:\\MGA\\PROYECTOSWEB\\mga-v2\\app\\api\\dashboard\\presupuestos\\[id]",
+      "C:\\MGA\\PROYECTOSWEB\\mga-v2\\app\\(dashboard)\\dashboard\\servicios\\[id]"
     ]
   }
 }

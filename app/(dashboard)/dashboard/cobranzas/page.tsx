@@ -19,9 +19,9 @@ export default async function CobranzasPage({
 
   const { data: clientes } = await supabaseAdmin
     .from('clientes')
-    .select('id, name')
-    .eq('active', true)
-    .order('name')
+    .select('id, nombre')
+    .eq('activo', true)
+    .order('nombre')
 
   const { data: servicios } = await supabaseAdmin
     .from('servicios')
@@ -30,7 +30,7 @@ export default async function CobranzasPage({
 
   let query = supabaseAdmin
     .from('cobranzas')
-    .select('*, clientes(name), servicios(titulo)')
+    .select('*, clientes(nombre), servicios(titulo)')
     .order('fecha', { ascending: false })
     .order('created_at', { ascending: false })
 

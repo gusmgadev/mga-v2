@@ -19,9 +19,9 @@ export default async function ServiciosPage({
 
   const { data: clientes } = await supabaseAdmin
     .from('clientes')
-    .select('id, name')
-    .eq('active', true)
-    .order('name')
+    .select('id, nombre')
+    .eq('activo', true)
+    .order('nombre')
 
   const { data: activos } = await supabaseAdmin
     .from('activos')
@@ -31,7 +31,7 @@ export default async function ServiciosPage({
 
   let query = supabaseAdmin
     .from('servicios')
-    .select('*, clientes(name), activos(nombre), servicio_pagos(monto)')
+    .select('*, clientes(nombre), activos(nombre), servicio_pagos(monto)')
     .order('fecha', { ascending: false, nullsFirst: false })
 
   if (cliente_id) query = query.eq('cliente_id', Number(cliente_id))

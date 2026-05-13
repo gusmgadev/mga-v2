@@ -33,7 +33,7 @@ type Presupuesto = {
   fecha: string
   fecha_vencimiento: string | null
   created_at: string
-  clientes: { name: string } | null
+  clientes: { nombre: string } | null
   activos: { nombre: string } | null
   presupuesto_items: Item[]
 }
@@ -354,7 +354,7 @@ export default function PresupuestoDetalleClient({
                 {presupuesto.titulo}
               </h2>
               <p style={{ margin: '0 0 12px', fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
-                {presupuesto.clientes?.name ?? '—'}
+                {presupuesto.clientes?.nombre ?? '—'}
                 {presupuesto.activos ? ` · ${presupuesto.activos.nombre}` : ''}
               </p>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -529,7 +529,7 @@ export default function PresupuestoDetalleClient({
         <ModalOverlay onClose={() => setShowGenServicio(false)}>
           <ModalCard title="Generar Servicio desde Presupuesto" onClose={() => setShowGenServicio(false)}>
             <p style={{ margin: '0 0 16px', fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
-              Cliente: <strong style={{ color: theme.colors.text }}>{presupuesto.clientes?.name}</strong>
+              Cliente: <strong style={{ color: theme.colors.text }}>{presupuesto.clientes?.nombre}</strong>
               {presupuesto.activos && <> · Activo: <strong style={{ color: theme.colors.text }}>{presupuesto.activos.nombre}</strong></>}
             </p>
             <form onSubmit={genServicioForm.handleSubmit(onGenServicioSubmit)}>

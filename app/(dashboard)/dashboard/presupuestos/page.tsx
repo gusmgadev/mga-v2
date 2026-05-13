@@ -21,7 +21,7 @@ export default async function PresupuestosPage({
 
   let query = supabaseAdmin
     .from('presupuestos')
-    .select('*, clientes(name), activos(nombre), presupuesto_items(id, cantidad, precio_unitario)')
+    .select('*, clientes(nombre), activos(nombre), presupuesto_items(id, cantidad, precio_unitario)')
     .order('created_at', { ascending: false })
 
   if (clienteId) query = query.eq('cliente_id', clienteId)
@@ -29,7 +29,7 @@ export default async function PresupuestosPage({
 
   const [{ data: presupuestos }, { data: clientes }, { data: activos }] = await Promise.all([
     query,
-    supabaseAdmin.from('clientes').select('id, name').eq('active', true).order('name'),
+    supabaseAdmin.from('clientes').select('id, nombre').eq('activo', true).order('nombre'),
     supabaseAdmin.from('activos').select('id, nombre, cliente_id').eq('activo', true).order('nombre'),
   ])
 

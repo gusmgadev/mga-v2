@@ -21,7 +21,7 @@ type Activo = {
   created_at: string
 }
 
-type ClienteSimple = { id: number; name: string }
+type ClienteSimple = { id: number; nombre: string }
 
 const TIPOS = ['PC', 'NOTEBOOK', 'SERVIDOR', 'IMPRESORA', 'SISTEMA', 'DESARROLLO', 'SERVICIO', 'DISPOSITIVO', 'OTRO'] as const
 
@@ -99,8 +99,8 @@ function ActivoFormFields({
 }) {
   const [showQCCliente, setShowQCCliente] = useState(false)
 
-  const handleClienteCreado = (c: { id: number; name: string }) => {
-    setClientes((prev) => [...prev, c].sort((a, b) => a.name.localeCompare(b.name)))
+  const handleClienteCreado = (c: { id: number; nombre: string }) => {
+    setClientes((prev) => [...prev, c].sort((a, b) => a.nombre.localeCompare(b.nombre)))
     form.setValue('cliente_id', c.id)
     setShowQCCliente(false)
   }
@@ -118,7 +118,7 @@ function ActivoFormFields({
             >
               <option value={0}>Seleccioná un cliente...</option>
               {clientes.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.id} value={c.id}>{c.nombre}</option>
               ))}
             </select>
             <button type="button" title="Crear nuevo cliente" onClick={() => setShowQCCliente(true)} style={quickAddBtnStyle}>
@@ -199,7 +199,7 @@ export default function ActivosClient({
   const [globalError, setGlobalError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
 
-  const clienteMap = Object.fromEntries(localClientes.map((c) => [c.id, c.name]))
+  const clienteMap = Object.fromEntries(localClientes.map((c) => [c.id, c.nombre]))
 
   const createForm = useForm<ActivoForm>({
     resolver: zodResolver(activoSchema),
@@ -292,7 +292,7 @@ export default function ActivosClient({
           >
             <option value="">Todos los clientes</option>
             {clientes.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
+              <option key={c.id} value={c.id}>{c.nombre}</option>
             ))}
           </select>
           <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>

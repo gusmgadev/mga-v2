@@ -19,9 +19,9 @@ export default async function ActivosPage({
 
   const { data: clientes } = await supabaseAdmin
     .from('clientes')
-    .select('id, name')
-    .eq('active', true)
-    .order('name')
+    .select('id, nombre')
+    .eq('activo', true)
+    .order('nombre')
 
   let query = supabaseAdmin.from('activos').select('*').order('nombre')
   if (cliente_id) query = query.eq('cliente_id', Number(cliente_id))

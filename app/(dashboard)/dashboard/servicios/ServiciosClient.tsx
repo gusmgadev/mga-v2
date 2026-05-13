@@ -26,11 +26,11 @@ type Servicio = {
   valor: number
   fecha: string | null
   created_at: string
-  clientes: { name: string } | null
+  clientes: { nombre: string } | null
   activos: { nombre: string } | null
   servicio_pagos: { monto: number }[]
 }
-type ClienteSimple = { id: number; name: string }
+type ClienteSimple = { id: number; nombre: string }
 type ActivoSimple = { id: number; nombre: string; cliente_id: number }
 
 const ESTADOS: ServicioEstado[] = ['INGRESADO', 'EN PROCESO', 'CANCELADO', 'RECHAZADO', 'TERMINADO', 'PRESUPUESTADO']
@@ -165,8 +165,8 @@ function ServicioFormFields({
   const clienteId = form.watch('cliente_id')
   const activosFiltrados = activos.filter((a) => a.cliente_id === clienteId)
 
-  const handleClienteCreado = (c: { id: number; name: string }) => {
-    setClientes((prev) => [...prev, c].sort((a, b) => a.name.localeCompare(b.name)))
+  const handleClienteCreado = (c: { id: number; nombre: string }) => {
+    setClientes((prev) => [...prev, c].sort((a, b) => a.nombre.localeCompare(b.nombre)))
     form.setValue('cliente_id', c.id)
     setShowQCCliente(false)
   }
@@ -190,7 +190,7 @@ function ServicioFormFields({
             >
               <option value={0}>Seleccioná un cliente...</option>
               {clientes.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
+                <option key={c.id} value={c.id}>{c.nombre}</option>
               ))}
             </select>
             <button type="button" title="Crear nuevo cliente" onClick={() => setShowQCCliente(true)} style={quickAddBtnStyle}>
@@ -459,7 +459,7 @@ export default function ServiciosClient({
           >
             <option value="">Todos los clientes</option>
             {clientes.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
+              <option key={c.id} value={c.id}>{c.nombre}</option>
             ))}
           </select>
 
@@ -529,7 +529,7 @@ export default function ServiciosClient({
               return (
               <tr key={s.id}>
                 <td style={{ ...tdStyle, color: theme.colors.textMuted, whiteSpace: 'nowrap' }}>{formatFecha(s.fecha)}</td>
-                <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{s.clientes?.name ?? '—'}</td>
+                <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{s.clientes?.nombre ?? '—'}</td>
                 <td style={{ ...tdStyle, fontWeight: theme.fontWeights.medium }}>{s.titulo}</td>
                 <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{s.activos?.nombre ?? '—'}</td>
                 <td style={tdStyle}><EstadoBadge estado={s.estado} /></td>
@@ -606,7 +606,7 @@ export default function ServiciosClient({
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={labelStyle}>Cliente</label>
                     <div style={{ padding: '10px 14px', backgroundColor: '#F8F9FB', borderRadius: theme.radii.sm, border: `1px solid ${theme.colors.border}`, fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
-                      {editTarget.clientes?.name ?? '—'}
+                      {editTarget.clientes?.nombre ?? '—'}
                     </div>
                   </div>
 

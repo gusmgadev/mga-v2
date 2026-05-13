@@ -9,19 +9,19 @@ import { theme } from '@/lib/theme'
 
 interface Props {
   onClose: () => void
-  onCreated: (c: { id: number; name: string }) => void
+  onCreated: (c: { id: number; nombre: string }) => void
 }
 
 const clienteSchema = z.object({
-  name: z.string().min(2, 'Mínimo 2 caracteres'),
-  type: z.enum(['PARTICULAR', 'EMPRESA', 'COMERCIO']),
+  nombre: z.string().min(2, 'Mínimo 2 caracteres'),
+  tipo: z.enum(['PARTICULAR', 'EMPRESA', 'COMERCIO']),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
-  phone: z.string().optional(),
-  address: z.string().optional(),
+  telefono: z.string().optional(),
+  direccion: z.string().optional(),
   cuit: z.string().optional(),
   rubro: z.string().optional(),
-  notes: z.string().optional(),
-  active: z.boolean(),
+  notas: z.string().optional(),
+  activo: z.boolean(),
   imagen: z.string().optional(),
   pagina_web: z.string().url('URL inválida').optional().or(z.literal('')),
   mostrar_en_landing: z.boolean(),
@@ -42,8 +42,8 @@ export default function QuickCreateClienteModal({ onClose, onCreated }: Props) {
   const form = useForm<ClienteForm>({
     resolver: zodResolver(clienteSchema),
     defaultValues: {
-      type: 'PARTICULAR', active: true, mostrar_en_landing: false,
-      name: '', email: '', phone: '', address: '', cuit: '', rubro: '', notes: '', imagen: '', pagina_web: '',
+      tipo: 'PARTICULAR', activo: true, mostrar_en_landing: false,
+      nombre: '', email: '', telefono: '', direccion: '', cuit: '', rubro: '', notas: '', imagen: '', pagina_web: '',
     },
   })
 
@@ -88,13 +88,13 @@ export default function QuickCreateClienteModal({ onClose, onCreated }: Props) {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Nombre <span style={{ color: theme.colors.error }}>*</span></label>
-              <input {...form.register('name')} autoFocus style={inputStyle} placeholder="Nombre completo o razón social" />
-              {form.formState.errors.name && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{form.formState.errors.name.message}</p>}
+              <input {...form.register('nombre')} autoFocus style={inputStyle} placeholder="Nombre completo o razón social" />
+              {form.formState.errors.nombre && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{form.formState.errors.nombre.message}</p>}
             </div>
 
             <div>
               <label style={labelStyle}>Tipo <span style={{ color: theme.colors.error }}>*</span></label>
-              <select {...form.register('type')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+              <select {...form.register('tipo')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
                 <option value="PARTICULAR">Particular</option>
                 <option value="EMPRESA">Empresa</option>
                 <option value="COMERCIO">Comercio</option>
@@ -119,12 +119,12 @@ export default function QuickCreateClienteModal({ onClose, onCreated }: Props) {
 
             <div>
               <label style={labelStyle}>Teléfono</label>
-              <input {...form.register('phone')} style={inputStyle} placeholder="2664-123456" />
+              <input {...form.register('telefono')} style={inputStyle} placeholder="2664-123456" />
             </div>
 
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Dirección</label>
-              <input {...form.register('address')} style={inputStyle} placeholder="Calle, número, localidad" />
+              <input {...form.register('direccion')} style={inputStyle} placeholder="Calle, número, localidad" />
             </div>
 
             <div>
@@ -141,7 +141,7 @@ export default function QuickCreateClienteModal({ onClose, onCreated }: Props) {
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Notas internas</label>
               <textarea
-                {...form.register('notes')}
+                {...form.register('notas')}
                 rows={2}
                 style={{ ...inputStyle, resize: 'vertical' }}
                 placeholder="Observaciones, condiciones especiales..."
@@ -150,7 +150,7 @@ export default function QuickCreateClienteModal({ onClose, onCreated }: Props) {
 
             <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '20px' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: theme.fontSizes.sm, color: theme.colors.text }}>
-                <input type="checkbox" {...form.register('active')} style={{ width: '15px', height: '15px', accentColor: theme.colors.primary }} />
+                <input type="checkbox" {...form.register('activo')} style={{ width: '15px', height: '15px', accentColor: theme.colors.primary }} />
                 Cliente activo
               </label>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: theme.fontSizes.sm, color: theme.colors.text }}>

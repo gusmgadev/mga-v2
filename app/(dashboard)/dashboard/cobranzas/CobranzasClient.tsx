@@ -23,11 +23,11 @@ type Cobranza = {
   metodo_pago: MetodoPago | null
   notas: string | null
   created_at: string
-  clientes: { name: string } | null
+  clientes: { nombre: string } | null
   servicios: { titulo: string } | null
 }
 
-type ClienteSimple = { id: number; name: string }
+type ClienteSimple = { id: number; nombre: string }
 type ServicioSimple = { id: number; titulo: string; cliente_id: number }
 
 const TIPOS: { value: CobranzaTipo; label: string }[] = [
@@ -162,7 +162,7 @@ function CobranzaFormFields({
           >
             <option value={0}>Seleccioná un cliente...</option>
             {clientes.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
+              <option key={c.id} value={c.id}>{c.nombre}</option>
             ))}
           </select>
           {form.formState.errors.cliente_id && (
@@ -373,7 +373,7 @@ export default function CobranzasClient({
   const saldo = totalCargos - totalPagado
 
   const clienteNombre = filtros.cliente_id
-    ? clientes.find((c) => c.id === filtros.cliente_id)?.name
+    ? clientes.find((c) => c.id === filtros.cliente_id)?.nombre
     : null
 
   return (
@@ -416,7 +416,7 @@ export default function CobranzasClient({
           >
             <option value="">Todos los clientes</option>
             {clientes.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
+              <option key={c.id} value={c.id}>{c.nombre}</option>
             ))}
           </select>
 
@@ -474,7 +474,7 @@ export default function CobranzasClient({
             {cobranzas.map((c) => (
               <tr key={c.id}>
                 <td style={{ ...tdStyle, color: theme.colors.textMuted, whiteSpace: 'nowrap' }}>{formatFecha(c.fecha)}</td>
-                <td style={{ ...tdStyle, fontWeight: theme.fontWeights.medium }}>{c.clientes?.name ?? '—'}</td>
+                <td style={{ ...tdStyle, fontWeight: theme.fontWeights.medium }}>{c.clientes?.nombre ?? '—'}</td>
                 <td style={tdStyle}>{c.concepto}</td>
                 <td style={tdStyle}><TipoBadge tipo={c.tipo} /></td>
                 <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{c.metodo_pago ?? '—'}</td>
