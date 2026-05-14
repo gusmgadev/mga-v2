@@ -8,7 +8,7 @@ export async function GET() {
 
   if (session.user.role === 'Administrador') {
     return NextResponse.json(
-      ['clientes', 'activos', 'servicios', 'presupuestos', 'cobranzas', 'productos', 'remitos'].map((m) => ({
+      ['clientes', 'activos', 'servicios', 'presupuestos', 'cobranzas', 'productos', 'remitos', 'noticias'].map((m) => ({
         module: m,
         can_view: true,
         can_create: true,
