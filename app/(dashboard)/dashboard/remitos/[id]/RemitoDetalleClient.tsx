@@ -63,7 +63,6 @@ const labelStyle: React.CSSProperties = {
 function ModalOverlay({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   return (
     <div
-      onClick={onClose}
       style={{
         position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',

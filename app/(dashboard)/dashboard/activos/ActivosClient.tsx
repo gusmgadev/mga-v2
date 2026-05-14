@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
-import { Plus, Pencil, Trash2, X, Loader2, AlertCircle } from 'lucide-react'
+import { Plus, Pencil, Trash2, X, Loader2, AlertCircle, Save } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 import QuickCreateClienteModal from '@/components/dashboard/QuickCreateClienteModal'
@@ -62,18 +62,30 @@ const tdStyle: React.CSSProperties = {
 
 function ModalOverlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '520px', maxHeight: '90vh', overflowY: 'auto' }}>{children}</div>
     </div>
   )
 }
 
-function ModalCard({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+function ModalCard({ title, onClose, children, formId }: { title: string; onClose: () => void; children: React.ReactNode; formId?: string }) {
   return (
     <div style={{ backgroundColor: '#fff', borderRadius: theme.radii.md, boxShadow: '0 8px 32px rgba(0,0,0,0.18)', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: `1px solid ${theme.colors.border}` }}>
         <h2 style={{ margin: 0, fontSize: theme.fontSizes.base, fontWeight: theme.fontWeights.bold, color: theme.colors.text }}>{title}</h2>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.textMuted, display: 'flex', padding: 0 }}><X size={18} /></button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {formId && (
+            <button
+              type="submit"
+              form={formId}
+              title="Guardar"
+              style={{ background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.primary, padding: '5px 8px', display: 'flex', alignItems: 'center' }}
+            >
+              <Save size={16} />
+            </button>
+          )}
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.textMuted, display: 'flex', padding: 0 }}><X size={18} /></button>
+        </div>
       </div>
       <div style={{ padding: '24px' }}>{children}</div>
     </div>
@@ -376,8 +388,8 @@ export default function ActivosClient({
       {/* Create modal */}
       {showCreate && (
         <ModalOverlay onClose={() => setShowCreate(false)}>
-          <ModalCard title="Nuevo activo" onClose={() => setShowCreate(false)}>
-            <form onSubmit={createForm.handleSubmit(onCreateSubmit)}>
+          <ModalCard title="Nuevo activo" onClose={() => setShowCreate(false)} formId="create-form">
+            <form id="create-form" onSubmit={createForm.handleSubmit(onCreateSubmit)}>
               <ActivoFormFields form={createForm} clientes={localClientes} setClientes={setLocalClientes} />
               {createError && <div style={{ marginTop: '14px' }}><ErrorBox message={createError} /></div>}
               <button
@@ -396,8 +408,8 @@ export default function ActivosClient({
       {/* Edit modal */}
       {editTarget && (
         <ModalOverlay onClose={() => setEditTarget(null)}>
-          <ModalCard title="Editar activo" onClose={() => setEditTarget(null)}>
-            <form onSubmit={editForm.handleSubmit(onEditSubmit)}>
+          <ModalCard title="Editar activo" onClose={() => setEditTarget(null)} formId="edit-form">
+            <form id="edit-form" onSubmit={editForm.handleSubmit(onEditSubmit)}>
               <ActivoFormFields form={editForm} clientes={localClientes} setClientes={setLocalClientes} />
               {editError && <div style={{ marginTop: '14px' }}><ErrorBox message={editError} /></div>}
               <button

@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Link from 'next/link'
-import { ArrowLeft, Pencil, X, Loader2, AlertCircle, Plus, Trash2, Wrench, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Pencil, X, Loader2, AlertCircle, Plus, Trash2, Wrench, ExternalLink, Save } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 import QuickCreateActivoModal from '@/components/dashboard/QuickCreateActivoModal'
@@ -108,18 +108,30 @@ const tdStyle: React.CSSProperties = {
 
 function ModalOverlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
       <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '560px', maxHeight: '90vh', overflowY: 'auto' }}>{children}</div>
     </div>
   )
 }
 
-function ModalCard({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+function ModalCard({ title, onClose, children, formId }: { title: string; onClose: () => void; children: React.ReactNode; formId?: string }) {
   return (
     <div style={{ backgroundColor: '#fff', borderRadius: theme.radii.md, boxShadow: '0 8px 32px rgba(0,0,0,0.18)', overflow: 'hidden' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: `1px solid ${theme.colors.border}` }}>
         <h2 style={{ margin: 0, fontSize: theme.fontSizes.base, fontWeight: theme.fontWeights.bold, color: theme.colors.text }}>{title}</h2>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.textMuted, display: 'flex', padding: 0 }}><X size={18} /></button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {formId && (
+            <button
+              type="submit"
+              form={formId}
+              title="Guardar"
+              style={{ background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.primary, padding: '5px 8px', display: 'flex', alignItems: 'center' }}
+            >
+              <Save size={16} />
+            </button>
+          )}
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.textMuted, display: 'flex', padding: 0 }}><X size={18} /></button>
+        </div>
       </div>
       <div style={{ padding: '24px' }}>{children}</div>
     </div>
@@ -527,12 +539,12 @@ export default function PresupuestoDetalleClient({
       {/* Generar Servicio modal */}
       {showGenServicio && (
         <ModalOverlay onClose={() => setShowGenServicio(false)}>
-          <ModalCard title="Generar Servicio desde Presupuesto" onClose={() => setShowGenServicio(false)}>
+          <ModalCard title="Generar Servicio desde Presupuesto" onClose={() => setShowGenServicio(false)} formId="gen-servicio-form">
             <p style={{ margin: '0 0 16px', fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
               Cliente: <strong style={{ color: theme.colors.text }}>{presupuesto.clientes?.nombre}</strong>
               {presupuesto.activos && <> · Activo: <strong style={{ color: theme.colors.text }}>{presupuesto.activos.nombre}</strong></>}
             </p>
-            <form onSubmit={genServicioForm.handleSubmit(onGenServicioSubmit)}>
+            <form id="gen-servicio-form" onSubmit={genServicioForm.handleSubmit(onGenServicioSubmit)}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div>
                   <label style={labelStyle}>Título <span style={{ color: theme.colors.error }}>*</span></label>
@@ -607,8 +619,8 @@ export default function PresupuestoDetalleClient({
       {/* Edit modal */}
       {showEdit && (
         <ModalOverlay onClose={() => setShowEdit(false)}>
-          <ModalCard title="Editar presupuesto" onClose={() => setShowEdit(false)}>
-            <form onSubmit={editForm.handleSubmit(onEditSubmit)}>
+          <ModalCard title="Editar presupuesto" onClose={() => setShowEdit(false)} formId="edit-form">
+            <form id="edit-form" onSubmit={editForm.handleSubmit(onEditSubmit)}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div style={{ gridColumn: '1 / -1' }}>

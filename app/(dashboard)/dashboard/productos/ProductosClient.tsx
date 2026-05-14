@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Plus, Pencil, X, Loader2, AlertCircle, Package } from 'lucide-react'
+import { Plus, Pencil, X, Loader2, AlertCircle, Package, Save } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import CatalogoCombobox from '@/components/dashboard/CatalogoCombobox'
 import type { Producto } from '@/types/stock'
@@ -84,7 +84,6 @@ const tdStyle: React.CSSProperties = {
 function ModalOverlay({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
   return (
     <div
-      onClick={onClose}
       style={{
         position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -96,7 +95,7 @@ function ModalOverlay({ onClose, children }: { onClose: () => void; children: Re
   )
 }
 
-function ModalCard({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+function ModalCard({ title, onClose, children, formId }: { title: string; onClose: () => void; children: React.ReactNode; formId?: string }) {
   return (
     <div style={{
       backgroundColor: '#fff', borderRadius: theme.radii.md,
@@ -105,9 +104,21 @@ function ModalCard({ title, onClose, children }: { title: string; onClose: () =>
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h2 style={{ fontSize: theme.fontSizes.lg, fontWeight: theme.fontWeights.bold, color: theme.colors.text, margin: 0 }}>{title}</h2>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.textMuted, padding: '4px' }}>
-          <X size={20} />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {formId && (
+            <button
+              type="submit"
+              form={formId}
+              title="Guardar"
+              style={{ background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.primary, padding: '5px 8px', display: 'flex', alignItems: 'center' }}
+            >
+              <Save size={16} />
+            </button>
+          )}
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.textMuted, padding: '4px' }}>
+            <X size={20} />
+          </button>
+        </div>
       </div>
       {children}
     </div>
@@ -388,8 +399,8 @@ export default function ProductosClient({ initialProductos, permisos, initialMar
       {/* Modal crear/editar */}
       {showModal && (
         <ModalOverlay onClose={() => setShowModal(false)}>
-          <ModalCard title={editTarget ? 'Editar producto' : 'Nuevo producto'} onClose={() => setShowModal(false)}>
-            <form onSubmit={handleSubmit(onSubmit)}>
+          <ModalCard title={editTarget ? 'Editar producto' : 'Nuevo producto'} onClose={() => setShowModal(false)} formId="producto-form">
+            <form id="producto-form" onSubmit={handleSubmit(onSubmit)}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
 
                 <div style={{ gridColumn: '1 / -1' }}>
