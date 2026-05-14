@@ -49,12 +49,13 @@ export async function PUT(
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
+  let _instagram = undefined
   const recienPublicada = previo && !previo.publicada && data.publicada === true
   if (recienPublicada && data.imagen_card) {
-    postNoticiaToInstagram(data).catch(console.error)
+    _instagram = await postNoticiaToInstagram(data)
   }
 
-  return NextResponse.json(data)
+  return NextResponse.json({ ...data, _instagram })
 }
 
 export async function DELETE(

@@ -7,10 +7,15 @@ interface NoticiaInstagram {
   imagen_card: string
 }
 
-export async function postNoticiaToInstagram(noticia: NoticiaInstagram): Promise<void> {
+export interface InstagramResult {
+  posted: boolean
+  error?: string
+}
+
+export async function postNoticiaToInstagram(noticia: NoticiaInstagram): Promise<InstagramResult> {
   const userId = process.env.INSTAGRAM_USER_ID
   const token = process.env.INSTAGRAM_ACCESS_TOKEN
-  if (!userId || !token) return
+  if (!userId || !token) return { posted: false }
 
   const caption =
     `${noticia.titulo}\n\n` +
@@ -25,8 +30,9 @@ export async function postNoticiaToInstagram(noticia: NoticiaInstagram): Promise
   })
   const container = await containerRes.json()
   if (!containerRes.ok || !container.id) {
+    const msg = container?.error?.message ?? 'Error al crear container'
     console.error('[Instagram] Error al crear container:', container)
-    return
+    return { posted: false, error: msg }
   }
 
   const publishRes = await fetch(`${IG_API}/${userId}/media_publish`, {
@@ -35,6 +41,11 @@ export async function postNoticiaToInstagram(noticia: NoticiaInstagram): Promise
     body: JSON.stringify({ creation_id: container.id, access_token: token }),
   })
   if (!publishRes.ok) {
-    console.error('[Instagram] Error al publicar:', await publishRes.json())
+    const err = await publishRes.json()
+    const msg = err?.error?.message ?? 'Error al publicar'
+    console.error('[Instagram] Error al publicar:', err)
+    return { posted: false, error: msg }
   }
+
+  return { posted: true }
 }

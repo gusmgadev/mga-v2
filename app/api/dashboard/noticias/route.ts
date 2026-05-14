@@ -51,9 +51,10 @@ export async function POST(req: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
+  let _instagram = undefined
   if (data.publicada && data.imagen_card) {
-    postNoticiaToInstagram(data).catch(console.error)
+    _instagram = await postNoticiaToInstagram(data)
   }
 
-  return NextResponse.json(data, { status: 201 })
+  return NextResponse.json({ ...data, _instagram }, { status: 201 })
 }

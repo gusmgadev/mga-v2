@@ -4,7 +4,7 @@ import { useState, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Plus, Trash2, X, Loader2, AlertCircle, Pencil, Eye, EyeOff, Upload, ExternalLink } from 'lucide-react'
+import { Plus, Trash2, X, Loader2, AlertCircle, Pencil, Eye, EyeOff, Upload, ExternalLink, CheckCircle2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { theme } from '@/lib/theme'
@@ -178,6 +178,16 @@ export default function NoticiasAdminClient({
   const [createLoading, setCreateLoading] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
   const [editLoading, setEditLoading] = useState(false)
+  const [igToast, setIgToast] = useState<{ ok: boolean; message: string } | null>(null)
+
+  const showIgToast = (ig: { posted: boolean; error?: string } | undefined) => {
+    if (!ig) return
+    const msg = ig.posted
+      ? '✓ Publicado en Instagram correctamente'
+      : `Instagram: ${ig.error ?? 'No se pudo publicar'}`
+    setIgToast({ ok: ig.posted, message: msg })
+    setTimeout(() => setIgToast(null), 6000)
+  }
 
   const createForm = useForm<NoticiaForm>({
     resolver: zodResolver(noticiaSchema),
@@ -208,8 +218,10 @@ export default function NoticiasAdminClient({
     const json = await res.json()
     setCreateLoading(false)
     if (!res.ok) { setCreateError(json.error); return }
-    setNoticias((prev) => [json, ...prev])
+    const { _instagram, ...noticia } = json
+    setNoticias((prev) => [noticia, ...prev])
     setShowCreate(false)
+    showIgToast(_instagram)
   }
 
   const openEdit = (n: Noticia) => {
@@ -232,8 +244,10 @@ export default function NoticiasAdminClient({
     const json = await res.json()
     setEditLoading(false)
     if (!res.ok) { setEditError(json.error); return }
-    setNoticias((prev) => prev.map((n) => (n.id === editTarget.id ? json : n)))
+    const { _instagram, ...noticia } = json
+    setNoticias((prev) => prev.map((n) => (n.id === editTarget.id ? noticia : n)))
     setEditTarget(null)
+    showIgToast(_instagram)
   }
 
   const togglePublicada = async (n: Noticia) => {
@@ -246,7 +260,9 @@ export default function NoticiasAdminClient({
     const json = await res.json()
     setTogglingId(null)
     if (!res.ok) { setGlobalError(json.error); return }
-    setNoticias((prev) => prev.map((item) => (item.id === n.id ? json : item)))
+    const { _instagram, ...noticia } = json
+    setNoticias((prev) => prev.map((item) => (item.id === n.id ? noticia : item)))
+    showIgToast(_instagram)
   }
 
   const confirmDelete = async () => {
@@ -330,6 +346,19 @@ export default function NoticiasAdminClient({
 
   return (
     <>
+      {igToast && (
+        <div style={{
+          position: 'fixed', bottom: '24px', right: '24px', zIndex: 200,
+          display: 'flex', alignItems: 'center', gap: '10px',
+          padding: '12px 18px', borderRadius: theme.radii.md,
+          backgroundColor: igToast.ok ? theme.colors.success : theme.colors.error,
+          color: '#fff', fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium,
+          boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+        }}>
+          {igToast.ok ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+          {igToast.message}
+        </div>
+      )}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
         <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
           {noticias.length} noticia{noticias.length !== 1 ? 's' : ''}
