@@ -28,7 +28,7 @@ type Servicio = {
   created_at: string
   clientes: { nombre: string } | null
   activos: { nombre: string } | null
-  servicio_pagos: { monto: number }[]
+  totalPagado: number
 }
 type ClienteSimple = { id: number; nombre: string }
 type ActivoSimple = { id: number; nombre: string; cliente_id: number }
@@ -376,7 +376,7 @@ export default function ServiciosClient({
     const json = await res.json()
     setCreateLoading(false)
     if (!res.ok) { setCreateError(json.error); return }
-    setServicios((prev) => [{ ...json, servicio_pagos: json.servicio_pagos ?? [] }, ...prev])
+    setServicios((prev) => [{ ...json, totalPagado: 0 }, ...prev])
     setShowCreate(false)
   }
 
@@ -411,7 +411,7 @@ export default function ServiciosClient({
       const nuevoActivo = data.activo_id
         ? (localActivos.find((a) => a.id === data.activo_id) ?? null)
         : null
-      return { ...s, ...json, clientes: s.clientes, activos: nuevoActivo ? { nombre: nuevoActivo.nombre } : null, servicio_pagos: s.servicio_pagos }
+      return { ...s, ...json, clientes: s.clientes, activos: nuevoActivo ? { nombre: nuevoActivo.nombre } : null, totalPagado: s.totalPagado }
     }))
     setEditTarget(null)
   }
@@ -523,7 +523,7 @@ export default function ServiciosClient({
               </tr>
             )}
             {servicios.map((s) => {
-              const totalPagado = (s.servicio_pagos ?? []).reduce((sum, p) => sum + Number(p.monto), 0)
+              const totalPagado = s.totalPagado ?? 0
               const valor = Number(s.valor)
               const saldo = Math.max(0, valor - totalPagado)
               return (
