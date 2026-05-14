@@ -12,6 +12,7 @@ const updateSchema = z.object({
   imagen_portada: z.string().nullable().optional(),
   publicada: z.boolean().optional(),
   orden: z.number().int().min(0).optional(),
+  fecha: z.string().optional(),
 })
 
 async function requireSession() {

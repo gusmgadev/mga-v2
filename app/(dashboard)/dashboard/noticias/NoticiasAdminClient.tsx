@@ -22,6 +22,7 @@ type Noticia = {
   imagen_portada: string | null
   publicada: boolean
   orden: number
+  fecha: string
   created_at: string
   updated_at: string
 }
@@ -32,6 +33,7 @@ const noticiaSchema = z.object({
   contenido: z.string().min(2, 'Mínimo 2 caracteres'),
   publicada: z.boolean(),
   orden: z.number().int().min(0),
+  fecha: z.string().min(1, 'Ingresá una fecha'),
 })
 type NoticiaForm = z.infer<typeof noticiaSchema>
 
@@ -151,9 +153,9 @@ function ImageUploader({
   )
 }
 
-function formatFecha(iso: string) {
-  const d = new Date(iso)
-  return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' })
+function formatDate(dateStr: string) {
+  const [y, m, d] = dateStr.split('-')
+  return `${d}/${m}/${String(y).slice(2)}`
 }
 
 export default function NoticiasAdminClient({
@@ -194,16 +196,16 @@ export default function NoticiasAdminClient({
 
   const createForm = useForm<NoticiaForm>({
     resolver: zodResolver(noticiaSchema),
-    defaultValues: { titulo: '', resumen: '', contenido: '', publicada: false, orden: 0 },
+    defaultValues: { titulo: '', resumen: '', contenido: '', publicada: false, orden: 0, fecha: new Date().toISOString().split('T')[0] },
   })
 
   const editForm = useForm<NoticiaForm>({
     resolver: zodResolver(noticiaSchema),
-    defaultValues: { titulo: '', resumen: '', contenido: '', publicada: false, orden: 0 },
+    defaultValues: { titulo: '', resumen: '', contenido: '', publicada: false, orden: 0, fecha: '' },
   })
 
   const openCreate = () => {
-    createForm.reset({ titulo: '', resumen: '', contenido: '', publicada: false, orden: noticias.length })
+    createForm.reset({ titulo: '', resumen: '', contenido: '', publicada: false, orden: noticias.length, fecha: new Date().toISOString().split('T')[0] })
     setCreateImagenCard(null)
     setCreateImagenPortada(null)
     setCreateError(null)
@@ -228,7 +230,7 @@ export default function NoticiasAdminClient({
   }
 
   const openEdit = (n: Noticia) => {
-    editForm.reset({ titulo: n.titulo, resumen: n.resumen, contenido: n.contenido, publicada: n.publicada, orden: n.orden })
+    editForm.reset({ titulo: n.titulo, resumen: n.resumen, contenido: n.contenido, publicada: n.publicada, orden: n.orden, fecha: n.fecha })
     setEditImagenCard(n.imagen_card)
     setEditImagenPortada(n.imagen_portada)
     setEditError(null)
@@ -310,7 +312,16 @@ export default function NoticiasAdminClient({
         <ImageUploader label="Imagen portada (detalle)" value={imagenPortada} onChange={setImagenPortada} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+        <div>
+          <label style={labelStyle}>Fecha <span style={{ color: theme.colors.error }}>*</span></label>
+          <input
+            type="date"
+            {...form.register('fecha')}
+            style={inputStyle}
+          />
+          {form.formState.errors.fecha && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.fecha.message}</p>}
+        </div>
         <div>
           <label style={labelStyle}>Orden</label>
           <input
@@ -423,7 +434,7 @@ export default function NoticiasAdminClient({
                     {n.publicada ? 'Publicada' : 'Borrador'}
                   </button>
                 </td>
-                <td style={{ ...tdStyle, color: theme.colors.textMuted, whiteSpace: 'nowrap' }}>{formatFecha(n.created_at)}</td>
+                <td style={{ ...tdStyle, color: theme.colors.textMuted, whiteSpace: 'nowrap' }}>{formatDate(n.fecha)}</td>
                 <td style={{ ...tdStyle, textAlign: 'right' }}>
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px' }}>
                     <Link

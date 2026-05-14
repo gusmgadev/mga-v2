@@ -36,9 +36,9 @@ export async function generateMetadata({
   }
 }
 
-function formatFecha(iso: string) {
-  const d = new Date(iso)
-  return d.toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric" })
+function formatFecha(dateStr: string) {
+  const [y, m, d] = dateStr.split('T')[0].split('-')
+  return new Date(Number(y), Number(m) - 1, Number(d)).toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric" })
 }
 
 const contentStyles = `
@@ -107,7 +107,7 @@ export default async function NoticiaDetallePage({
                 className="text-xs font-semibold uppercase tracking-widest mb-4"
                 style={{ color: theme.colors.primary }}
               >
-                {formatFecha(noticia.created_at)}
+                {formatFecha(noticia.fecha ?? noticia.created_at)}
               </p>
 
               {/* Título */}
