@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
-import { Plus, Trash2, X, Loader2, AlertCircle, TrendingUp, TrendingDown, Wallet } from 'lucide-react'
+import { Plus, Trash2, X, Loader2, AlertCircle, TrendingUp, TrendingDown, Wallet, CreditCard } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 
@@ -183,11 +183,7 @@ function CobranzaFormFields({
 
         <div>
           <label style={labelStyle}>Fecha <span style={{ color: theme.colors.error }}>*</span></label>
-          <input
-            type="date"
-            {...form.register('fecha')}
-            style={inputStyle}
-          />
+          <input type="date" {...form.register('fecha')} style={inputStyle} />
           {form.formState.errors.fecha && (
             <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
               {form.formState.errors.fecha.message}
@@ -212,12 +208,9 @@ function CobranzaFormFields({
         <div>
           <label style={labelStyle}>Monto ($) <span style={{ color: theme.colors.error }}>*</span></label>
           <input
-            type="number"
-            min={0.01}
-            step="0.01"
+            type="number" min={0.01} step="0.01"
             {...form.register('monto', { valueAsNumber: true })}
-            style={inputStyle}
-            placeholder="0.00"
+            style={inputStyle} placeholder="0.00"
           />
           {form.formState.errors.monto && (
             <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
@@ -229,14 +222,9 @@ function CobranzaFormFields({
         {mostrarMetodo && (
           <div>
             <label style={labelStyle}>Método de pago</label>
-            <select
-              {...form.register('metodo_pago')}
-              style={{ ...inputStyle, backgroundColor: '#fff' }}
-            >
+            <select {...form.register('metodo_pago')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
               <option value="">Sin especificar</option>
-              {METODOS.map((m) => (
-                <option key={m} value={m}>{m}</option>
-              ))}
+              {METODOS.map((m) => <option key={m} value={m}>{m}</option>)}
             </select>
           </div>
         )}
@@ -248,10 +236,8 @@ function CobranzaFormFields({
               {...form.register('servicio_id', { setValueAs: (v) => (v === '' || v === '0' || v === 0) ? null : Number(v) })}
               style={{ ...inputStyle, backgroundColor: '#fff' }}
             >
-              <option value="">Sin servicio vinculado</option>
-              {serviciosFiltrados.map((s) => (
-                <option key={s.id} value={s.id}>{s.titulo}</option>
-              ))}
+              <option value="">Sin servicio — pago a cuenta</option>
+              {serviciosFiltrados.map((s) => <option key={s.id} value={s.id}>{s.titulo}</option>)}
             </select>
           </div>
         )}
@@ -292,6 +278,17 @@ export default function CobranzasClient({
   const [deleting, setDeleting] = useState(false)
   const [createError, setCreateError] = useState<string | null>(null)
   const [createLoading, setCreateLoading] = useState(false)
+
+  // Filtros de fecha (client-side)
+  const [desde, setDesde] = useState('')
+  const [hasta, setHasta] = useState('')
+
+  // Imputar pago a cuenta
+  const [imputarTarget, setImputarTarget] = useState<Cobranza | null>(null)
+  const [imputarServicioId, setImputarServicioId] = useState<string>('')
+  const [imputarMonto, setImputarMonto] = useState('')
+  const [imputarLoading, setImputarLoading] = useState(false)
+  const [imputarError, setImputarError] = useState<string | null>(null)
 
   const today = new Date().toISOString().split('T')[0]
 
@@ -351,6 +348,40 @@ export default function CobranzasClient({
     setDeleteTarget(null)
   }
 
+  const abrirImputar = (c: Cobranza) => {
+    setImputarTarget(c)
+    setImputarServicioId('')
+    setImputarMonto(String(Number(c.monto)))
+    setImputarError(null)
+  }
+
+  const confirmarImputar = async () => {
+    if (!imputarTarget) return
+    const monto = parseFloat(imputarMonto)
+    const servicioId = Number(imputarServicioId)
+    if (!servicioId) { setImputarError('Seleccioná un servicio'); return }
+    if (!monto || monto <= 0) { setImputarError('El monto debe ser mayor a 0'); return }
+    if (monto > Number(imputarTarget.monto) + 0.01) { setImputarError('El monto supera el saldo disponible'); return }
+    setImputarLoading(true)
+    setImputarError(null)
+    const res = await fetch(`/api/dashboard/cobranzas/${imputarTarget.id}/imputar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ servicio_id: servicioId, monto }),
+    })
+    const json = await res.json()
+    setImputarLoading(false)
+    if (!res.ok) { setImputarError(json.error); return }
+
+    setCobranzas((prev) => {
+      const sin = prev.filter((c) => c.id !== imputarTarget.id)
+      const items: Cobranza[] = [json.pago_imputado]
+      if (json.pago_restante) items.push(json.pago_restante)
+      return [...items, ...sin]
+    })
+    setImputarTarget(null)
+  }
+
   const buildUrl = (overrides: Partial<typeof filtros>) => {
     const merged = { ...filtros, ...overrides }
     const params = new URLSearchParams()
@@ -367,14 +398,26 @@ export default function CobranzasClient({
   const formatFecha = (iso: string) =>
     new Date(`${iso}T12:00:00`).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' })
 
-  // Totales calculados desde la lista actual
-  const totalCargos = cobranzas.filter((c) => c.tipo === 'CARGO').reduce((s, c) => s + Number(c.monto), 0)
-  const totalPagado = cobranzas.filter((c) => c.tipo !== 'CARGO').reduce((s, c) => s + Number(c.monto), 0)
+  // Filtrado por fecha client-side
+  const cobranzasFiltradas = useMemo(() => {
+    return cobranzas.filter((c) => {
+      if (desde && c.fecha < desde) return false
+      if (hasta && c.fecha > hasta) return false
+      return true
+    })
+  }, [cobranzas, desde, hasta])
+
+  const totalCargos = cobranzasFiltradas.filter((c) => c.tipo === 'CARGO').reduce((s, c) => s + Number(c.monto), 0)
+  const totalPagado = cobranzasFiltradas.filter((c) => c.tipo !== 'CARGO').reduce((s, c) => s + Number(c.monto), 0)
   const saldo = totalCargos - totalPagado
 
   const clienteNombre = filtros.cliente_id
     ? clientes.find((c) => c.id === filtros.cliente_id)?.nombre
     : null
+
+  const serviciosDelImputar = imputarTarget
+    ? servicios.filter((s) => s.cliente_id === imputarTarget.cliente_id)
+    : []
 
   return (
     <>
@@ -415,9 +458,7 @@ export default function CobranzasClient({
             style={{ padding: '8px 14px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', backgroundColor: '#fff', fontFamily: 'inherit', color: theme.colors.text }}
           >
             <option value="">Todos los clientes</option>
-            {clientes.map((c) => (
-              <option key={c.id} value={c.id}>{c.nombre}</option>
-            ))}
+            {clientes.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
           </select>
 
           <select
@@ -426,13 +467,34 @@ export default function CobranzasClient({
             style={{ padding: '8px 14px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', backgroundColor: '#fff', fontFamily: 'inherit', color: theme.colors.text }}
           >
             <option value="">Todos los tipos</option>
-            {TIPOS.map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
-            ))}
+            {TIPOS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
 
+          <input
+            type="date"
+            value={desde}
+            onChange={(e) => setDesde(e.target.value)}
+            title="Desde"
+            style={{ padding: '8px 10px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', fontFamily: 'inherit', color: theme.colors.text }}
+          />
+          <input
+            type="date"
+            value={hasta}
+            onChange={(e) => setHasta(e.target.value)}
+            title="Hasta"
+            style={{ padding: '8px 10px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', fontFamily: 'inherit', color: theme.colors.text }}
+          />
+          {(desde || hasta) && (
+            <button
+              onClick={() => { setDesde(''); setHasta('') }}
+              style={{ padding: '7px 10px', fontSize: theme.fontSizes.xs, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, background: '#fff', cursor: 'pointer', color: theme.colors.textMuted, display: 'flex', alignItems: 'center', gap: '4px' }}
+            >
+              <X size={11} /> Limpiar fechas
+            </button>
+          )}
+
           <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
-            {cobranzas.length} movimiento{cobranzas.length !== 1 ? 's' : ''}
+            {cobranzasFiltradas.length} movimiento{cobranzasFiltradas.length !== 1 ? 's' : ''}
           </p>
         </div>
 
@@ -464,38 +526,57 @@ export default function CobranzasClient({
             </tr>
           </thead>
           <tbody>
-            {cobranzas.length === 0 && (
+            {cobranzasFiltradas.length === 0 && (
               <tr>
                 <td colSpan={8} style={{ ...tdStyle, textAlign: 'center', color: theme.colors.textMuted }}>
                   No hay movimientos registrados
                 </td>
               </tr>
             )}
-            {cobranzas.map((c) => (
-              <tr key={c.id}>
-                <td style={{ ...tdStyle, color: theme.colors.textMuted, whiteSpace: 'nowrap' }}>{formatFecha(c.fecha)}</td>
-                <td style={{ ...tdStyle, fontWeight: theme.fontWeights.medium }}>{c.clientes?.nombre ?? '—'}</td>
-                <td style={tdStyle}>{c.concepto}</td>
-                <td style={tdStyle}><TipoBadge tipo={c.tipo} /></td>
-                <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{c.metodo_pago ?? '—'}</td>
-                <td style={{ ...tdStyle, textAlign: 'right', fontWeight: theme.fontWeights.medium, color: c.tipo === 'CARGO' ? theme.colors.error : theme.colors.success }}>
-                  {c.tipo === 'CARGO' ? '+' : '-'}${Number(c.monto).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </td>
-                <td style={{ ...tdStyle, color: theme.colors.textMuted, fontSize: theme.fontSizes.xs }}>
-                  {c.servicios?.titulo ?? '—'}
-                </td>
-                {permisos.can_delete && (
-                  <td style={{ ...tdStyle, textAlign: 'right' }}>
-                    <button
-                      onClick={() => setDeleteTarget(c)}
-                      style={{ background: 'none', border: `1px solid ${theme.colors.error}44`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.error, padding: '5px 8px', display: 'flex', alignItems: 'center' }}
-                    >
-                      <Trash2 size={13} />
-                    </button>
+            {cobranzasFiltradas.map((c) => {
+              const esPagoACuenta = c.tipo === 'PAGO' && c.servicio_id === null
+              return (
+                <tr key={c.id}>
+                  <td style={{ ...tdStyle, color: theme.colors.textMuted, whiteSpace: 'nowrap' }}>{formatFecha(c.fecha)}</td>
+                  <td style={{ ...tdStyle, fontWeight: theme.fontWeights.medium }}>{c.clientes?.nombre ?? '—'}</td>
+                  <td style={tdStyle}>{c.concepto}</td>
+                  <td style={tdStyle}><TipoBadge tipo={c.tipo} /></td>
+                  <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{c.metodo_pago ?? '—'}</td>
+                  <td style={{ ...tdStyle, textAlign: 'right', fontWeight: theme.fontWeights.medium, color: c.tipo === 'CARGO' ? theme.colors.error : theme.colors.success }}>
+                    {c.tipo === 'CARGO' ? '+' : '-'}${Number(c.monto).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
-                )}
-              </tr>
-            ))}
+                  <td style={{ ...tdStyle, color: theme.colors.textMuted, fontSize: theme.fontSizes.xs }}>
+                    {esPagoACuenta ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                        <span style={{ padding: '2px 8px', backgroundColor: '#FFF7ED', color: '#C2410C', borderRadius: theme.radii.full, fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <CreditCard size={10} /> A cuenta
+                        </span>
+                        {permisos.can_create && (
+                          <button
+                            onClick={() => abrirImputar(c)}
+                            style={{ padding: '2px 8px', backgroundColor: theme.colors.primary, color: '#fff', border: 'none', borderRadius: theme.radii.sm, fontSize: theme.fontSizes.xs, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                          >
+                            Imputar
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      c.servicios?.titulo ?? '—'
+                    )}
+                  </td>
+                  {permisos.can_delete && (
+                    <td style={{ ...tdStyle, textAlign: 'right' }}>
+                      <button
+                        onClick={() => setDeleteTarget(c)}
+                        style={{ background: 'none', border: `1px solid ${theme.colors.error}44`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.error, padding: '5px 8px', display: 'flex', alignItems: 'center' }}
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>
@@ -516,6 +597,74 @@ export default function CobranzasClient({
                 {createLoading ? 'Guardando...' : 'Guardar movimiento'}
               </button>
             </form>
+          </ModalCard>
+        </ModalOverlay>
+      )}
+
+      {/* Modal imputar pago a cuenta */}
+      {imputarTarget && (
+        <ModalOverlay onClose={() => setImputarTarget(null)}>
+          <ModalCard title="Imputar pago a cuenta" onClose={() => setImputarTarget(null)}>
+            <p style={{ margin: '0 0 4px', fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
+              Pago disponible: <strong style={{ color: theme.colors.text }}>${Number(imputarTarget.monto).toLocaleString('es-AR')}</strong>
+              {imputarTarget.metodo_pago && ` · ${imputarTarget.metodo_pago}`}
+              {` · ${formatFecha(imputarTarget.fecha)}`}
+            </p>
+            <p style={{ margin: '0 0 16px', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>
+              {imputarTarget.clientes?.nombre}
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={labelStyle}>Servicio <span style={{ color: theme.colors.error }}>*</span></label>
+                <select
+                  value={imputarServicioId}
+                  onChange={(e) => setImputarServicioId(e.target.value)}
+                  style={{ ...inputStyle, backgroundColor: '#fff' }}
+                >
+                  <option value="">Seleccioná un servicio...</option>
+                  {serviciosDelImputar.map((s) => (
+                    <option key={s.id} value={s.id}>{s.titulo}</option>
+                  ))}
+                </select>
+                {serviciosDelImputar.length === 0 && (
+                  <p style={{ margin: '4px 0 0', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>
+                    Este cliente no tiene servicios registrados.
+                  </p>
+                )}
+              </div>
+              <div>
+                <label style={labelStyle}>Monto a imputar ($) <span style={{ color: theme.colors.error }}>*</span></label>
+                <input
+                  type="number"
+                  min={0.01}
+                  max={Number(imputarTarget.monto)}
+                  step="0.01"
+                  value={imputarMonto}
+                  onChange={(e) => setImputarMonto(e.target.value)}
+                  style={inputStyle}
+                />
+                <p style={{ margin: '4px 0 0', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>
+                  Máx: ${Number(imputarTarget.monto).toLocaleString('es-AR')}. Si imputás menos, el resto queda como saldo a cuenta.
+                </p>
+              </div>
+            </div>
+            {imputarError && <div style={{ marginTop: '12px' }}><ErrorBox message={imputarError} /></div>}
+            <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>
+              <button
+                onClick={() => setImputarTarget(null)}
+                style={{ flex: 1, padding: '10px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, background: '#fff', cursor: 'pointer', fontSize: theme.fontSizes.sm }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarImputar}
+                disabled={imputarLoading}
+                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '10px', backgroundColor: imputarLoading ? `${theme.colors.primary}99` : theme.colors.primary, color: '#fff', border: 'none', borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, cursor: imputarLoading ? 'not-allowed' : 'pointer' }}
+              >
+                {imputarLoading && <Loader2 size={13} className="animate-spin" />}
+                Confirmar imputación
+              </button>
+            </div>
           </ModalCard>
         </ModalOverlay>
       )}

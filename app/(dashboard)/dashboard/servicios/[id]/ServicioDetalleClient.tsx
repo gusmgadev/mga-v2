@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Link from 'next/link'
-import { ArrowLeft, Pencil, X, Loader2, AlertCircle, Plus, Trash2, CheckCircle2 } from 'lucide-react'
+import { ArrowLeft, Pencil, X, Loader2, AlertCircle, Plus, Trash2, CheckCircle2, CreditCard } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 import QuickCreateActivoModal from '@/components/dashboard/QuickCreateActivoModal'
@@ -23,12 +23,15 @@ type Tarea = {
   created_at: string
 }
 
-type Pago = {
+type CobranzaPago = {
   id: number
-  servicio_id: number
+  cliente_id: number
+  servicio_id: number | null
+  tipo: 'PAGO'
+  concepto: string
   monto: number
   fecha: string
-  metodo: MetodoPago
+  metodo_pago: MetodoPago | null
   notas: string | null
   created_at: string
 }
@@ -47,7 +50,6 @@ type Servicio = {
   clientes: { nombre: string } | null
   activos: { nombre: string } | null
   servicio_tareas: Tarea[]
-  servicio_pagos: Pago[]
 }
 
 type ClienteSimple = { id: number; nombre: string }
@@ -156,18 +158,23 @@ function Badge({ label, bg, text }: { label: string; bg: string; text: string })
 
 export default function ServicioDetalleClient({
   initialServicio,
+  initialPagos,
+  pagosACuenta: initialPagosACuenta,
   clientes,
   activos,
   permisos,
 }: {
   initialServicio: Servicio
+  initialPagos: CobranzaPago[]
+  pagosACuenta: CobranzaPago[]
   clientes: ClienteSimple[]
   activos: ActivoSimple[]
   permisos: ModulePermisos
 }) {
   const [servicio, setServicio] = useState(initialServicio)
   const [tareas, setTareas] = useState<Tarea[]>(initialServicio.servicio_tareas ?? [])
-  const [pagos, setPagos] = useState<Pago[]>(initialServicio.servicio_pagos ?? [])
+  const [pagos, setPagos] = useState<CobranzaPago[]>(initialPagos)
+  const [pagosACuenta, setPagosACuenta] = useState<CobranzaPago[]>(initialPagosACuenta)
   const [localActivos, setLocalActivos] = useState(activos)
   const [showEdit, setShowEdit] = useState(false)
   const [showQCActivo, setShowQCActivo] = useState(false)
@@ -190,6 +197,12 @@ export default function ServicioDetalleClient({
   const [pagoLoading, setPagoLoading] = useState(false)
   const [pagoError, setPagoError] = useState<string | null>(null)
   const [deletingPagoId, setDeletingPagoId] = useState<number | null>(null)
+
+  // Imputar a cuenta state
+  const [imputarTarget, setImputarTarget] = useState<CobranzaPago | null>(null)
+  const [imputarMonto, setImputarMonto] = useState('')
+  const [imputarLoading, setImputarLoading] = useState(false)
+  const [imputarError, setImputarError] = useState<string | null>(null)
 
   const activosFiltrados = localActivos.filter((a) => a.cliente_id === servicio.cliente_id)
 
@@ -292,28 +305,40 @@ export default function ServicioDetalleClient({
   const totalPagado = pagos.reduce((sum, p) => sum + Number(p.monto), 0)
   const valor = Number(servicio.valor)
   const saldo = Math.max(0, valor - totalPagado)
+  const saldoACuenta = pagosACuenta.reduce((sum, p) => sum + Number(p.monto), 0)
+
+  function recalcularEstadoPagoLocal(listaPagos: CobranzaPago[]) {
+    if (servicio.estado_pago === 'SIN CARGO' || servicio.estado_pago === 'GARANTIA') return
+    const total = listaPagos.reduce((s, p) => s + Number(p.monto), 0)
+    const ep: EstadoPago = total === 0 ? 'PENDIENTE' : total >= valor ? 'PAGADO' : 'PAGO PARCIAL'
+    setServicio((prev) => ({ ...prev, estado_pago: ep }))
+  }
 
   const agregarPago = async () => {
     const monto = parseFloat(pagoMonto)
     if (!monto || monto <= 0) { setPagoError('El monto debe ser mayor a 0'); return }
     setPagoLoading(true)
     setPagoError(null)
-    const res = await fetch(`/api/dashboard/servicios/${servicio.id}/pagos`, {
+    const res = await fetch('/api/dashboard/cobranzas', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ monto, fecha: pagoFecha, metodo: pagoMetodo, notas: pagoNotas || undefined }),
+      body: JSON.stringify({
+        tipo: 'PAGO',
+        cliente_id: servicio.cliente_id,
+        servicio_id: servicio.id,
+        concepto: 'Pago de servicio',
+        monto,
+        fecha: pagoFecha,
+        metodo_pago: pagoMetodo,
+        notas: pagoNotas || undefined,
+      }),
     })
     const json = await res.json()
     setPagoLoading(false)
     if (!res.ok) { setPagoError(json.error); return }
-    const nuevoPagos = [...pagos, json]
+    const nuevoPagos = [json, ...pagos]
     setPagos(nuevoPagos)
-    // Recalculate estado_pago locally (mirrors backend logic)
-    if (servicio.estado_pago !== 'SIN CARGO' && servicio.estado_pago !== 'GARANTIA') {
-      const nuevoTotal = nuevoPagos.reduce((s, p) => s + Number(p.monto), 0)
-      const ep: EstadoPago = nuevoTotal === 0 ? 'PENDIENTE' : nuevoTotal >= valor ? 'PAGADO' : 'PAGO PARCIAL'
-      setServicio((prev) => ({ ...prev, estado_pago: ep }))
-    }
+    recalcularEstadoPagoLocal(nuevoPagos)
     setPagoMonto('')
     setPagoNotas('')
     setShowAddPago(false)
@@ -321,16 +346,47 @@ export default function ServicioDetalleClient({
 
   const eliminarPago = async (pagoId: number) => {
     setDeletingPagoId(pagoId)
-    const res = await fetch(`/api/dashboard/servicios/${servicio.id}/pagos/${pagoId}`, { method: 'DELETE' })
+    const res = await fetch(`/api/dashboard/cobranzas/${pagoId}`, { method: 'DELETE' })
     setDeletingPagoId(null)
     if (!res.ok) return
     const nuevosPagos = pagos.filter((p) => p.id !== pagoId)
     setPagos(nuevosPagos)
-    if (servicio.estado_pago !== 'SIN CARGO' && servicio.estado_pago !== 'GARANTIA') {
-      const nuevoTotal = nuevosPagos.reduce((s, p) => s + Number(p.monto), 0)
-      const ep: EstadoPago = nuevoTotal === 0 ? 'PENDIENTE' : nuevoTotal >= valor ? 'PAGADO' : 'PAGO PARCIAL'
-      setServicio((prev) => ({ ...prev, estado_pago: ep }))
+    recalcularEstadoPagoLocal(nuevosPagos)
+  }
+
+  const abrirImputar = (pago: CobranzaPago) => {
+    setImputarTarget(pago)
+    setImputarMonto(String(Number(pago.monto)))
+    setImputarError(null)
+  }
+
+  const confirmarImputar = async () => {
+    if (!imputarTarget) return
+    const monto = parseFloat(imputarMonto)
+    if (!monto || monto <= 0) { setImputarError('El monto debe ser mayor a 0'); return }
+    if (monto > Number(imputarTarget.monto) + 0.01) { setImputarError('El monto supera el saldo disponible'); return }
+    setImputarLoading(true)
+    setImputarError(null)
+    const res = await fetch(`/api/dashboard/cobranzas/${imputarTarget.id}/imputar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ servicio_id: servicio.id, monto }),
+    })
+    const json = await res.json()
+    setImputarLoading(false)
+    if (!res.ok) { setImputarError(json.error); return }
+
+    const nuevoPagos = [json.pago_imputado, ...pagos]
+    setPagos(nuevoPagos)
+    recalcularEstadoPagoLocal(nuevoPagos)
+
+    if (json.pago_restante) {
+      setPagosACuenta((prev) => prev.map((p) => p.id === imputarTarget.id ? json.pago_restante : p))
+    } else {
+      setPagosACuenta((prev) => prev.filter((p) => p.id !== imputarTarget.id))
     }
+    setImputarTarget(null)
+    setImputarMonto('')
   }
 
   const todasTerminadas = tareas.length > 0 && tareas.every((t) => t.estado === 'TERMINADA')
@@ -585,9 +641,11 @@ export default function ServicioDetalleClient({
                 <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, minWidth: '80px' }}>
                   {pago.fecha}
                 </span>
-                <span style={{ padding: '2px 8px', backgroundColor: '#F3F4F6', color: theme.colors.text, borderRadius: theme.radii.sm, fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium }}>
-                  {pago.metodo}
-                </span>
+                {pago.metodo_pago && (
+                  <span style={{ padding: '2px 8px', backgroundColor: '#F3F4F6', color: theme.colors.text, borderRadius: theme.radii.sm, fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium }}>
+                    {pago.metodo_pago}
+                  </span>
+                )}
                 <span style={{ fontWeight: theme.fontWeights.bold, color: theme.colors.text, fontSize: theme.fontSizes.sm, minWidth: '80px' }}>
                   ${Number(pago.monto).toLocaleString('es-AR')}
                 </span>
@@ -618,6 +676,94 @@ export default function ServicioDetalleClient({
           </>
         )}
       </div>
+
+      {/* Pagos a cuenta del cliente */}
+      {pagosACuenta.length > 0 && (
+        <div style={cardStyle}>
+          <div style={cardHeaderStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <CreditCard size={15} color={theme.colors.primary} />
+              <h3 style={{ margin: 0, fontSize: theme.fontSizes.base, fontWeight: theme.fontWeights.bold, color: theme.colors.text }}>
+                Pagos a cuenta del cliente
+              </h3>
+            </div>
+            <span style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
+              Saldo disponible: <strong style={{ color: theme.colors.primary }}>${saldoACuenta.toLocaleString('es-AR')}</strong>
+            </span>
+          </div>
+          <div style={{ padding: '10px 16px', backgroundColor: '#FFFBEB', borderBottom: `1px solid ${theme.colors.border}` }}>
+            <p style={{ margin: 0, fontSize: theme.fontSizes.xs, color: '#92400E' }}>
+              Estos pagos fueron registrados sin asociar a un servicio. Podés imputarlos total o parcialmente a este servicio.
+            </p>
+          </div>
+          {pagosACuenta.map((pago) => (
+            <div
+              key={pago.id}
+              style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 20px', borderBottom: `1px solid ${theme.colors.border}` }}
+            >
+              <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, minWidth: '80px' }}>{pago.fecha}</span>
+              <span style={{ flex: 1, fontSize: theme.fontSizes.sm, color: theme.colors.text }}>{pago.concepto}</span>
+              <span style={{ fontWeight: theme.fontWeights.bold, color: theme.colors.primary, fontSize: theme.fontSizes.sm }}>
+                ${Number(pago.monto).toLocaleString('es-AR')}
+              </span>
+              {permisos.can_create && (
+                <button
+                  onClick={() => abrirImputar(pago)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 10px', backgroundColor: theme.colors.primary, color: '#fff', border: 'none', borderRadius: theme.radii.sm, fontSize: theme.fontSizes.xs, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                >
+                  <Plus size={11} /> Imputar
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Modal imputar pago a cuenta */}
+      {imputarTarget && (
+        <ModalOverlay onClose={() => setImputarTarget(null)}>
+          <ModalCard title="Imputar pago a cuenta" onClose={() => setImputarTarget(null)}>
+            <p style={{ margin: '0 0 16px', fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
+              Pago disponible: <strong style={{ color: theme.colors.text }}>${Number(imputarTarget.monto).toLocaleString('es-AR')}</strong>
+              {imputarTarget.metodo_pago && ` · ${imputarTarget.metodo_pago}`}
+              {` · ${imputarTarget.fecha}`}
+            </p>
+            <div style={{ marginBottom: '14px' }}>
+              <label style={labelStyle}>Monto a aplicar a este servicio <span style={{ color: theme.colors.error }}>*</span></label>
+              <input
+                type="number"
+                min={0.01}
+                max={Number(imputarTarget.monto)}
+                step="0.01"
+                value={imputarMonto}
+                onChange={(e) => setImputarMonto(e.target.value)}
+                style={inputStyle}
+                autoFocus
+              />
+              <p style={{ margin: '4px 0 0', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>
+                Máx: ${Number(imputarTarget.monto).toLocaleString('es-AR')}. Si imputás menos, el resto queda disponible como saldo a cuenta.
+              </p>
+            </div>
+            {imputarError && <div style={{ marginBottom: '12px' }}><ErrorBox message={imputarError} /></div>}
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => setImputarTarget(null)}
+                style={{ flex: 1, padding: '10px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, background: '#fff', cursor: 'pointer', fontSize: theme.fontSizes.sm }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarImputar}
+                disabled={imputarLoading}
+                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '10px', backgroundColor: imputarLoading ? `${theme.colors.primary}99` : theme.colors.primary, color: '#fff', border: 'none', borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, cursor: imputarLoading ? 'not-allowed' : 'pointer' }}
+              >
+                {imputarLoading && <Loader2 size={13} className="animate-spin" />}
+                Confirmar imputación
+              </button>
+            </div>
+          </ModalCard>
+        </ModalOverlay>
+      )}
 
       {showQCActivo && (
         <QuickCreateActivoModal

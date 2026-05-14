@@ -207,8 +207,14 @@ public.role_permissions { id, role_id, module, can_view, can_create, can_edit, c
 ### Tablas de negocio
 
 ```sql
--- Clientes
-public.clientes { id, name, email, phone, address, active (bool), created_at }
+-- Clientes (todas las columnas en español)
+public.clientes {
+  id, nombre, tipo ('PARTICULAR'|'EMPRESA'|'COMERCIO'),
+  email (nullable), telefono (nullable), direccion (nullable),
+  cuit (nullable), rubro (nullable), notas (nullable),
+  activo (bool), imagen (nullable), pagina_web (nullable),
+  mostrar_en_landing (bool), created_at
+}
 
 -- Activos (equipos del cliente)
 public.activos { id, nombre, tipo, marca, modelo, serie, cliente_id (FK), activo (bool), created_at }
@@ -216,6 +222,7 @@ public.activos { id, nombre, tipo, marca, modelo, serie, cliente_id (FK), activo
 -- Servicios (órdenes de trabajo)
 public.servicios {
   id, cliente_id (FK), activo_id (FK nullable), titulo, descripcion,
+  fecha (date, default CURRENT_DATE),
   estado ('INGRESADO'|'EN PROCESO'|'CANCELADO'|'RECHAZADO'|'TERMINADO'|'PRESUPUESTADO'),
   estado_pago ('PENDIENTE'|'SIN CARGO'|'GARANTIA'|'PAGO PARCIAL'|'PAGADO'),
   valor, created_at, updated_at
@@ -299,7 +306,7 @@ if (!permisos.can_view) redirect('/dashboard')
 - Administrador → hardcoded FULL para todos los módulos
 - Otros → query a `role_permissions` por `role_id`
 - **Cuando se agrega un módulo nuevo, actualizar este array:**
-  `['clientes', 'activos', 'servicios', 'presupuestos']`
+  `['clientes', 'activos', 'servicios', 'presupuestos', 'cobranzas', 'productos', 'remitos']`
 
 ---
 
@@ -309,10 +316,11 @@ if (!permisos.can_view) redirect('/dashboard')
 |--------|-------|-------|---------|--------|--------------|
 | Clientes | ✅ | ✅ | — | ✅ | — |
 | Activos | ✅ | ✅ | — | ✅ | — |
-| Servicios | ✅ | ✅ | ✅ | ✅ | ✅ tareas + pagos |
+| Servicios | ✅ | ✅ | ✅ | ✅ | ✅ tareas + pagos + fecha + saldo/pagado |
 | Presupuestos | ✅ | ✅ | ✅ | ✅ | ✅ ítems |
 | Productos | ✅ | ✅ | — | ✅ | marca/rubro combobox |
 | Remitos | ✅ | ✅ | ✅ | ✅ | ✅ ítems + voz + confirmar |
+| Cobranzas | ✅ | ✅ | — | — | ✅ filtros cliente/tipo + resumen cargos/pagado/saldo |
 | Admin/Usuarios | ✅ | ✅ | — | ✅ | — |
 | Admin/Roles | ✅ | ✅ | — | — | — |
 | Admin/Permisos | ✅ | — | — | ✅ | — |
@@ -468,7 +476,8 @@ GROQ_API_KEY=          # Whisper (STT) + Llama 3.3 (extracción de productos por
 
 ## Qué falta / pendientes
 
-- **Módulo Cobranzas** — en `role_permissions` existe el módulo pero no hay página ni API
+- **Cobranzas y servicio_pagos desconectados** — los pagos registrados en el detalle de un servicio (`servicio_pagos`) no aparecen en el módulo Cobranzas, y viceversa. Decidir si fusionar o conectar.
+- **Cobranzas sin edición** — solo existe DELETE, no PUT/PATCH. Si se ingresó mal un monto hay que borrar y recrear.
 - **Google Search Console** — enviar sitemap tras deploy
 - **OG image dedicada** — actualmente usa `hero-1.jpg`
 - **Sección Nosotros** — link en navbar apunta a `#`, sin destino real
@@ -488,3 +497,7 @@ GROQ_API_KEY=          # Whisper (STT) + Llama 3.3 (extracción de productos por
 8. **Remitos — confianza auto-insert:** el umbral es `>= 0.7`. Por debajo va al panel de pendientes, no se inserta automáticamente.
 9. **Remitos — tabla de ítems:** mostrar `item.productos?.nombre` primero; `item.nombre_detectado` como fallback. Nunca al revés (el nombre detectado puede ser el código dictado, no el nombre real del producto).
 10. **`buscar_productos_por_nombre`** — si la función RPC no está actualizada para buscar por `codigo`, el fallback ILIKE en route.ts lo cubre con confianza 0.8.
+11. **`clientes` — columnas en español** — todas las columnas de la tabla están en español (`nombre`, `tipo`, `telefono`, `direccion`, `notas`, `activo`). `ClienteSimple` en todos los módulos es `{ id: number; nombre: string }`. En selects de join usar `clientes(nombre)`, nunca `clientes(name)`.
+12. **`servicios` — campo `fecha`** — columna `date` con default `CURRENT_DATE`. En JS formatear con `const [y,m,d] = fecha.split('-')` para evitar desfase UTC. La grilla ordena descendente por `fecha`. Saldo = `Math.max(0, valor - totalPagado)` calculado en cliente desde pagos de cobranzas.
+13. **Cobranzas — tabla única de pagos** — `servicio_pagos` fue eliminada. Todos los pagos viven en `cobranzas` con `tipo='PAGO'`. Pagos vinculados a servicio tienen `servicio_id != null`; "pagos a cuenta" tienen `servicio_id = null`. `recalcularEstadoPago` está en `app/api/dashboard/cobranzas/route.ts` (exportada) y se reutiliza desde `[id]/route.ts` e `[id]/imputar/route.ts`.
+14. **Imputar pago a cuenta** — `POST /api/dashboard/cobranzas/[id]/imputar` con `{ servicio_id, monto }`. Si es parcial, reduce el original y crea un nuevo registro vinculado. `ServicioDetalleClient` carga `initialPagos` (cobranzas del servicio) y `pagosACuenta` (del mismo cliente sin servicio) como props separados desde `page.tsx`.
