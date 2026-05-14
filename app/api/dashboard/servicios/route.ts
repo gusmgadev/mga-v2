@@ -32,7 +32,7 @@ export async function GET(req: Request) {
 
   let query = supabaseAdmin
     .from('servicios')
-    .select('*, clientes(nombre), activos(nombre), servicio_pagos(monto)')
+    .select('*, clientes(nombre), activos(nombre)')
     .order('fecha', { ascending: false, nullsFirst: false })
 
   if (clienteId) query = query.eq('cliente_id', Number(clienteId))
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
   const { data, error } = await supabaseAdmin
     .from('servicios')
     .insert(parsed.data)
-    .select('*, clientes(nombre), activos(nombre), servicio_pagos(monto)')
+    .select('*, clientes(nombre), activos(nombre)')
     .single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data, { status: 201 })
