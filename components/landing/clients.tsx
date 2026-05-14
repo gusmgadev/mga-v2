@@ -8,10 +8,10 @@ import { motion } from "framer-motion"
 
 type ClienteDB = {
   id: number
-  name: string
+  nombre: string
   rubro: string | null
-  phone: string | null
-  address: string | null
+  telefono: string | null
+  direccion: string | null
   imagen: string | null
   pagina_web: string | null
 }
@@ -73,13 +73,13 @@ export default function Clients({ clientes }: { clientes: ClienteDB[] }) {
                   {client.imagen ? (
                     <Image
                       src={client.imagen}
-                      alt={client.name}
+                      alt={client.nombre}
                       fill
                       className="object-contain"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-xs text-center font-semibold" style={{ color: theme.colors.textMuted }}>
-                      {client.name}
+                      {client.nombre}
                     </div>
                   )}
                 </div>
@@ -87,7 +87,7 @@ export default function Clients({ clientes }: { clientes: ClienteDB[] }) {
                   className="text-sm font-semibold text-center leading-tight"
                   style={{ color: theme.colors.text }}
                 >
-                  {client.name}
+                  {client.nombre}
                 </h3>
                 <p
                   className="text-sm text-center"
@@ -107,7 +107,7 @@ export default function Clients({ clientes }: { clientes: ClienteDB[] }) {
                     {client.imagen ? (
                       <Image
                         src={client.imagen}
-                        alt={client.name}
+                        alt={client.nombre}
                         fill
                         className="object-contain"
                       />
@@ -117,7 +117,7 @@ export default function Clients({ clientes }: { clientes: ClienteDB[] }) {
                     className="text-sm font-bold text-center leading-tight"
                     style={{ color: theme.colors.text }}
                   >
-                    {client.name}
+                    {client.nombre}
                   </h3>
                   <p
                     className="text-sm text-center"
@@ -126,16 +126,16 @@ export default function Clients({ clientes }: { clientes: ClienteDB[] }) {
                     {client.rubro}
                   </p>
                   <div className="mt-1 pt-1 border-t" style={{ borderColor: theme.colors.border }}>
-                    {client.address && (
+                    {client.direccion && (
                       <div className="flex items-center gap-1 justify-center">
                         <MapPin size={10} />
-                        <span className="text-[10px] truncate max-w-full">{client.address}</span>
+                        <span className="text-[10px] truncate max-w-full">{client.direccion}</span>
                       </div>
                     )}
-                    {client.phone && (
+                    {client.telefono && (
                       <div className="flex items-center gap-1 justify-center">
                         <Phone size={10} />
-                        <span className="text-[10px]">{client.phone}</span>
+                        <span className="text-[10px]">{client.telefono}</span>
                       </div>
                     )}
                   </div>
