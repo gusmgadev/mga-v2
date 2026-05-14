@@ -31,6 +31,7 @@ Dos productos en un mismo repo Next.js:
 | Framer Motion | 12.x | Solo en landing |
 | Resend | 6.x | Email desde `/api/contact` |
 | Groq API | — | Whisper (STT) + Llama 3.3 (extracción de productos por voz) |
+| TipTap | — | Editor rich text (Bold/Italic/Highlight) — solo en dashboard noticias |
 
 **IMPORTANTE — Next.js 16 breaking changes:**
 - `params` y `searchParams` en page/route handlers son `Promise` — siempre `await params` antes de usar
@@ -88,6 +89,9 @@ mga-v2/
 │   │       │   └── [id]/
 │   │       │       ├── page.tsx
 │   │       │       └── RemitoDetalleClient.tsx # Ingreso por voz + tabla de ítems
+│   │       ├── noticias/
+│   │       │   ├── page.tsx
+│   │       │   └── NoticiasAdminClient.tsx     # CRUD noticias + rich text + imágenes
 │   │       └── admin/                  # Solo rol Administrador
 │   │           ├── usuarios/
 │   │           ├── roles/
@@ -123,11 +127,17 @@ mga-v2/
 │   │       ├── remitos/[id]/items/route.ts
 │   │       ├── remitos/[id]/items/[itemId]/route.ts
 │   │       ├── voz/transcribir/route.ts # Groq Whisper + Llama 3.3 + matching
+│   │       ├── noticias/route.ts        # GET+POST
+│   │       ├── noticias/[id]/route.ts  # PUT+DELETE + auto-post Instagram
+│   │       ├── upload/imagen/route.ts  # POST — sube imagen a Supabase Storage
 │   │       ├── usuarios/route.ts
 │   │       ├── usuarios/[id]/route.ts
 │   │       ├── roles/route.ts
 │   │       ├── roles/[id]/route.ts
 │   │       └── permisos/route.ts
+│   ├── noticias/
+│   │   ├── page.tsx                    # Lista pública de noticias
+│   │   └── [id]/page.tsx               # Detalle público con rich text rendering
 │   └── layout.tsx                      # Root layout
 ├── components/
 │   ├── landing/                        # 9 componentes (Navbar, Hero, Services, etc.)
@@ -137,7 +147,8 @@ mga-v2/
 │       ├── QuickCreateClienteModal.tsx # Mini-modal para crear cliente inline (createPortal)
 │       ├── QuickCreateActivoModal.tsx  # Mini-modal para crear activo inline (createPortal)
 │       ├── VoiceRecorder.tsx           # Grabación de audio vía MediaRecorder API
-│       └── CatalogoCombobox.tsx        # Combobox con opción de crear nueva marca/rubro
+│       ├── CatalogoCombobox.tsx        # Combobox con opción de crear nueva marca/rubro
+│       └── RichTextEditor.tsx          # Editor TipTap (Bold/Italic/Highlight) — cargado con next/dynamic ssr:false
 ├── lib/
 │   ├── theme.ts                        # FUENTE DE VERDAD — colores, tipografía, datos de contacto
 │   ├── auth.ts                         # Configuración NextAuth
@@ -145,7 +156,8 @@ mga-v2/
 │   ├── clientes.ts                     # Array de 22 clientes (landing)
 │   └── permisos.ts                     # getModulePermisos() + tipo ModulePermisos
 ├── services/
-│   └── supabase-admin.ts               # Cliente Supabase service role (solo server)
+│   ├── supabase-admin.ts               # Cliente Supabase service role (solo server)
+│   └── instagram.ts                    # postNoticiaToInstagram() — Graph API v21.0
 ├── hooks/
 │   └── usePermissions.ts               # Hook cliente para leer permisos
 ├── types/
@@ -272,6 +284,17 @@ public.remito_items {
   confianza (nullable, 0-1), es_producto_nuevo (bool), orden (int), created_at
 }
 
+-- Noticias (módulo público + dashboard)
+public.noticias {
+  id, titulo, resumen, contenido (html string),
+  imagen_card (nullable, URL Supabase Storage), imagen_portada (nullable, URL),
+  publicada (bool, default false), orden (int, default 0),
+  fecha (date, default CURRENT_DATE),
+  created_at, updated_at
+}
+-- Bucket Supabase Storage: 'noticias-imagenes'
+-- Al pasar publicada false→true: dispara auto-post a Instagram si hay imagen_card y env vars configuradas
+
 public.movimientos_stock {
   id, producto_id (FK), remito_id (FK), remito_item_id (FK),
   tipo ('entrada'|'salida'|'ajuste'), cantidad (numeric),
@@ -321,6 +344,7 @@ if (!permisos.can_view) redirect('/dashboard')
 | Productos | ✅ | ✅ | — | ✅ | marca/rubro combobox |
 | Remitos | ✅ | ✅ | ✅ | ✅ | ✅ ítems + voz + confirmar |
 | Cobranzas | ✅ | ✅ | — | — | ✅ filtros cliente/tipo + resumen cargos/pagado/saldo |
+| Noticias | ✅ | ✅ | ✅ (pública) | ✅ | ✅ rich text + imágenes card/portada + fecha editable + Instagram auto-post |
 | Admin/Usuarios | ✅ | ✅ | — | ✅ | — |
 | Admin/Roles | ✅ | ✅ | — | — | — |
 | Admin/Permisos | ✅ | — | — | ✅ | — |
@@ -470,7 +494,11 @@ SUPABASE_SERVICE_ROLE_KEY=
 RESEND_API_KEY=
 RESEND_FROM_EMAIL=
 GROQ_API_KEY=          # Whisper (STT) + Llama 3.3 (extracción de productos por voz)
+INSTAGRAM_USER_ID=     # ID numérico del usuario IG Business (no el @handle)
+INSTAGRAM_ACCESS_TOKEN= # Token larga duración (60 días) o System User token (no vence)
 ```
+
+**Instagram:** Si las variables no están configuradas, el auto-post se ignora silenciosamente. El token vence a los 60 días — renovar con Graph API Explorer o usar un System User token permanente.
 
 ---
 
@@ -501,3 +529,9 @@ GROQ_API_KEY=          # Whisper (STT) + Llama 3.3 (extracción de productos por
 12. **`servicios` — campo `fecha`** — columna `date` con default `CURRENT_DATE`. En JS formatear con `const [y,m,d] = fecha.split('-')` para evitar desfase UTC. La grilla ordena descendente por `fecha`. Saldo = `Math.max(0, valor - totalPagado)` calculado en cliente desde pagos de cobranzas.
 13. **Cobranzas — tabla única de pagos** — `servicio_pagos` fue eliminada. Todos los pagos viven en `cobranzas` con `tipo='PAGO'`. Pagos vinculados a servicio tienen `servicio_id != null`; "pagos a cuenta" tienen `servicio_id = null`. `recalcularEstadoPago` está en `app/api/dashboard/cobranzas/route.ts` (exportada) y se reutiliza desde `[id]/route.ts` e `[id]/imputar/route.ts`.
 14. **Imputar pago a cuenta** — `POST /api/dashboard/cobranzas/[id]/imputar` con `{ servicio_id, monto }`. Si es parcial, reduce el original y crea un nuevo registro vinculado. `ServicioDetalleClient` carga `initialPagos` (cobranzas del servicio) y `pagosACuenta` (del mismo cliente sin servicio) como props separados desde `page.tsx`.
+15. **Modales del dashboard — comportamiento estándar:**
+    - **Click afuera NO cierra** el modal (evita pérdida de cambios). Solo se cierra con el botón X.
+    - **Botón guardar en el header**: `ModalCard` acepta prop `formId?: string`. Si se pasa, renderiza un botón `<Save>` a la izquierda del X con `type="submit" form={formId}`. Dar `id="create-form"` / `id="edit-form"` al `<form>` correspondiente. NO pasar `formId` en modales de confirmación/eliminación.
+    - Este patrón está implementado en los 12 archivos client del dashboard.
+16. **Noticias — `contenido` es HTML** — generado por TipTap (rich text editor). Al renderizar en la página pública, usar `dangerouslySetInnerHTML`. Para backward compat con contenido antiguo en plain text, detectar con `/<[a-z]/i.test(contenido)` y convertir `\n` a `<br />` si no es HTML. El editor se carga con `next/dynamic({ ssr: false })` porque TipTap usa APIs del browser.
+17. **Noticias — `fecha`** — columna `date` (default CURRENT_DATE), editable desde el dashboard. En la página pública mostrar `noticia.fecha ?? noticia.created_at`. Formatear con split para evitar desfase UTC: `const [y,m,d] = dateStr.split('-'); new Date(Number(y), Number(m)-1, Number(d))`.

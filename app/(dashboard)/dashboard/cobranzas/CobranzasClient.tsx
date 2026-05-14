@@ -464,7 +464,7 @@ export default function CobranzasClient({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '12px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <select
-            defaultValue={filtros.cliente_id ?? ''}
+            value={filtros.cliente_id ?? ''}
             onChange={(e) => filterSelect('cliente_id', e.target.value)}
             style={{ padding: '8px 14px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', backgroundColor: '#fff', fontFamily: 'inherit', color: theme.colors.text }}
           >
@@ -473,7 +473,7 @@ export default function CobranzasClient({
           </select>
 
           <select
-            defaultValue={filtros.tipo ?? ''}
+            value={filtros.tipo ?? ''}
             onChange={(e) => filterSelect('tipo', e.target.value)}
             style={{ padding: '8px 14px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', backgroundColor: '#fff', fontFamily: 'inherit', color: theme.colors.text }}
           >

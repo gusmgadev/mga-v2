@@ -48,6 +48,8 @@
 - **Estilos landing:** Tailwind CSS v4 + Framer Motion
 - **Estilos dashboard:** inline styles con `theme.*` (sin Tailwind)
 - **IA / voz:** Groq Whisper (STT) + Llama 3.3 (extracción de productos) para ingreso de stock por voz
+- **Rich text:** TipTap (Bold / Italic / Highlight) para el editor de noticias en el dashboard
+- **Instagram:** Graph API v21.0 — auto-post al publicar una noticia
 - **Autenticación:** NextAuth.js v5 beta — CredentialsProvider + JWT
 - **Base de datos:** Supabase PostgreSQL (dos clientes: anon y service role)
 - **Formularios:** React Hook Form + Zod
@@ -68,14 +70,15 @@ mga-v2/
 │   └── api/               # API routes (auth, contact, dashboard/*)
 ├── components/
 │   ├── landing/           # 9 componentes de la landing
-│   └── dashboard/         # Sidebar, Header, QuickCreate modals, VoiceRecorder, CatalogoCombobox
+│   └── dashboard/         # Sidebar, Header, QuickCreate modals, VoiceRecorder, CatalogoCombobox, RichTextEditor
 ├── lib/
 │   ├── theme.ts           # FUENTE DE VERDAD — colores, tipografía, datos
 │   ├── auth.ts            # Config NextAuth
 │   ├── permisos.ts        # getModulePermisos() + tipo ModulePermisos
 │   └── clientes.ts        # 22 clientes de la landing
 ├── services/
-│   └── supabase-admin.ts  # Cliente Supabase service role (solo server)
+│   ├── supabase-admin.ts  # Cliente Supabase service role (solo server)
+│   └── instagram.ts       # Auto-post a Instagram Graph API al publicar noticias
 ├── hooks/
 │   └── usePermissions.ts  # Hook cliente para permisos
 ├── proxy.ts               # Middleware de rutas (se llama proxy.ts, no middleware.ts)
@@ -109,15 +112,16 @@ mga-v2/
   - Matching automático por código (exacto y normalizado) y por nombre (pg_trgm / ILIKE fallback)
   - Auto-inserción con confianza ≥ 0.70; panel de pendientes para el resto
   - Panel de pendientes: "Usar esta coincidencia", "Crear producto", "Descartar"
+- [x] Módulo Noticias: lista, crear, editar con rich text (TipTap), imágenes, fecha editable, toggle publicada/borrador, auto-post Instagram al publicar. Página pública `/noticias` y `/noticias/[id]`
 - [x] Panel Admin: Usuarios, Roles, Permisos
 - [x] Quick-create inline: crear cliente o activo desde cualquier formulario sin salir de la pantalla
 - [x] CatalogoCombobox: combobox compartido con creación inline de marca/rubro
+- [x] Modales: click afuera NO cierra, botón guardar (💾) en header de todos los modales con formulario
 
 ---
 
 ## Pendientes
 
-- **Módulo Cobranzas** — existe en `role_permissions` pero sin página ni API
 - **Sección Nosotros** — link en navbar apunta a `#`, sin destino
 - **OG image dedicada** — actualmente usa `hero-1.jpg`
 - **Google Search Console** — enviar sitemap
@@ -134,5 +138,5 @@ mga-v2/
 
 ---
 
-**Última actualización:** 2026-05-13
+**Última actualización:** 2026-05-14
 **Actualizado por:** Claude Code

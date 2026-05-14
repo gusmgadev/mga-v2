@@ -388,7 +388,7 @@ export default function ServiciosClient({
     const json = await res.json()
     setCreateLoading(false)
     if (!res.ok) { setCreateError(json.error); return }
-    setServicios((prev) => [{ ...json, totalPagado: 0 }, ...prev])
+    setServicios((prev) => sortByFecha([{ ...json, totalPagado: 0 }, ...prev]))
     setShowCreate(false)
   }
 
@@ -418,13 +418,13 @@ export default function ServiciosClient({
     const json = await res.json()
     setEditLoading(false)
     if (!res.ok) { setEditError(json.error); return }
-    setServicios((prev) => prev.map((s) => {
+    setServicios((prev) => sortByFecha(prev.map((s) => {
       if (s.id !== editTarget.id) return s
       const nuevoActivo = data.activo_id
         ? (localActivos.find((a) => a.id === data.activo_id) ?? null)
         : null
       return { ...s, ...json, clientes: s.clientes, activos: nuevoActivo ? { nombre: nuevoActivo.nombre } : null, totalPagado: s.totalPagado }
-    }))
+    })))
     setEditTarget(null)
   }
 
@@ -439,6 +439,9 @@ export default function ServiciosClient({
     setServicios((prev) => prev.filter((s) => s.id !== deleteTarget.id))
     setDeleteTarget(null)
   }
+
+  const sortByFecha = (arr: Servicio[]) =>
+    [...arr].sort((a, b) => (b.fecha ?? '0000-00-00').localeCompare(a.fecha ?? '0000-00-00'))
 
   const buildUrl = (overrides: Partial<typeof filtros>) => {
     const merged = { ...filtros, ...overrides }
@@ -465,7 +468,7 @@ export default function ServiciosClient({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '16px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <select
-            defaultValue={filtros.cliente_id ?? ''}
+            value={filtros.cliente_id ?? ''}
             onChange={(e) => filterSelect('cliente_id', e.target.value)}
             style={{ padding: '8px 14px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', backgroundColor: '#fff', fontFamily: 'inherit', color: theme.colors.text }}
           >
@@ -476,7 +479,7 @@ export default function ServiciosClient({
           </select>
 
           <select
-            defaultValue={filtros.estado ?? ''}
+            value={filtros.estado ?? ''}
             onChange={(e) => filterSelect('estado', e.target.value)}
             style={{ padding: '8px 14px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', backgroundColor: '#fff', fontFamily: 'inherit', color: theme.colors.text }}
           >
@@ -485,7 +488,7 @@ export default function ServiciosClient({
           </select>
 
           <select
-            defaultValue={filtros.estado_pago ?? ''}
+            value={filtros.estado_pago ?? ''}
             onChange={(e) => filterSelect('estado_pago', e.target.value)}
             style={{ padding: '8px 14px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', backgroundColor: '#fff', fontFamily: 'inherit', color: theme.colors.text }}
           >
