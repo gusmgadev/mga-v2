@@ -41,6 +41,14 @@ function formatFecha(iso: string) {
   return d.toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric" })
 }
 
+const contentStyles = `
+  .noticia-body p { margin-bottom: 0.75em; }
+  .noticia-body p:last-child { margin-bottom: 0; }
+  .noticia-body mark { background-color: #fef08a; border-radius: 2px; padding: 0 2px; }
+  .noticia-body strong { font-weight: 700; }
+  .noticia-body em { font-style: italic; }
+`
+
 export default async function NoticiaDetallePage({
   params,
 }: {
@@ -125,12 +133,16 @@ export default async function NoticiaDetallePage({
               </p>
 
               {/* Contenido completo */}
+              <style>{contentStyles}</style>
               <div
-                className="text-base leading-relaxed"
-                style={{ color: theme.colors.text, whiteSpace: "pre-wrap" }}
-              >
-                {noticia.contenido}
-              </div>
+                className="noticia-body text-base leading-relaxed"
+                style={{ color: theme.colors.text }}
+                dangerouslySetInnerHTML={{
+                  __html: /<[a-z]/i.test(noticia.contenido)
+                    ? noticia.contenido
+                    : noticia.contenido.replace(/\n/g, '<br />')
+                }}
+              />
             </div>
           </article>
 

@@ -1,6 +1,9 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import dynamic from 'next/dynamic'
+
+const RichTextEditor = dynamic(() => import('@/components/dashboard/RichTextEditor'), { ssr: false })
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -302,17 +305,6 @@ export default function NoticiasAdminClient({
         {form.formState.errors.resumen && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.resumen.message}</p>}
       </div>
 
-      <div>
-        <label style={labelStyle}>Contenido completo <span style={{ color: theme.colors.error }}>*</span></label>
-        <textarea
-          {...form.register('contenido')}
-          rows={8}
-          style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }}
-          placeholder="Texto completo de la noticia (se muestra en la página de detalle)"
-        />
-        {form.formState.errors.contenido && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.contenido.message}</p>}
-      </div>
-
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         <ImageUploader label="Imagen card (miniatura)" value={imagenCard} onChange={setImagenCard} />
         <ImageUploader label="Imagen portada (detalle)" value={imagenPortada} onChange={setImagenPortada} />
@@ -478,6 +470,18 @@ export default function NoticiasAdminClient({
                 imagenPortada={createImagenPortada}
                 setImagenPortada={setCreateImagenPortada}
               />
+              <div style={{ marginTop: '14px' }}>
+                <label style={labelStyle}>Contenido completo <span style={{ color: theme.colors.error }}>*</span></label>
+                <RichTextEditor
+                  defaultValue=""
+                  onChange={(html) => createForm.setValue('contenido', html, { shouldValidate: true })}
+                />
+                {createForm.formState.errors.contenido && (
+                  <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+                    {createForm.formState.errors.contenido.message}
+                  </p>
+                )}
+              </div>
               {createError && <div style={{ marginTop: '14px' }}><ErrorBox message={createError} /></div>}
               <button
                 type="submit"
@@ -504,6 +508,19 @@ export default function NoticiasAdminClient({
                 imagenPortada={editImagenPortada}
                 setImagenPortada={setEditImagenPortada}
               />
+              <div style={{ marginTop: '14px' }}>
+                <label style={labelStyle}>Contenido completo <span style={{ color: theme.colors.error }}>*</span></label>
+                <RichTextEditor
+                  key={editTarget?.id}
+                  defaultValue={editTarget?.contenido ?? ''}
+                  onChange={(html) => editForm.setValue('contenido', html, { shouldValidate: true })}
+                />
+                {editForm.formState.errors.contenido && (
+                  <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+                    {editForm.formState.errors.contenido.message}
+                  </p>
+                )}
+              </div>
               {editError && <div style={{ marginTop: '14px' }}><ErrorBox message={editError} /></div>}
               <button
                 type="submit"
