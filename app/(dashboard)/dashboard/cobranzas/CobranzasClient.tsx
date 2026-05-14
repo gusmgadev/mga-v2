@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -283,6 +283,7 @@ export default function CobranzasClient({
 }) {
   const router = useRouter()
   const [cobranzas, setCobranzas] = useState(initialCobranzas)
+  useEffect(() => { setCobranzas(initialCobranzas) }, [initialCobranzas])
   const [showCreate, setShowCreate] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Cobranza | null>(null)
   const [globalError, setGlobalError] = useState<string | null>(null)

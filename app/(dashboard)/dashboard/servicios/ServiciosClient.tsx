@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -331,6 +331,7 @@ export default function ServiciosClient({
 }) {
   const router = useRouter()
   const [servicios, setServicios] = useState(initialServicios)
+  useEffect(() => { setServicios(initialServicios) }, [initialServicios])
   const [localClientes, setLocalClientes] = useState(clientes)
   const [localActivos, setLocalActivos] = useState(activos)
   const [showCreate, setShowCreate] = useState(false)
