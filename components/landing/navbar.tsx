@@ -96,8 +96,9 @@ export default function Navbar() {
                     href={item.href}
                     className="relative text-sm uppercase tracking-widest px-4 py-1 flex items-center gap-1"
                     style={{
-                      color: isActive || hoveredItem === item.label ? theme.colors.primary : "#555",
+                      color: isActive || hoveredItem === item.label ? (item.color ?? theme.colors.primary) : (item.color ?? "#555"),
                       fontWeight: isActive || hoveredItem === item.label ? 700 : 400,
+                      fontStyle: item.italic ? "italic" : "normal",
                       transition: theme.transitions.fast,
                     }}
                     onClick={(e) => {

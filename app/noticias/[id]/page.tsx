@@ -66,7 +66,7 @@ export default async function NoticiaDetallePage({
 
           {/* Volver */}
           <Link
-            href="/#noticias"
+            href="/noticias"
             className="inline-flex items-center gap-2 mb-8 text-sm font-medium transition-colors"
             style={{ color: theme.colors.primary, textDecoration: "none" }}
           >
@@ -137,7 +137,7 @@ export default async function NoticiaDetallePage({
           {/* Volver (bottom) */}
           <div className="mt-10 text-center">
             <Link
-              href="/#noticias"
+              href="/noticias"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium transition-all"
               style={{
                 backgroundColor: theme.colors.primary,

@@ -13,6 +13,8 @@ export interface NavItem {
   href: string
   scroll?: boolean
   submenu?: NavSubItem[]
+  color?: string
+  italic?: boolean
 }
 
 export const theme = {
@@ -125,8 +127,8 @@ items: [
       { label: "Sistemas Zoologic", href: "/#sistemas-zoologic", scroll: true },
       { label: "Clientes", href: "/#clientes", scroll: true },
       { label: "Proceso", href: "/#process", scroll: true },
-      { label: "Noticias", href: "/noticias", scroll: false },
       { label: "Contacto", href: "/#contact", scroll: true },
+      { label: "Noticias y Novedades", href: "/noticias", scroll: false, color: "#16a34a", italic: true },
     ] as NavItem[],
   },
 
