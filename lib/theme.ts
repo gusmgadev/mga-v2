@@ -128,7 +128,7 @@ items: [
       { label: "Clientes", href: "/#clientes", scroll: true },
       { label: "Proceso", href: "/#process", scroll: true },
       { label: "Contacto", href: "/#contact", scroll: true },
-      { label: "Noticias y Novedades", href: "/noticias", scroll: false, color: "#16a34a", italic: true },
+      { label: "Noticias y Novedades", href: "/noticias", scroll: false, color: "#16a34a" },
     ] as NavItem[],
   },
 

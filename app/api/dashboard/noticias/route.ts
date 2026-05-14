@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { supabaseAdmin } from '@/services/supabase-admin'
+import { postNoticiaToInstagram } from '@/services/instagram'
 import { z } from 'zod'
 
 const createSchema = z.object({
@@ -49,5 +50,10 @@ export async function POST(req: Request) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  if (data.publicada && data.imagen_card) {
+    postNoticiaToInstagram(data).catch(console.error)
+  }
+
   return NextResponse.json(data, { status: 201 })
 }

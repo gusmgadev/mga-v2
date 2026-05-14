@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { supabaseAdmin } from '@/services/supabase-admin'
+import { postNoticiaToInstagram } from '@/services/instagram'
 import { z } from 'zod'
 
 const updateSchema = z.object({
@@ -32,6 +33,13 @@ export async function PUT(
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 })
   }
+
+  const { data: previo } = await supabaseAdmin
+    .from('noticias')
+    .select('publicada')
+    .eq('id', Number(id))
+    .single()
+
   const { data, error } = await supabaseAdmin
     .from('noticias')
     .update({ ...parsed.data, updated_at: new Date().toISOString() })
@@ -40,6 +48,12 @@ export async function PUT(
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  const recienPublicada = previo && !previo.publicada && data.publicada === true
+  if (recienPublicada && data.imagen_card) {
+    postNoticiaToInstagram(data).catch(console.error)
+  }
+
   return NextResponse.json(data)
 }
 
