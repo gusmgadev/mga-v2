@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
   Mail, Search, Download, Eye, Pencil, Trash2, Wrench, FileText,
-  X, Loader2, AlertCircle, ChevronDown, ChevronUp, Save, Check,
+  X, Loader2, AlertCircle, ChevronDown, ChevronUp, Save, Check, History,
 } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
@@ -59,6 +59,33 @@ type EmailResult = {
 }
 
 type ClienteSimple = { id: number; nombre: string }
+
+type TipoContacto = 'telefono' | 'whatsapp' | 'mail' | 'presencial' | 'otro'
+
+type Iteracion = {
+  id: number
+  oportunidad_id: number
+  fecha: string
+  contacto: string | null
+  detalle: string | null
+  tipo_contacto: TipoContacto
+  created_at: string
+}
+
+const TIPO_CONTACTO_LABELS: Record<TipoContacto, string> = {
+  telefono: 'Teléfono',
+  whatsapp: 'WhatsApp',
+  mail: 'Mail',
+  presencial: 'Presencial',
+  otro: 'Otro',
+}
+const TIPO_CONTACTO_COLORS: Record<TipoContacto, { bg: string; text: string }> = {
+  telefono:   { bg: '#E3F2FD', text: '#1565C0' },
+  whatsapp:   { bg: '#E8F5E9', text: '#2E7D32' },
+  mail:       { bg: '#FFF3E0', text: '#E65100' },
+  presencial: { bg: '#F3E8FF', text: '#7C3AED' },
+  otro:       { bg: '#F1F5F9', text: '#475569' },
+}
 
 const ESTADOS: OportunidadEstado[] = ['NUEVA', 'EN_SEGUIMIENTO', 'CERRADA', 'PERDIDA']
 const ESTADO_LABELS: Record<OportunidadEstado, string> = {
@@ -228,6 +255,60 @@ export default function OportunidadesClient({
   const [deleteTarget, setDeleteTarget] = useState<Oportunidad | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [globalError, setGlobalError] = useState<string | null>(null)
+
+  // Historial de iteraciones
+  const [historialTarget, setHistorialTarget] = useState<Oportunidad | null>(null)
+  const [iteraciones, setIteraciones] = useState<Iteracion[]>([])
+  const [loadingIteraciones, setLoadingIteraciones] = useState(false)
+  const [iteracionFecha, setIteracionFecha] = useState(new Date().toISOString().split('T')[0])
+  const [iteracionTipo, setIteracionTipo] = useState<TipoContacto>('telefono')
+  const [iteracionContacto, setIteracionContacto] = useState('')
+  const [iteracionDetalle, setIteracionDetalle] = useState('')
+  const [savingIteracion, setSavingIteracion] = useState(false)
+  const [iteracionError, setIteracionError] = useState<string | null>(null)
+
+  const openHistorial = async (op: Oportunidad) => {
+    setHistorialTarget(op)
+    setIteraciones([])
+    setIteracionError(null)
+    setIteracionFecha(new Date().toISOString().split('T')[0])
+    setIteracionTipo('telefono')
+    setIteracionContacto('')
+    setIteracionDetalle('')
+    setLoadingIteraciones(true)
+    const res = await fetch(`/api/dashboard/oportunidades/${op.id}/iteraciones`)
+    setLoadingIteraciones(false)
+    if (res.ok) setIteraciones(await res.json())
+  }
+
+  const saveIteracion = async () => {
+    if (!historialTarget) return
+    setSavingIteracion(true)
+    setIteracionError(null)
+    const res = await fetch(`/api/dashboard/oportunidades/${historialTarget.id}/iteraciones`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fecha: iteracionFecha,
+        tipo_contacto: iteracionTipo,
+        contacto: iteracionContacto || null,
+        detalle: iteracionDetalle || null,
+      }),
+    })
+    const json = await res.json()
+    setSavingIteracion(false)
+    if (!res.ok) { setIteracionError(json.error); return }
+    setIteraciones((prev) => [json, ...prev])
+    setIteracionDetalle('')
+    setIteracionContacto('')
+    setIteracionFecha(new Date().toISOString().split('T')[0])
+  }
+
+  const deleteIteracion = async (iteracionId: number) => {
+    if (!historialTarget) return
+    const res = await fetch(`/api/dashboard/oportunidades/${historialTarget.id}/iteraciones/${iteracionId}`, { method: 'DELETE' })
+    if (res.ok) setIteraciones((prev) => prev.filter((i) => i.id !== iteracionId))
+  }
 
   // Generate service/presupuesto
   const [genServicioTarget, setGenServicioTarget] = useState<Oportunidad | null>(null)
@@ -691,6 +772,7 @@ export default function OportunidadesClient({
                     <td style={{ ...tdStyle, textAlign: 'right' }}>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', flexWrap: 'nowrap' }}>
                         <button onClick={() => setViewTarget(op)} style={actionBtnStyle} title="Ver detalle"><Eye size={13} /></button>
+                        <button onClick={() => openHistorial(op)} style={{ ...actionBtnStyle, color: '#7C3AED' }} title="Historial de contactos"><History size={13} /></button>
                         {permisos.can_edit && (
                           <button onClick={() => openEdit(op)} style={actionBtnStyle} title="Editar estado / notas"><Pencil size={13} /></button>
                         )}
@@ -983,6 +1065,153 @@ export default function OportunidadesClient({
             </form>
           </ModalCard>
         </ModalOverlay>
+      )}
+
+      {/* Historial de iteraciones modal */}
+      {historialTarget && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '680px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ backgroundColor: '#fff', borderRadius: theme.radii.md, boxShadow: '0 8px 32px rgba(0,0,0,0.18)', overflow: 'hidden' }}>
+              {/* Header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px', borderBottom: `1px solid ${theme.colors.border}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <History size={16} color="#7C3AED" />
+                  <h2 style={{ margin: 0, fontSize: theme.fontSizes.base, fontWeight: theme.fontWeights.bold, color: theme.colors.text }}>
+                    Historial — Op #{historialTarget.nro_oportunidad ?? historialTarget.id}
+                  </h2>
+                </div>
+                <button onClick={() => setHistorialTarget(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.textMuted, display: 'flex', padding: 0 }}>
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {/* Formulario nueva iteración */}
+                <div style={{ backgroundColor: '#F8F9FB', borderRadius: theme.radii.sm, padding: '16px', border: `1px solid ${theme.colors.border}` }}>
+                  <p style={{ margin: '0 0 12px', fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium, color: theme.colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Agregar contacto
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+                    <div>
+                      <label style={labelStyle}>Fecha</label>
+                      <input
+                        type="date"
+                        value={iteracionFecha}
+                        onChange={(e) => setIteracionFecha(e.target.value)}
+                        style={{ ...inputStyle, backgroundColor: '#fff' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Tipo de contacto</label>
+                      <select
+                        value={iteracionTipo}
+                        onChange={(e) => setIteracionTipo(e.target.value as TipoContacto)}
+                        style={{ ...inputStyle, backgroundColor: '#fff', cursor: 'pointer' }}
+                      >
+                        {(Object.keys(TIPO_CONTACTO_LABELS) as TipoContacto[]).map((t) => (
+                          <option key={t} value={t}>{TIPO_CONTACTO_LABELS[t]}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div style={{ marginBottom: '10px' }}>
+                    <label style={labelStyle}>Contacto (nombre / cargo)</label>
+                    <input
+                      type="text"
+                      value={iteracionContacto}
+                      onChange={(e) => setIteracionContacto(e.target.value)}
+                      placeholder="ej: Juan Pérez — Gerente"
+                      style={{ ...inputStyle, backgroundColor: '#fff' }}
+                    />
+                  </div>
+                  <div style={{ marginBottom: '12px' }}>
+                    <label style={labelStyle}>Detalle</label>
+                    <textarea
+                      value={iteracionDetalle}
+                      onChange={(e) => setIteracionDetalle(e.target.value)}
+                      rows={3}
+                      placeholder="Resultado del contacto, próximos pasos..."
+                      style={{ ...inputStyle, backgroundColor: '#fff', resize: 'vertical' }}
+                    />
+                  </div>
+                  {iteracionError && <div style={{ marginBottom: '10px' }}><ErrorBox message={iteracionError} /></div>}
+                  <button
+                    onClick={saveIteracion}
+                    disabled={savingIteracion || !iteracionFecha}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '6px',
+                      padding: '9px 16px',
+                      backgroundColor: savingIteracion || !iteracionFecha ? `${theme.colors.primary}66` : theme.colors.primary,
+                      color: '#fff', border: 'none', borderRadius: theme.radii.sm,
+                      cursor: savingIteracion || !iteracionFecha ? 'not-allowed' : 'pointer',
+                      fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium,
+                    }}
+                  >
+                    {savingIteracion ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+                    {savingIteracion ? 'Guardando...' : 'Agregar'}
+                  </button>
+                </div>
+
+                {/* Lista de iteraciones */}
+                <div>
+                  <p style={{ margin: '0 0 12px', fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium, color: theme.colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Historial ({iteraciones.length})
+                  </p>
+                  {loadingIteraciones && (
+                    <div style={{ display: 'flex', justifyContent: 'center', padding: '24px' }}>
+                      <Loader2 size={18} className="animate-spin" style={{ color: theme.colors.textMuted }} />
+                    </div>
+                  )}
+                  {!loadingIteraciones && iteraciones.length === 0 && (
+                    <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textMuted, textAlign: 'center', padding: '16px 0' }}>
+                      Sin contactos registrados
+                    </p>
+                  )}
+                  {!loadingIteraciones && iteraciones.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {iteraciones.map((it) => {
+                        const { bg, text } = TIPO_CONTACTO_COLORS[it.tipo_contacto]
+                        return (
+                          <div key={it.id} style={{ border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, padding: '12px 14px', backgroundColor: '#fff' }}>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                <span style={{ padding: '2px 9px', backgroundColor: bg, color: text, borderRadius: theme.radii.full, fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium, whiteSpace: 'nowrap' }}>
+                                  {TIPO_CONTACTO_LABELS[it.tipo_contacto]}
+                                </span>
+                                <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, whiteSpace: 'nowrap' }}>
+                                  {formatDate(it.fecha)}
+                                </span>
+                                {it.contacto && (
+                                  <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.text, fontWeight: theme.fontWeights.medium }}>
+                                    {it.contacto}
+                                  </span>
+                                )}
+                              </div>
+                              {permisos.can_delete && (
+                                <button
+                                  onClick={() => deleteIteracion(it.id)}
+                                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.textMuted, padding: '2px', display: 'flex', flexShrink: 0 }}
+                                  title="Eliminar"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              )}
+                            </div>
+                            {it.detalle && (
+                              <p style={{ margin: '8px 0 0', fontSize: theme.fontSizes.sm, color: theme.colors.text, whiteSpace: 'pre-wrap', lineHeight: '1.5' }}>
+                                {it.detalle}
+                              </p>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {showQCCliente && (
