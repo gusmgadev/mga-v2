@@ -440,10 +440,16 @@ export default function OportunidadesClient({
     return `${d}/${m}/${y.slice(2)}`
   }
 
-  const filtered = oportunidades.filter((o) =>
-    (!filterEstado || o.estado === filterEstado) &&
-    (!filterTipo || (o.tipo_op ?? 'OP_NUEVA') === filterTipo)
-  )
+  const filtered = oportunidades
+    .filter((o) =>
+      (!filterEstado || o.estado === filterEstado) &&
+      (!filterTipo || (o.tipo_op ?? 'OP_NUEVA') === filterTipo)
+    )
+    .sort((a, b) => {
+      const da = a.fecha_inicio ?? a.created_at
+      const db = b.fecha_inicio ?? b.created_at
+      return db.localeCompare(da)
+    })
 
   const actionBtnStyle: React.CSSProperties = {
     background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm,
@@ -638,6 +644,7 @@ export default function OportunidadesClient({
               <tr>
                 <th style={thStyle}>Nro OP</th>
                 <th style={thStyle}>Nro Tarea</th>
+                <th style={thStyle}>Fecha inicio</th>
                 <th style={thStyle}>Contacto</th>
                 <th style={thStyle}>Teléfono</th>
                 <th style={thStyle}>Email</th>
@@ -650,7 +657,7 @@ export default function OportunidadesClient({
             <tbody>
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={9} style={{ ...tdStyle, textAlign: 'center', color: theme.colors.textMuted }}>
+                  <td colSpan={10} style={{ ...tdStyle, textAlign: 'center', color: theme.colors.textMuted }}>
                     No hay oportunidades registradas
                   </td>
                 </tr>
@@ -661,6 +668,7 @@ export default function OportunidadesClient({
                   <tr key={op.id}>
                     <td style={{ ...tdStyle, fontWeight: theme.fontWeights.medium }}>{op.nro_oportunidad ?? '—'}</td>
                     <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{op.nro_tarea ?? '—'}</td>
+                    <td style={{ ...tdStyle, color: theme.colors.textMuted, whiteSpace: 'nowrap' }}>{formatDate(op.fecha_inicio)}</td>
                     <td style={tdStyle}>
                       <p style={{ margin: 0, fontWeight: theme.fontWeights.medium }}>{nombre}</p>
                       {op.empresa && <p style={{ margin: 0, fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>{op.empresa}</p>}
