@@ -12,7 +12,7 @@ import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 import QuickCreateClienteModal from '@/components/dashboard/QuickCreateClienteModal'
 
-type OportunidadEstado = 'NUEVA' | 'EN_SEGUIMIENTO' | 'CERRADA' | 'PERDIDA'
+type OportunidadEstado = 'NUEVA' | 'EN_PROCESO' | 'GANADA' | 'NO_GANADA' | 'NO_OP'
 type TipoOp = 'OP_NUEVA' | 'SEGUIMIENTO' | 'CROSS_SELLING'
 
 type Oportunidad = {
@@ -41,6 +41,8 @@ type Oportunidad = {
   email_fecha: string | null
   estado: OportunidadEstado
   notas: string | null
+  motivo_cierre: string | null
+  fecha_ultimo_estado_final: string | null
   servicio_id: number | null
   presupuesto_id: number | null
   tipo_op: TipoOp | null
@@ -87,19 +89,22 @@ const TIPO_CONTACTO_COLORS: Record<TipoContacto, { bg: string; text: string }> =
   otro:       { bg: '#F1F5F9', text: '#475569' },
 }
 
-const ESTADOS: OportunidadEstado[] = ['NUEVA', 'EN_SEGUIMIENTO', 'CERRADA', 'PERDIDA']
+const ESTADOS: OportunidadEstado[] = ['NUEVA', 'EN_PROCESO', 'GANADA', 'NO_GANADA', 'NO_OP']
 const ESTADO_LABELS: Record<OportunidadEstado, string> = {
   NUEVA: 'Nueva',
-  EN_SEGUIMIENTO: 'En seguimiento',
-  CERRADA: 'Cerrada',
-  PERDIDA: 'Perdida',
+  EN_PROCESO: 'En proceso',
+  GANADA: 'Ganada',
+  NO_GANADA: 'No ganada',
+  NO_OP: 'No es OP',
 }
 const ESTADO_COLORS: Record<OportunidadEstado, { bg: string; text: string }> = {
-  NUEVA: { bg: '#E3F2FD', text: '#1565C0' },
-  EN_SEGUIMIENTO: { bg: '#FFF3E0', text: '#E65100' },
-  CERRADA: { bg: `${theme.colors.success}18`, text: theme.colors.success },
-  PERDIDA: { bg: `${theme.colors.error}14`, text: theme.colors.error },
+  NUEVA:     { bg: '#E3F2FD', text: '#1565C0' },
+  EN_PROCESO: { bg: '#FFF3E0', text: '#E65100' },
+  GANADA:    { bg: `${theme.colors.success}18`, text: theme.colors.success },
+  NO_GANADA: { bg: `${theme.colors.error}14`, text: theme.colors.error },
+  NO_OP:     { bg: '#F1F5F9', text: '#475569' },
 }
+const ESTADOS_CON_MOTIVO: OportunidadEstado[] = ['NO_GANADA', 'NO_OP']
 
 const TIPO_OP_LABELS: Record<TipoOp, string> = {
   OP_NUEVA: 'Nueva',
@@ -250,6 +255,7 @@ export default function OportunidadesClient({
   const [editTarget, setEditTarget] = useState<Oportunidad | null>(null)
   const [editEstado, setEditEstado] = useState<OportunidadEstado>('NUEVA')
   const [editNotas, setEditNotas] = useState('')
+  const [editMotivo, setEditMotivo] = useState('')
   const [editLoading, setEditLoading] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Oportunidad | null>(null)
@@ -302,6 +308,20 @@ export default function OportunidadesClient({
     setIteracionDetalle('')
     setIteracionContacto('')
     setIteracionFecha(new Date().toISOString().split('T')[0])
+
+    // Transición automática: NUEVA → EN_PROCESO al agregar primer contacto
+    if (historialTarget.estado === 'NUEVA') {
+      const patchRes = await fetch(`/api/dashboard/oportunidades/${historialTarget.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: 'EN_PROCESO' }),
+      })
+      if (patchRes.ok) {
+        const updated: Oportunidad = { ...historialTarget, estado: 'EN_PROCESO' }
+        setHistorialTarget(updated)
+        setOportunidades((prev) => prev.map((o) => o.id === updated.id ? updated : o))
+      }
+    }
   }
 
   const deleteIteracion = async (iteracionId: number) => {
@@ -432,6 +452,7 @@ export default function OportunidadesClient({
   const openEdit = (op: Oportunidad) => {
     setEditEstado(op.estado)
     setEditNotas(op.notas ?? '')
+    setEditMotivo(op.motivo_cierre ?? '')
     setEditError(null)
     setEditTarget(op)
   }
@@ -443,12 +464,20 @@ export default function OportunidadesClient({
     const res = await fetch(`/api/dashboard/oportunidades/${editTarget.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ estado: editEstado, notas: editNotas }),
+      body: JSON.stringify({
+        estado: editEstado,
+        notas: editNotas,
+        motivo_cierre: ESTADOS_CON_MOTIVO.includes(editEstado) ? (editMotivo || null) : null,
+      }),
     })
     const json = await res.json()
     setEditLoading(false)
     if (!res.ok) { setEditError(json.error); return }
-    setOportunidades((prev) => prev.map((o) => o.id === editTarget.id ? { ...o, estado: editEstado, notas: editNotas } : o))
+    setOportunidades((prev) => prev.map((o) =>
+      o.id === editTarget.id
+        ? { ...o, estado: editEstado, notas: editNotas, motivo_cierre: json.motivo_cierre ?? null, fecha_ultimo_estado_final: json.fecha_ultimo_estado_final ?? null }
+        : o
+    ))
     setEditTarget(null)
   }
 
@@ -481,7 +510,18 @@ export default function OportunidadesClient({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ servicio_id: json.id }),
     })
-    setOportunidades((prev) => prev.map((o) => o.id === genServicioTarget.id ? { ...o, servicio_id: json.id } : o))
+    // Transición automática → GANADA al vincular servicio
+    const nuevoEstado = genServicioTarget.estado !== 'GANADA' ? 'GANADA' : genServicioTarget.estado
+    if (genServicioTarget.estado !== 'GANADA') {
+      await fetch(`/api/dashboard/oportunidades/${genServicioTarget.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: 'GANADA' }),
+      })
+    }
+    setOportunidades((prev) => prev.map((o) =>
+      o.id === genServicioTarget.id ? { ...o, servicio_id: json.id, estado: nuevoEstado } : o
+    ))
     setGenLoading(false)
     setGenServicioTarget(null)
   }
@@ -509,7 +549,18 @@ export default function OportunidadesClient({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ presupuesto_id: json.id }),
     })
-    setOportunidades((prev) => prev.map((o) => o.id === genPresupuestoTarget.id ? { ...o, presupuesto_id: json.id } : o))
+    // Transición automática: NUEVA → EN_PROCESO al generar presupuesto
+    const estadoTrasPresupuesto = genPresupuestoTarget.estado === 'NUEVA' ? 'EN_PROCESO' : genPresupuestoTarget.estado
+    if (genPresupuestoTarget.estado === 'NUEVA') {
+      await fetch(`/api/dashboard/oportunidades/${genPresupuestoTarget.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: 'EN_PROCESO' }),
+      })
+    }
+    setOportunidades((prev) => prev.map((o) =>
+      o.id === genPresupuestoTarget.id ? { ...o, presupuesto_id: json.id, estado: estadoTrasPresupuesto } : o
+    ))
     setGenLoading(false)
     setGenPresupuestoTarget(null)
   }
@@ -522,10 +573,12 @@ export default function OportunidadesClient({
   }
 
   const filtered = oportunidades
-    .filter((o) =>
-      (!filterEstado || o.estado === filterEstado) &&
-      (!filterTipo || (o.tipo_op ?? 'OP_NUEVA') === filterTipo)
-    )
+    .filter((o) => {
+      if (filterEstado === '__activas__') return o.estado === 'NUEVA' || o.estado === 'EN_PROCESO'
+      if (filterEstado) return o.estado === filterEstado
+      return true
+    })
+    .filter((o) => !filterTipo || (o.tipo_op ?? 'OP_NUEVA') === filterTipo)
     .sort((a, b) => {
       const da = a.fecha_inicio ?? a.created_at
       const db = b.fecha_inicio ?? b.created_at
@@ -708,6 +761,8 @@ export default function OportunidadesClient({
           >
             <option value="">Todos los estados</option>
             {ESTADOS.map((e) => <option key={e} value={e}>{ESTADO_LABELS[e]}</option>)}
+            <option disabled style={{ color: theme.colors.textMuted }}>──────────</option>
+            <option value="__activas__">Solo activas (Nueva + En proceso)</option>
           </select>
           <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
             {filtered.length} oportunidad{filtered.length !== 1 ? 'es' : ''}
@@ -835,7 +890,16 @@ export default function OportunidadesClient({
                 <Field label="Fecha vencimiento" value={formatDate(viewTarget.fecha_vencimiento)} />
                 <Field label="Tipo de tarea" value={viewTarget.tipo_tarea} />
                 <Field label="Estado" value={ESTADO_LABELS[viewTarget.estado]} />
+                {viewTarget.fecha_ultimo_estado_final && (
+                  <Field label="Fecha cierre" value={formatDate(viewTarget.fecha_ultimo_estado_final)} />
+                )}
               </div>
+              {(viewTarget.motivo_cierre && ESTADOS_CON_MOTIVO.includes(viewTarget.estado)) && (
+                <div style={{ padding: '10px 14px', backgroundColor: `${theme.colors.error}0A`, border: `1px solid ${theme.colors.error}30`, borderRadius: theme.radii.sm }}>
+                  <p style={{ fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium, color: theme.colors.error, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '4px' }}>Motivo de cierre</p>
+                  <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.text, whiteSpace: 'pre-wrap', margin: 0 }}>{viewTarget.motivo_cierre}</p>
+                </div>
+              )}
               <div style={{ borderTop: `1px solid ${theme.colors.border}`, paddingTop: '12px' }}>
                 <p style={{ fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium, color: theme.colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '10px' }}>Datos del contacto</p>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -902,13 +966,27 @@ export default function OportunidadesClient({
                   {ESTADOS.map((e) => <option key={e} value={e}>{ESTADO_LABELS[e]}</option>)}
                 </select>
               </div>
+              {ESTADOS_CON_MOTIVO.includes(editEstado) && (
+                <div>
+                  <label style={{ ...labelStyle, fontSize: theme.fontSizes.sm }}>
+                    Motivo <span style={{ color: theme.colors.error }}>*</span>
+                  </label>
+                  <textarea
+                    value={editMotivo}
+                    onChange={(e) => setEditMotivo(e.target.value)}
+                    rows={3}
+                    placeholder="Describí el motivo de cierre..."
+                    style={{ ...inputStyle, resize: 'vertical', fontSize: theme.fontSizes.base }}
+                  />
+                </div>
+              )}
               <div>
                 <label style={{ ...labelStyle, fontSize: theme.fontSizes.sm }}>Notas internas</label>
                 <textarea
                   value={editNotas}
                   onChange={(e) => setEditNotas(e.target.value)}
-                  rows={4}
-                  placeholder="Observaciones, próximos pasos, historial de contacto..."
+                  rows={3}
+                  placeholder="Observaciones, próximos pasos..."
                   style={{ ...inputStyle, resize: 'vertical', fontSize: theme.fontSizes.base }}
                 />
               </div>

@@ -49,6 +49,27 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     .select('*, clientes(nombre), activos(nombre)')
     .single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Transición automática de oportunidad vinculada
+  if (parsed.data.estado === 'APROBADO' || parsed.data.estado === 'RECHAZADO') {
+    const nuevoEstadoOp = parsed.data.estado === 'APROBADO' ? 'GANADA' : 'NO_GANADA'
+    const { data: op } = await supabaseAdmin
+      .from('oportunidades')
+      .select('id, estado')
+      .eq('presupuesto_id', Number(id))
+      .maybeSingle()
+    if (op && op.estado !== nuevoEstadoOp) {
+      await supabaseAdmin
+        .from('oportunidades')
+        .update({
+          estado: nuevoEstadoOp,
+          fecha_ultimo_estado_final: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', op.id)
+    }
+  }
+
   return NextResponse.json(data)
 }
 

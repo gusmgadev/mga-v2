@@ -3,9 +3,12 @@ import { auth } from '@/lib/auth'
 import { supabaseAdmin } from '@/services/supabase-admin'
 import { z } from 'zod'
 
+const ESTADOS_FINALES = ['GANADA', 'NO_GANADA', 'NO_OP'] as const
+
 const patchSchema = z.object({
-  estado: z.enum(['NUEVA', 'EN_SEGUIMIENTO', 'CERRADA', 'PERDIDA']).optional(),
+  estado: z.enum(['NUEVA', 'EN_PROCESO', 'GANADA', 'NO_GANADA', 'NO_OP']).optional(),
   notas: z.string().optional().nullable(),
+  motivo_cierre: z.string().nullable().optional(),
   servicio_id: z.number().int().positive().nullable().optional(),
   presupuesto_id: z.number().int().positive().nullable().optional(),
 })
@@ -24,9 +27,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const parsed = patchSchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 })
 
+  const extra: Record<string, unknown> = {}
+  if (parsed.data.estado && (ESTADOS_FINALES as readonly string[]).includes(parsed.data.estado)) {
+    extra.fecha_ultimo_estado_final = new Date().toISOString()
+  }
+
   const { data, error } = await supabaseAdmin
     .from('oportunidades')
-    .update({ ...parsed.data, updated_at: new Date().toISOString() })
+    .update({ ...parsed.data, ...extra, updated_at: new Date().toISOString() })
     .eq('id', Number(id))
     .select()
     .single()
