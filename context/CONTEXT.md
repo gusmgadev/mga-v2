@@ -47,7 +47,7 @@
 - **Lenguaje:** TypeScript strict
 - **Estilos landing:** Tailwind CSS v4 + Framer Motion
 - **Estilos dashboard:** inline styles con `theme.*` (sin Tailwind)
-- **IA / voz:** Groq Whisper (STT) + Llama 3.3 (extracción de productos) para ingreso de stock por voz
+- **IA / voz:** Groq Whisper (STT) + Llama 3.3 (voz remitos + extracción oportunidades desde email)
 - **Rich text:** TipTap (Bold / Italic / Highlight) para el editor de noticias en el dashboard
 - **Instagram:** Graph API v21.0 — auto-post al publicar una noticia
 - **Autenticación:** NextAuth.js v5 beta — CredentialsProvider + JWT
@@ -113,6 +113,7 @@ mga-v2/
   - Auto-inserción con confianza ≥ 0.70; panel de pendientes para el resto
   - Panel de pendientes: "Usar esta coincidencia", "Crear producto", "Descartar"
 - [x] Módulo Noticias: lista, crear, editar con rich text (TipTap), imágenes, fecha editable, toggle publicada/borrador, auto-post Instagram al publicar. Página pública `/noticias` y `/noticias/[id]`
+- [x] Módulo Oportunidades: búsqueda IMAP Gmail, selección de emails, extracción automática con Groq Llama 3.3, deduplicación por message_id, soporte tipo_op (OP_NUEVA / SEGUIMIENTO / CROSS_SELLING)
 - [x] Panel Admin: Usuarios, Roles, Permisos
 - [x] Quick-create inline: crear cliente o activo desde cualquier formulario sin salir de la pantalla
 - [x] CatalogoCombobox: combobox compartido con creación inline de marca/rubro
@@ -138,5 +139,5 @@ mga-v2/
 
 ---
 
-**Última actualización:** 2026-05-14
+**Última actualización:** 2026-05-15
 **Actualizado por:** Claude Code

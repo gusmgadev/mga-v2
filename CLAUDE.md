@@ -30,7 +30,7 @@ Dos productos en un mismo repo Next.js:
 | Lucide React | 1.14.0 | Íconos |
 | Framer Motion | 12.x | Solo en landing |
 | Resend | 6.x | Email desde `/api/contact` |
-| Groq API | — | Whisper (STT) + Llama 3.3 (extracción de productos por voz) |
+| Groq API | — | Whisper (STT) + Llama 3.3 (voz/remitos) + Llama 3.3 (extracción oportunidades) |
 | TipTap | — | Editor rich text (Bold/Italic/Highlight) — solo en dashboard noticias |
 
 **IMPORTANTE — Next.js 16 breaking changes:**
@@ -127,6 +127,10 @@ mga-v2/
 │   │       ├── remitos/[id]/items/route.ts
 │   │       ├── remitos/[id]/items/[itemId]/route.ts
 │   │       ├── voz/transcribir/route.ts # Groq Whisper + Llama 3.3 + matching
+│   │       ├── oportunidades/route.ts              # GET+POST
+│   │       ├── oportunidades/[id]/route.ts         # PUT+DELETE
+│   │       ├── oportunidades/buscar-emails/route.ts # POST — búsqueda IMAP Gmail
+│   │       ├── oportunidades/extraer/route.ts      # POST — extracción Groq Llama 3.3
 │   │       ├── noticias/route.ts        # GET+POST
 │   │       ├── noticias/[id]/route.ts  # PUT+DELETE + auto-post Instagram
 │   │       ├── upload/imagen/route.ts  # POST — sube imagen a Supabase Storage
@@ -301,6 +305,21 @@ public.movimientos_stock {
   costo (nullable), stock_antes (numeric), stock_despues (numeric), created_at
 }
 
+-- Oportunidades comerciales (extraídas desde email con Groq Llama 3.3)
+public.oportunidades {
+  id, nro_tarea (int nullable), nro_oportunidad (int nullable), nro_oportunidad_origen (int nullable),
+  titulo, registrada_por, fecha_inicio (date nullable), fecha_vencimiento (date nullable),
+  tipo_tarea, cliente_codigo, cliente_nombre, origen, tipo_oportunidad, zona_gestion,
+  primer_nombre, apellido, empresa, provincia_ciudad, telefono, email_contacto, comentarios,
+  email_subject, email_from, email_fecha (timestamptz nullable),
+  email_message_id (text, unique — deduplicación), 
+  tipo_op ('OP_NUEVA'|'SEGUIMIENTO'|'CROSS_SELLING', default 'OP_NUEVA'),
+  created_at
+}
+-- SQL migrations (aplicar en Supabase si aún no están):
+--   ALTER TABLE oportunidades ADD COLUMN tipo_op TEXT DEFAULT 'OP_NUEVA';
+--   ALTER TABLE oportunidades ADD COLUMN nro_oportunidad_origen INTEGER;
+
 -- Función pg_trgm (requiere extensión pg_trgm activa):
 -- buscar_productos_por_nombre(p_nombre text, p_limit int) → busca por nombre, marca Y código
 -- Devuelve: id, nombre, codigo, marca, unidad, stock_actual, costo, precio_venta, confianza (0-1)
@@ -345,11 +364,43 @@ if (!permisos.can_view) redirect('/dashboard')
 | Remitos | ✅ | ✅ | ✅ | ✅ | ✅ ítems + voz + confirmar |
 | Cobranzas | ✅ | ✅ | — | — | ✅ filtros cliente/tipo + resumen cargos/pagado/saldo |
 | Noticias | ✅ | ✅ | ✅ (pública) | ✅ | ✅ rich text + imágenes card/portada + fecha editable + Instagram auto-post |
+| Oportunidades | ✅ | — | — | — | ✅ búsqueda IMAP Gmail + extracción Groq + deduplicación por message_id |
 | Admin/Usuarios | ✅ | ✅ | — | ✅ | — |
 | Admin/Roles | ✅ | ✅ | — | — | — |
 | Admin/Permisos | ✅ | — | — | ✅ | — |
 
 **Permisos aplicados:** todos los módulos de negocio respetan `can_view / can_create / can_edit / can_delete`.
+
+---
+
+## Módulo Oportunidades — extracción desde email
+
+**Flujo completo:**
+1. `OportunidadesClient` busca emails via `POST /api/dashboard/oportunidades/buscar-emails` (ImapFlow + Gmail IMAP)
+2. El usuario selecciona emails y elige tipo: OP_NUEVA / SEGUIMIENTO / CROSS_SELLING
+3. `POST /api/dashboard/oportunidades/extraer` procesa cada email con Groq Llama 3.3 (json_object mode)
+4. Deduplicación por `email_message_id` — si ya existe se cuenta como duplicado y se salta
+5. Los campos extraídos se insertan en `oportunidades` junto con metadata del email
+
+**Comportamiento ante rate limits de Groq:**
+- **TPD (tokens/día agotados):** el mensaje contiene "per day" o "TPD" → falla inmediatamente, sin espera ni reintento. El loop rompe con `break` — todos los emails restantes también se saltan.
+- **TPM (tokens/minuto):** mensaje trae `try again in Xs` con X ≤ 30 → espera ese tiempo + 500ms y reintenta una vez.
+- Si el wait del TPM es > 30s, se trata como error permanente (evita confundir con TPD disfrazado).
+- Delay de 1.200ms entre llamadas para reducir presión sobre TPM.
+
+**Límite práctico del free tier de Groq:**
+- 100.000 tokens/día. Cada email usa ~1.000-1.500 tokens → máximo ~65-100 extracciones/día.
+- **Extraer en lotes de máximo 10-12 emails** por sesión para no agotar el cupo.
+- El límite diario se resetea a las 00:00 UTC.
+
+**Campos extraídos automáticamente:** nro_tarea, nro_oportunidad, nro_oportunidad_origen (número después de "Contactar Oportunidad" en el título), titulo, registrada_por, fechas, tipo_tarea, cliente_codigo, cliente_nombre, origen, tipo_oportunidad, zona_gestion, datos de contacto, comentarios.
+
+**Variables de entorno para Oportunidades:**
+```
+GMAIL_IMAP_USER=      # dirección Gmail
+GMAIL_IMAP_PASSWORD=  # App Password de Google (no la contraseña real)
+```
+GROQ_API_KEY es compartida con el módulo de voz/remitos.
 
 ---
 
@@ -493,7 +544,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 RESEND_API_KEY=
 RESEND_FROM_EMAIL=
-GROQ_API_KEY=          # Whisper (STT) + Llama 3.3 (extracción de productos por voz)
+GROQ_API_KEY=          # Whisper (STT) + Llama 3.3 (voz remitos) + Llama 3.3 (extracción oportunidades — 100k tokens/día gratis)
 INSTAGRAM_USER_ID=     # ID numérico del usuario IG Business (no el @handle)
 INSTAGRAM_ACCESS_TOKEN= # Token larga duración (60 días) o System User token (no vence)
 ```
@@ -535,3 +586,5 @@ INSTAGRAM_ACCESS_TOKEN= # Token larga duración (60 días) o System User token (
     - Este patrón está implementado en los 12 archivos client del dashboard.
 16. **Noticias — `contenido` es HTML** — generado por TipTap (rich text editor). Al renderizar en la página pública, usar `dangerouslySetInnerHTML`. Para backward compat con contenido antiguo en plain text, detectar con `/<[a-z]/i.test(contenido)` y convertir `\n` a `<br />` si no es HTML. El editor se carga con `next/dynamic({ ssr: false })` porque TipTap usa APIs del browser.
 17. **Noticias — `fecha`** — columna `date` (default CURRENT_DATE), editable desde el dashboard. En la página pública mostrar `noticia.fecha ?? noticia.created_at`. Formatear con split para evitar desfase UTC: `const [y,m,d] = dateStr.split('-'); new Date(Number(y), Number(m)-1, Number(d))`.
+18. **Oportunidades — Groq TPD vs TPM:** El regex `/try again in ([\d.]+)s/` solo captura segundos; "9m19.008s" da 19s, no 9min. La detección de TPD depende del texto "per day"/"TPD" en el mensaje, no del tiempo de espera. Al detectar TPD → `break` inmediato del loop. No confundir con TPM (espera corta, reintentar una vez).
+19. **Oportunidades — `p.html` es `string | false`** en mailparser. Usar `(p.html || '')` no `(p.html ?? '')` — `??` no reemplaza `false`, solo `null`/`undefined`.

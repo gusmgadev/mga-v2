@@ -12,7 +12,8 @@
       "Bash(Remove-Item -Path \"c:\\\\MGA\\\\PROYECTOSWEB\\\\mga-v2\\\\app\\\\api\\\\dashboard\\\\servicios\\\\[id]\\\\pagos\\\\[pagoId]\" -Force -ErrorAction SilentlyContinue)",
       "Bash(Remove-Item -Path \"c:\\\\MGA\\\\PROYECTOSWEB\\\\mga-v2\\\\app\\\\api\\\\dashboard\\\\servicios\\\\[id]\\\\pagos\" -Force -ErrorAction SilentlyContinue)",
       "Bash(Write-Host \"Listo\")",
-      "Bash(Get-ChildItem -Path \"c:\\\\MGA\\\\PROYECTOSWEB\\\\mga-v2\\\\app\" -Directory)"
+      "Bash(Get-ChildItem -Path \"c:\\\\MGA\\\\PROYECTOSWEB\\\\mga-v2\\\\app\" -Directory)",
+      "Bash(python)"
     ],
     "additionalDirectories": [
       "C:\\MGA\\PROYECTOSWEB\\mga-v2\\app\\api\\dashboard\\presupuestos\\[id]",

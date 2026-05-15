@@ -70,7 +70,7 @@ export async function POST(req: Request) {
 
           const extractText = (p: ParsedMail): string => {
             const rawText = (p.text ?? '').trim()
-            const htmlText = (p.html ?? '')
+            const htmlText = (p.html || '')
               .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, ' ')
               .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, ' ')
               .replace(/<[^>]+>/g, ' ')
