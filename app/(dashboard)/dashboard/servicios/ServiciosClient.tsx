@@ -97,7 +97,7 @@ const thStyle: React.CSSProperties = {
   borderBottom: `1px solid ${theme.colors.border}`, backgroundColor: '#F8F9FB',
 }
 const tdStyle: React.CSSProperties = {
-  padding: '14px 16px', fontSize: theme.fontSizes.sm, color: theme.colors.text,
+  padding: '8px 16px', fontSize: theme.fontSizes.sm, color: theme.colors.text,
   borderBottom: `1px solid ${theme.colors.border}`,
 }
 
@@ -521,7 +521,6 @@ export default function ServiciosClient({
               <th style={thStyle}>Fecha</th>
               <th style={thStyle}>Cliente</th>
               <th style={thStyle}>Título</th>
-              <th style={thStyle}>Activo</th>
               <th style={thStyle}>Estado</th>
               <th style={thStyle}>Pago</th>
               <th style={{ ...thStyle, textAlign: 'right' }}>Valor</th>
@@ -533,7 +532,7 @@ export default function ServiciosClient({
           <tbody>
             {servicios.length === 0 && (
               <tr>
-                <td colSpan={10} style={{ ...tdStyle, textAlign: 'center', color: theme.colors.textMuted }}>
+                <td colSpan={9} style={{ ...tdStyle, textAlign: 'center', color: theme.colors.textMuted }}>
                   No hay servicios registrados
                 </td>
               </tr>
@@ -545,9 +544,10 @@ export default function ServiciosClient({
               return (
               <tr key={s.id}>
                 <td style={{ ...tdStyle, color: theme.colors.textMuted, whiteSpace: 'nowrap' }}>{formatFecha(s.fecha)}</td>
-                <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{s.clientes?.nombre ?? '—'}</td>
-                <td style={{ ...tdStyle, fontWeight: theme.fontWeights.medium }}>{s.titulo}</td>
-                <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{s.activos?.nombre ?? '—'}</td>
+                <td style={{ ...tdStyle, color: theme.colors.textMuted, whiteSpace: 'nowrap', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.clientes?.nombre ?? '—'}</td>
+                <td style={{ ...tdStyle, maxWidth: '240px' }}>
+                  <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: theme.fontWeights.medium }}>{s.titulo}</div>
+                </td>
                 <td style={tdStyle}><EstadoBadge estado={s.estado} /></td>
                 <td style={tdStyle}><PagoBadge estado={s.estado_pago} /></td>
                 <td style={{ ...tdStyle, textAlign: 'right', fontWeight: theme.fontWeights.medium }}>

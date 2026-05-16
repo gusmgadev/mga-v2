@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Link from 'next/link'
-import { Plus, Pencil, Trash2, X, Loader2, AlertCircle, HardDrive, Save } from 'lucide-react'
+import { Plus, Pencil, Trash2, X, Loader2, AlertCircle, HardDrive, Save, Upload } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 
@@ -213,6 +213,26 @@ function ClienteFormFields({
   onNewRubro: (r: string) => void
 }) {
   const rubroValue = form.watch('rubro') ?? ''
+  const imagenValue = form.watch('imagen') ?? ''
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [logoPreview, setLogoPreview] = useState(imagenValue)
+  const [logoError, setLogoError] = useState<string | null>(null)
+
+  useEffect(() => { setLogoPreview(imagenValue) }, [imagenValue])
+
+  async function handleLogoFile(file: File) {
+    setUploadingLogo(true)
+    setLogoError(null)
+    const fd = new FormData()
+    fd.append('file', file)
+    const res = await fetch('/api/upload/logo', { method: 'POST', body: fd })
+    const json = await res.json()
+    setUploadingLogo(false)
+    if (!res.ok) { setLogoError(json.error ?? 'Error al subir imagen'); return }
+    form.setValue('imagen', json.url, { shouldDirty: true })
+    setLogoPreview(json.url)
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -268,11 +288,55 @@ function ClienteFormFields({
             placeholder="Observaciones, condiciones especiales..."
           />
         </div>
-        <div>
-          <label style={labelStyle}>Imagen (URL del logo)</label>
-          <input {...form.register('imagen')} style={inputStyle} placeholder="https://..." />
+
+        <div style={{ gridColumn: '1 / -1' }}>
+          <label style={labelStyle}>Logo / Foto</label>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+            {logoPreview && (
+              <div style={{ position: 'relative', flexShrink: 0 }}>
+                <img
+                  src={logoPreview}
+                  alt="logo"
+                  style={{ width: 64, height: 64, objectFit: 'contain', borderRadius: theme.radii.sm, border: `1px solid ${theme.colors.border}`, backgroundColor: '#f8f9fb' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => { form.setValue('imagen', '', { shouldDirty: true }); setLogoPreview('') }}
+                  style={{ position: 'absolute', top: -6, right: -6, background: theme.colors.error, border: 'none', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff', padding: 0 }}
+                >
+                  <X size={10} />
+                </button>
+              </div>
+            )}
+            <div>
+              <label
+                htmlFor="logo-upload"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: uploadingLogo ? 'not-allowed' : 'pointer', fontSize: theme.fontSizes.sm, color: theme.colors.textMuted, backgroundColor: '#fff' }}
+              >
+                {uploadingLogo ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                {uploadingLogo ? 'Subiendo...' : logoPreview ? 'Cambiar imagen' : 'Seleccionar imagen'}
+              </label>
+              <input
+                id="logo-upload"
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                disabled={uploadingLogo}
+                onChange={async (e) => {
+                  const file = e.target.files?.[0]
+                  if (file) await handleLogoFile(file)
+                  e.target.value = ''
+                }}
+              />
+              <p style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, marginTop: '4px' }}>
+                PNG, JPG, SVG, WEBP
+              </p>
+              {logoError && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{logoError}</p>}
+            </div>
+          </div>
         </div>
-        <div>
+
+        <div style={{ gridColumn: '1 / -1' }}>
           <label style={labelStyle}>Página web</label>
           <input {...form.register('pagina_web')} type="url" style={inputStyle} placeholder="https://www.ejemplo.com" />
           {form.formState.errors.pagina_web && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.pagina_web.message}</p>}
