@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 
 const RichTextEditor = dynamic(() => import('@/components/dashboard/RichTextEditor'), { ssr: false })
@@ -169,6 +169,72 @@ function ImageUploader({
   )
 }
 
+function VideoPreview({ url }: { url: string }) {
+  const [vimeoThumb, setVimeoThumb] = useState<string | null>(null)
+  const [vimeoLoading, setVimeoLoading] = useState(false)
+
+  useEffect(() => {
+    try {
+      const u = new URL(url)
+      if (!u.hostname.includes('vimeo.com')) { setVimeoThumb(null); setVimeoLoading(false); return }
+    } catch {
+      setVimeoThumb(null); setVimeoLoading(false); return
+    }
+    const ctrl = new AbortController()
+    setVimeoThumb(null)
+    setVimeoLoading(true)
+    fetch(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent(url)}`, { signal: ctrl.signal })
+      .then(r => r.json())
+      .then(d => { setVimeoThumb(d.thumbnail_url || null); setVimeoLoading(false) })
+      .catch(() => setVimeoLoading(false))
+    return () => ctrl.abort()
+  }, [url])
+
+  let ytId: string | null = null
+  try {
+    const u = new URL(url)
+    if (u.hostname === 'youtu.be') {
+      ytId = u.pathname.slice(1).split('/')[0] || null
+    } else if (u.hostname.includes('youtube.com')) {
+      if (u.pathname.includes('/shorts/')) {
+        ytId = u.pathname.split('/shorts/')[1]?.split('/')[0] || null
+      } else {
+        ytId = u.searchParams.get('v')
+      }
+    }
+  } catch { /* invalid URL */ }
+
+  const thumbSrc = ytId
+    ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`
+    : vimeoThumb
+
+  if (!thumbSrc && !vimeoLoading) return null
+
+  return (
+    <div style={{ marginTop: '8px', borderRadius: theme.radii.sm, overflow: 'hidden', border: `1px solid ${theme.colors.border}` }}>
+      {vimeoLoading && !thumbSrc ? (
+        <div style={{ height: '70px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#F5F5F3' }}>
+          <Loader2 size={14} className="animate-spin" style={{ color: theme.colors.textMuted }} />
+        </div>
+      ) : thumbSrc ? (
+        <div style={{ position: 'relative' }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={thumbSrc}
+            alt="Vista previa"
+            style={{ width: '100%', display: 'block', aspectRatio: '16/9', objectFit: 'cover', maxHeight: '160px' }}
+          />
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.25)' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.18)' }}>
+              <div style={{ width: 0, height: 0, borderTop: '6px solid transparent', borderBottom: '6px solid transparent', borderLeft: `10px solid ${theme.colors.primary}`, marginLeft: '2px' }} />
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 function formatDate(dateStr: string) {
   const [y, m, d] = dateStr.split('-')
   return `${d}/${m}/${String(y).slice(2)}`
@@ -304,7 +370,9 @@ export default function NoticiasAdminClient({
     setImagenCard: (v: string | null) => void
     imagenPortada: string | null
     setImagenPortada: (v: string | null) => void
-  }) => (
+  }) => {
+    const videoUrl = form.watch('video_url') ?? ''
+    return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       <div>
         <label style={labelStyle}>Título <span style={{ color: theme.colors.error }}>*</span></label>
@@ -342,6 +410,7 @@ export default function NoticiasAdminClient({
           </p>
         )}
         <p style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, marginTop: '4px' }}>Opcional — se incrusta en el detalle de la noticia</p>
+        {videoUrl && <VideoPreview url={videoUrl} />}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
@@ -377,7 +446,8 @@ export default function NoticiasAdminClient({
         </div>
       </div>
     </div>
-  )
+    )
+  }
 
   return (
     <>

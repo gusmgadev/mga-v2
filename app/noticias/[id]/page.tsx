@@ -114,44 +114,43 @@ export default async function NoticiaDetallePage({
             className="rounded-2xl overflow-hidden"
             style={{ backgroundColor: "#fff", boxShadow: theme.shadows.md }}
           >
-            {/* Imagen portada */}
+            {/* Fecha + Título — siempre visible al entrar */}
+            <div className="px-8 pt-8 pb-6 md:px-12 md:pt-10 md:pb-8">
+              <p
+                className="text-xs font-semibold uppercase tracking-widest mb-3"
+                style={{ color: theme.colors.primary }}
+              >
+                {formatFecha(noticia.fecha ?? noticia.created_at)}
+              </p>
+              <h1
+                className="text-2xl md:text-3xl font-bold leading-tight"
+                style={{ color: theme.colors.text }}
+              >
+                {noticia.titulo}
+              </h1>
+            </div>
+
+            {/* Imagen portada — completa, sin recorte */}
             {noticia.imagen_portada && (
-              <div className="relative w-full" style={{ aspectRatio: "16/7", overflow: "hidden" }}>
+              <div className="relative w-full" style={{ aspectRatio: "16/9", backgroundColor: "#F0F2F4" }}>
                 <Image
                   src={noticia.imagen_portada}
                   alt={noticia.titulo}
                   fill
                   priority
                   sizes="(max-width: 768px) 100vw, 768px"
-                  style={{ objectFit: "cover" }}
+                  style={{ objectFit: "contain" }}
                 />
               </div>
             )}
 
+            {/* Contenido */}
             <div className="p-8 md:p-12">
-              {/* Fecha */}
-              <p
-                className="text-xs font-semibold uppercase tracking-widest mb-4"
-                style={{ color: theme.colors.primary }}
-              >
-                {formatFecha(noticia.fecha ?? noticia.created_at)}
-              </p>
-
-              {/* Título */}
-              <h1
-                className="text-2xl md:text-3xl font-bold leading-tight mb-6"
-                style={{ color: theme.colors.text }}
-              >
-                {noticia.titulo}
-              </h1>
-
-              {/* Separador */}
               <div
                 className="mb-6"
                 style={{ height: "2px", width: "48px", backgroundColor: theme.colors.primary, borderRadius: "2px" }}
               />
 
-              {/* Resumen destacado */}
               <p
                 className="text-base leading-relaxed mb-8 font-medium"
                 style={{ color: theme.colors.textMuted }}
@@ -159,7 +158,6 @@ export default async function NoticiaDetallePage({
                 {noticia.resumen}
               </p>
 
-              {/* Contenido completo */}
               <style>{contentStyles}</style>
               <div
                 className="noticia-body text-base leading-relaxed"
@@ -171,7 +169,6 @@ export default async function NoticiaDetallePage({
                 }}
               />
 
-              {/* Video embed */}
               {embedUrl && (
                 <div style={{ marginTop: '32px' }}>
                   <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '12px', backgroundColor: '#000' }}>

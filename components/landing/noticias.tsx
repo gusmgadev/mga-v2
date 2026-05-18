@@ -70,11 +70,7 @@ export default function Noticias({ noticias }: { noticias: NoticiaCard[] }) {
                       alt={n.titulo}
                       fill
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                      style={{
-                        objectFit: "cover",
-                        transition: "transform 0.35s ease",
-                        transform: hoveredId === n.id ? "scale(1.04)" : "scale(1)",
-                      }}
+                      style={{ objectFit: "contain" }}
                     />
                   ) : (
                     <div
