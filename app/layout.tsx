@@ -4,6 +4,7 @@ import "./globals.css"
 import { theme } from "@/lib/theme"
 import WhatsAppButton from "@/components/landing/whatsapp-button"
 import AuthSessionProvider from "@/components/shared/session-provider"
+import { GoogleAnalytics } from "@next/third-parties/google"
 
 const inter = Inter({
   variable: "--font-inter",
@@ -106,6 +107,9 @@ export default function RootLayout({
         </AuthSessionProvider>
         <WhatsAppButton />
       </body>
+      {process.env.NEXT_PUBLIC_GA_ID && (
+        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+      )}
     </html>
   )
 }

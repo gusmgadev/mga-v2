@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@next/third-parties": "^16.2.6",
     "@supabase/supabase-js": "^2.105.3",
     "@tiptap/extension-highlight": "^3.23.4",
     "@tiptap/pm": "^3.23.4",
