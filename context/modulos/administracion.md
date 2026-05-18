@@ -24,10 +24,12 @@ public.role_permissions { id, role_id, module, can_view, can_create, can_edit, c
 public.noticias {
   id, titulo, resumen, contenido (html string),
   imagen_card (nullable, URL Supabase Storage), imagen_portada (nullable, URL),
+  video_url (nullable, URL de YouTube o Vimeo — incrustado en el detalle público),
   publicada (bool, default false), orden (int, default 0),
   fecha (date, default CURRENT_DATE),
   created_at, updated_at
 }
+-- Migration: ALTER TABLE noticias ADD COLUMN video_url TEXT;
 -- Bucket Supabase Storage: 'noticias-imagenes'
 -- Al pasar publicada false→true: dispara auto-post a Instagram si hay imagen_card y env vars configuradas
 ```

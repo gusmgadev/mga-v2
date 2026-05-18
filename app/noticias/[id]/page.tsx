@@ -36,6 +36,31 @@ export async function generateMetadata({
   }
 }
 
+function getEmbedUrl(url: string): string | null {
+  try {
+    const u = new URL(url)
+    if (u.hostname === 'youtu.be') {
+      const id = u.pathname.slice(1).split('/')[0]
+      return id ? `https://www.youtube.com/embed/${id}` : null
+    }
+    if (u.hostname.includes('youtube.com')) {
+      if (u.pathname.includes('/shorts/')) {
+        const id = u.pathname.split('/shorts/')[1]?.split('/')[0]
+        return id ? `https://www.youtube.com/embed/${id}` : null
+      }
+      const v = u.searchParams.get('v')
+      return v ? `https://www.youtube.com/embed/${v}` : null
+    }
+    if (u.hostname.includes('vimeo.com')) {
+      const id = u.pathname.split('/').filter(Boolean).find(p => /^\d+$/.test(p))
+      return id ? `https://player.vimeo.com/video/${id}` : null
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
 function formatFecha(dateStr: string) {
   const [y, m, d] = dateStr.split('T')[0].split('-')
   return new Date(Number(y), Number(m) - 1, Number(d)).toLocaleDateString("es-AR", { day: "2-digit", month: "long", year: "numeric" })
@@ -64,6 +89,8 @@ export default async function NoticiaDetallePage({
 
   if (error || !noticia) notFound()
   if (!noticia.publicada) redirect("/")
+
+  const embedUrl = noticia.video_url ? getEmbedUrl(noticia.video_url) : null
 
   return (
     <>
@@ -143,6 +170,20 @@ export default async function NoticiaDetallePage({
                     : noticia.contenido.replace(/\n/g, '<br />')
                 }}
               />
+
+              {/* Video embed */}
+              {embedUrl && (
+                <div style={{ marginTop: '32px' }}>
+                  <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '12px', backgroundColor: '#000' }}>
+                    <iframe
+                      src={embedUrl}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </article>
 

@@ -7,7 +7,7 @@ const RichTextEditor = dynamic(() => import('@/components/dashboard/RichTextEdit
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Plus, Trash2, X, Loader2, AlertCircle, Pencil, Eye, EyeOff, Upload, ExternalLink, CheckCircle2, Save } from 'lucide-react'
+import { Plus, Trash2, X, Loader2, AlertCircle, Pencil, Eye, EyeOff, Upload, ExternalLink, CheckCircle2, Save, Video } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { theme } from '@/lib/theme'
@@ -20,6 +20,7 @@ type Noticia = {
   contenido: string
   imagen_card: string | null
   imagen_portada: string | null
+  video_url: string | null
   publicada: boolean
   orden: number
   fecha: string
@@ -34,6 +35,9 @@ const noticiaSchema = z.object({
   publicada: z.boolean(),
   orden: z.number().int().min(0),
   fecha: z.string().min(1, 'Ingresá una fecha'),
+  video_url: z.string()
+    .refine(v => v === '' || /^https?:\/\//i.test(v), { message: 'Ingresá una URL válida de YouTube o Vimeo' })
+    .optional(),
 })
 type NoticiaForm = z.infer<typeof noticiaSchema>
 
@@ -208,16 +212,16 @@ export default function NoticiasAdminClient({
 
   const createForm = useForm<NoticiaForm>({
     resolver: zodResolver(noticiaSchema),
-    defaultValues: { titulo: '', resumen: '', contenido: '', publicada: false, orden: 0, fecha: new Date().toISOString().split('T')[0] },
+    defaultValues: { titulo: '', resumen: '', contenido: '', publicada: false, orden: 0, fecha: new Date().toISOString().split('T')[0], video_url: '' },
   })
 
   const editForm = useForm<NoticiaForm>({
     resolver: zodResolver(noticiaSchema),
-    defaultValues: { titulo: '', resumen: '', contenido: '', publicada: false, orden: 0, fecha: '' },
+    defaultValues: { titulo: '', resumen: '', contenido: '', publicada: false, orden: 0, fecha: '', video_url: '' },
   })
 
   const openCreate = () => {
-    createForm.reset({ titulo: '', resumen: '', contenido: '', publicada: false, orden: noticias.length, fecha: new Date().toISOString().split('T')[0] })
+    createForm.reset({ titulo: '', resumen: '', contenido: '', publicada: false, orden: noticias.length, fecha: new Date().toISOString().split('T')[0], video_url: '' })
     setCreateImagenCard(null)
     setCreateImagenPortada(null)
     setCreateError(null)
@@ -230,7 +234,7 @@ export default function NoticiasAdminClient({
     const res = await fetch('/api/dashboard/noticias', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...data, imagen_card: createImagenCard, imagen_portada: createImagenPortada }),
+      body: JSON.stringify({ ...data, imagen_card: createImagenCard, imagen_portada: createImagenPortada, video_url: data.video_url || null }),
     })
     const json = await res.json()
     setCreateLoading(false)
@@ -242,7 +246,7 @@ export default function NoticiasAdminClient({
   }
 
   const openEdit = (n: Noticia) => {
-    editForm.reset({ titulo: n.titulo, resumen: n.resumen, contenido: n.contenido, publicada: n.publicada, orden: n.orden, fecha: n.fecha })
+    editForm.reset({ titulo: n.titulo, resumen: n.resumen, contenido: n.contenido, publicada: n.publicada, orden: n.orden, fecha: n.fecha, video_url: n.video_url ?? '' })
     setEditImagenCard(n.imagen_card)
     setEditImagenPortada(n.imagen_portada)
     setEditError(null)
@@ -256,7 +260,7 @@ export default function NoticiasAdminClient({
     const res = await fetch(`/api/dashboard/noticias/${editTarget.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...data, imagen_card: editImagenCard, imagen_portada: editImagenPortada }),
+      body: JSON.stringify({ ...data, imagen_card: editImagenCard, imagen_portada: editImagenPortada, video_url: data.video_url || null }),
     })
     const json = await res.json()
     setEditLoading(false)
@@ -322,6 +326,22 @@ export default function NoticiasAdminClient({
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         <ImageUploader label="Imagen card (miniatura)" value={imagenCard} onChange={setImagenCard} />
         <ImageUploader label="Imagen portada (detalle)" value={imagenPortada} onChange={setImagenPortada} />
+      </div>
+
+      <div>
+        <label style={labelStyle}>Video (YouTube o Vimeo)</label>
+        <input
+          {...form.register('video_url')}
+          type="url"
+          style={inputStyle}
+          placeholder="https://www.youtube.com/watch?v=... o https://vimeo.com/..."
+        />
+        {form.formState.errors.video_url && (
+          <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+            {form.formState.errors.video_url.message}
+          </p>
+        )}
+        <p style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, marginTop: '4px' }}>Opcional — se incrusta en el detalle de la noticia</p>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
@@ -425,7 +445,10 @@ export default function NoticiasAdminClient({
                   )}
                 </td>
                 <td style={tdStyle}>
-                  <div style={{ fontWeight: theme.fontWeights.medium, marginBottom: '2px' }}>{n.titulo}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: theme.fontWeights.medium, marginBottom: '2px' }}>
+                    {n.titulo}
+                    {n.video_url && <Video size={12} style={{ color: theme.colors.primary, flexShrink: 0 }} />}
+                  </div>
                   <div style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '320px' }}>{n.resumen}</div>
                 </td>
                 <td style={tdStyle}>

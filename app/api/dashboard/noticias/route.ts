@@ -10,6 +10,7 @@ const createSchema = z.object({
   contenido: z.string().min(2, 'Mínimo 2 caracteres'),
   imagen_card: z.string().nullable().optional(),
   imagen_portada: z.string().nullable().optional(),
+  video_url: z.string().nullable().optional(),
   publicada: z.boolean(),
   orden: z.number().int().min(0),
   fecha: z.string().optional(),

@@ -10,6 +10,7 @@ const updateSchema = z.object({
   contenido: z.string().min(2).optional(),
   imagen_card: z.string().nullable().optional(),
   imagen_portada: z.string().nullable().optional(),
+  video_url: z.string().nullable().optional(),
   publicada: z.boolean().optional(),
   orden: z.number().int().min(0).optional(),
   fecha: z.string().optional(),
