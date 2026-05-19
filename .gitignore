@@ -37,6 +37,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# recursos internos (documentos, prompts, material de referencia)
+/recursos
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

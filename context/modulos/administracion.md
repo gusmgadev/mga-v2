@@ -90,6 +90,16 @@ if (!permisos.can_view) redirect('/dashboard')
 - Se carga con `next/dynamic({ ssr: false })` porque TipTap usa APIs del browser
 - El campo `contenido` almacena HTML generado por TipTap
 
+**Video thumbnail preview en admin:** componente `VideoPreview` (definido FUERA de `NoticiasAdminClient` para evitar remounting) en `NoticiasAdminClient.tsx`.
+- YouTube: thumbnail via `https://img.youtube.com/vi/${id}/hqdefault.jpg` (sin API key)
+- Vimeo: thumbnail via oEmbed `https://vimeo.com/api/oembed.json?url=...` (CORS habilitado, gratis)
+- Usa `useEffect` con `AbortController` para cleanup. Se activa con `form.watch('video_url')`
+- `VideoPreview` DEBE definirse fuera del componente padre — si se define adentro, React lo remonta en cada render
+
+**Imágenes en página pública:** tanto cards (`components/landing/noticias.tsx`) como portada de detalle (`app/noticias/[id]/page.tsx`) usan `objectFit: "contain"` (no `cover`) para mostrar la imagen completa sin recorte.
+
+**Layout de detalle público:** fecha + título van ANTES de la imagen portada, para que sean visibles sin scroll. Imagen en contenedor 16:9 con `backgroundColor: "#F0F2F4"`.
+
 **Instagram auto-post:** `services/instagram.ts` → `postNoticiaToInstagram()`
 - Se dispara en `PUT /api/dashboard/noticias/[id]` al pasar `publicada: false → true`
 - Requiere `imagen_card` + variables de entorno configuradas

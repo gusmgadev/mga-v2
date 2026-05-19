@@ -295,9 +295,12 @@ GMAIL_IMAP_USER=        # Oportunidades: dirección Gmail
 GMAIL_IMAP_PASSWORD=    # Oportunidades: App Password de Google (no la contraseña real)
 INSTAGRAM_USER_ID=      # ID numérico del usuario IG Business (no el @handle)
 INSTAGRAM_ACCESS_TOKEN= # Token larga duración (60 días) o System User token (no vence)
+NEXT_PUBLIC_GA_ID=      # Google Analytics 4 Measurement ID (G-XXXXXXXX) — si no está, GA no se carga
 ```
 
 **Instagram:** Si las variables no están configuradas, el auto-post se ignora silenciosamente. El token vence a los 60 días — renovar con Graph API Explorer o usar un System User token permanente.
+
+**Google Analytics:** `@next/third-parties/google` — `GoogleAnalytics gaId={...}` agregado en `app/layout.tsx`. `NEXT_PUBLIC_*` se embebe en build time — cambiar la variable en Vercel requiere redeploy para que tome efecto. Measurement ID actual: `G-LN52WQPWPZ`.
 
 ---
 
