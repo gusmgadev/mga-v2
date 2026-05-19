@@ -6,7 +6,7 @@ import { z } from 'zod'
 const ESTADOS_FINALES = ['GANADA', 'NO_GANADA', 'NO_OP'] as const
 
 const patchSchema = z.object({
-  estado: z.enum(['NUEVA', 'EN_PROCESO', 'GANADA', 'NO_GANADA', 'NO_OP']).optional(),
+  estado: z.enum(['NUEVA', 'PRIMER_CONTACTO_WS', 'EN_PROCESO', 'GANADA', 'NO_GANADA', 'NO_OP']).optional(),
   notas: z.string().optional().nullable(),
   motivo_cierre: z.string().nullable().optional(),
   servicio_id: z.number().int().positive().nullable().optional(),

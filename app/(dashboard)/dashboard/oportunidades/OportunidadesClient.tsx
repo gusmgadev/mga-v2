@@ -6,13 +6,13 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
   Mail, Search, Download, Eye, Pencil, Trash2, Wrench, FileText,
-  X, Loader2, AlertCircle, ChevronDown, ChevronUp, Save, Check, History,
+  X, Loader2, AlertCircle, ChevronDown, ChevronUp, Save, Check, History, MessageCircle,
 } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 import QuickCreateClienteModal from '@/components/dashboard/QuickCreateClienteModal'
 
-type OportunidadEstado = 'NUEVA' | 'EN_PROCESO' | 'GANADA' | 'NO_GANADA' | 'NO_OP'
+type OportunidadEstado = 'NUEVA' | 'PRIMER_CONTACTO_WS' | 'EN_PROCESO' | 'GANADA' | 'NO_GANADA' | 'NO_OP'
 type TipoOp = 'OP_NUEVA' | 'SEGUIMIENTO' | 'CROSS_SELLING'
 
 type Oportunidad = {
@@ -89,20 +89,22 @@ const TIPO_CONTACTO_COLORS: Record<TipoContacto, { bg: string; text: string }> =
   otro:       { bg: '#F1F5F9', text: '#475569' },
 }
 
-const ESTADOS: OportunidadEstado[] = ['NUEVA', 'EN_PROCESO', 'GANADA', 'NO_GANADA', 'NO_OP']
+const ESTADOS: OportunidadEstado[] = ['NUEVA', 'PRIMER_CONTACTO_WS', 'EN_PROCESO', 'GANADA', 'NO_GANADA', 'NO_OP']
 const ESTADO_LABELS: Record<OportunidadEstado, string> = {
   NUEVA: 'Nueva',
+  PRIMER_CONTACTO_WS: 'Primer contacto WS',
   EN_PROCESO: 'En proceso',
   GANADA: 'Ganada',
   NO_GANADA: 'No ganada',
   NO_OP: 'No es OP',
 }
 const ESTADO_COLORS: Record<OportunidadEstado, { bg: string; text: string }> = {
-  NUEVA:     { bg: '#E3F2FD', text: '#1565C0' },
-  EN_PROCESO: { bg: '#FFF3E0', text: '#E65100' },
-  GANADA:    { bg: `${theme.colors.success}18`, text: theme.colors.success },
-  NO_GANADA: { bg: `${theme.colors.error}14`, text: theme.colors.error },
-  NO_OP:     { bg: '#F1F5F9', text: '#475569' },
+  NUEVA:               { bg: '#E3F2FD', text: '#1565C0' },
+  PRIMER_CONTACTO_WS:  { bg: '#DCFCE7', text: '#15803D' },
+  EN_PROCESO:          { bg: '#FFF3E0', text: '#E65100' },
+  GANADA:              { bg: `${theme.colors.success}18`, text: theme.colors.success },
+  NO_GANADA:           { bg: `${theme.colors.error}14`, text: theme.colors.error },
+  NO_OP:               { bg: '#F1F5F9', text: '#475569' },
 }
 const ESTADOS_CON_MOTIVO: OportunidadEstado[] = ['NO_GANADA', 'NO_OP']
 
@@ -197,6 +199,17 @@ function Field({ label, value }: { label: string; value: string | number | null 
       <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.text }}>{value ?? '—'}</p>
     </div>
   )
+}
+
+const WA_MENSAJE = `Hola, ¿cómo estás?
+Te escribo por la consulta que hiciste sobre un sistema de control de stock y ventas para tu comercio.
+
+Soy Gustavo, representante de Zoologic en Chubut. Me gustaría poder asesorarte y mostrarte las distintas opciones de sistemas que trabajamos, para encontrar la que mejor se adapte a las necesidades de tu negocio.
+
+¿Preferís que coordinemos una llamada o te envío información por WhatsApp?`
+
+function whatsappUrl(phone: string): string {
+  return `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(WA_MENSAJE)}`
 }
 
 const genServicioSchema = z.object({
@@ -828,6 +841,17 @@ export default function OportunidadesClient({
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', flexWrap: 'nowrap' }}>
                         <button onClick={() => setViewTarget(op)} style={actionBtnStyle} title="Ver detalle"><Eye size={13} /></button>
                         <button onClick={() => openHistorial(op)} style={{ ...actionBtnStyle, color: '#7C3AED' }} title="Historial de contactos"><History size={13} /></button>
+                        {op.telefono && (
+                          <a
+                            href={whatsappUrl(op.telefono)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ ...actionBtnStyle, color: '#15803D', textDecoration: 'none' }}
+                            title={`WhatsApp ${op.telefono}`}
+                          >
+                            <MessageCircle size={13} />
+                          </a>
+                        )}
                         {permisos.can_edit && (
                           <button onClick={() => openEdit(op)} style={actionBtnStyle} title="Editar estado / notas"><Pencil size={13} /></button>
                         )}
@@ -905,7 +929,25 @@ export default function OportunidadesClient({
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <Field label="Nombre" value={[viewTarget.primer_nombre, viewTarget.apellido].filter(Boolean).join(' ')} />
                   <Field label="Empresa" value={viewTarget.empresa} />
-                  <Field label="Teléfono" value={viewTarget.telefono} />
+                  <div>
+                    <p style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, fontWeight: theme.fontWeights.medium, marginBottom: '2px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Teléfono</p>
+                    {viewTarget.telefono ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.text, margin: 0 }}>{viewTarget.telefono}</p>
+                        <a
+                          href={whatsappUrl(viewTarget.telefono)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 8px', backgroundColor: '#DCFCE7', color: '#15803D', borderRadius: theme.radii.full, fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium, textDecoration: 'none', whiteSpace: 'nowrap' }}
+                        >
+                          <MessageCircle size={11} />
+                          WhatsApp
+                        </a>
+                      </div>
+                    ) : (
+                      <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.text }}>—</p>
+                    )}
+                  </div>
                   <Field label="Email" value={viewTarget.email_contacto} />
                   <Field label="Provincia / Ciudad" value={viewTarget.provincia_ciudad} />
                   <Field label="Zona de gestión" value={viewTarget.zona_gestion} />
