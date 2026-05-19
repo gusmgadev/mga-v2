@@ -27,9 +27,11 @@ export async function generateMetadata({
   return {
     title: `${data.titulo} | MGA Informática`,
     description: data.resumen,
+    alternates: { canonical: `${theme.site.url}/noticias/${id}` },
     openGraph: {
       title: `${data.titulo} | MGA Informática`,
       description: data.resumen,
+      url: `${theme.site.url}/noticias/${id}`,
       locale: "es_AR",
       type: "article",
     },
@@ -201,6 +203,22 @@ export default async function NoticiaDetallePage({
           </div>
         </div>
       </main>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "NewsArticle",
+        headline: noticia.titulo,
+        description: noticia.resumen,
+        url: `${theme.site.url}/noticias/${id}`,
+        datePublished: noticia.fecha ?? noticia.created_at,
+        dateModified: noticia.created_at,
+        image: noticia.imagen_portada ? [noticia.imagen_portada] : [`${theme.site.url}${theme.site.ogImage}`],
+        author: { "@type": "Organization", name: "MGA Informática", url: theme.site.url },
+        publisher: {
+          "@type": "Organization",
+          name: "MGA Informática",
+          logo: { "@type": "ImageObject", url: `${theme.site.url}${theme.logo.path}` },
+        },
+      }) }} />
       <Footer />
     </>
   )

@@ -8,7 +8,7 @@ import Footer from "@/components/landing/footer"
 export const metadata: Metadata = {
   title: "Dragonfish - Sistema de Gestión para Pymes en Chubut | MGA Informática",
   description: "Dragonfish Color y Talle: software completo para pymes con integración a Mercado Libre, Tienda Nube y WooCommerce. Gestión de stock, facturación y multi-sucursales. Distribuidor certificado en Chubut.",
-  keywords: ["Dragonfish Chubut", "sistema gestión pymes Patagonia", "ZooLogic Dragonfish", "software Mercado Libre Chubut", "facturación electrónica pymes Comodoro Rivadavia"],
+  keywords: ["Dragonfish Chubut", "sistema gestión pymes Patagonia", "ZooLogic Dragonfish", "software Mercado Libre Chubut", "facturación electrónica pymes Comodoro Rivadavia", "Dragonfish Color y Talle", "sistema de stock pymes", "integración Tienda Nube", "integración WooCommerce", "gestión multi-sucursales Chubut"],
   alternates: { canonical: `${theme.site.url}/dragonfish` },
   openGraph: {
     title: "Dragonfish - MGA Informática",
@@ -26,6 +26,17 @@ export default function DragonfishPage() {
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        name: "Dragonfish Color y Talle",
+        description: "Software para pymes con integración a Mercado Libre, Tienda Nube y WooCommerce. Gestión de stock, facturación electrónica y multi-sucursales. Distribuidor certificado en Chubut.",
+        applicationCategory: "BusinessApplication",
+        operatingSystem: "Windows",
+        url: "https://mgadigital.com.ar/dragonfish",
+        offers: { "@type": "Offer", seller: { "@type": "LocalBusiness", name: "MGA Informática", url: "https://mgadigital.com.ar", areaServed: "AR-U" } },
+        featureList: ["Gestión de Stock", "Facturación Electrónica", "Integración Mercado Libre", "Integración Tienda Nube", "Multi-sucursales"],
+      }) }} />
       <MovingBanner />
       <Navbar />
       <main className="min-h-screen pt-48 pb-12 px-4 md:px-8 relative overflow-hidden">

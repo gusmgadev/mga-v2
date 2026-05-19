@@ -8,7 +8,7 @@ import Footer from "@/components/landing/footer"
 export const metadata: Metadata = {
   title: "Soporte Técnico y Reparación de PC en Rada Tilly - MGA Informática",
   description: "Soporte técnico presencial y remoto en Rada Tilly y Comodoro Rivadavia. Reparación de computadoras, mantenimiento preventivo, redes, backup y recuperación de datos.",
-  keywords: ["soporte técnico Rada Tilly", "reparación computadoras Chubut", "mantenimiento PC Comodoro Rivadavia", "servicio técnico Patagonia", "backup datos Chubut"],
+  keywords: ["soporte técnico Rada Tilly", "reparación computadoras Chubut", "mantenimiento PC Comodoro Rivadavia", "servicio técnico Patagonia", "backup datos Chubut", "servicio técnico computadoras Patagonia", "reparación PC Comodoro Rivadavia", "técnico informático Rada Tilly", "recuperación datos Patagonia", "soporte remoto Chubut"],
   alternates: { canonical: `${theme.site.url}/soporte-tecnico` },
   openGraph: {
     title: "Soporte Técnico - MGA Informática",

@@ -8,7 +8,7 @@ import Footer from "@/components/landing/footer"
 export const metadata: Metadata = {
   title: "Sistemas de Gestión y Punto de Venta en Chubut - MGA Informática",
   description: "Distribuidor certificado ZooLogic en Chubut. Sistemas de punto de venta, control de stock, facturación electrónica AFIP y gestión empresarial para pymes en Rada Tilly y Comodoro Rivadavia.",
-  keywords: ["sistema de gestión Chubut", "punto de venta Rada Tilly", "ZooLogic Chubut", "facturación electrónica AFIP", "control stock Comodoro Rivadavia", "software pymes Patagonia"],
+  keywords: ["sistema de gestión Chubut", "punto de venta Rada Tilly", "ZooLogic Chubut", "facturación electrónica AFIP", "control stock Comodoro Rivadavia", "software pymes Patagonia", "sistema de stock Patagonia", "control de ventas Comodoro Rivadavia", "sistema punto de venta Argentina", "gestión empresarial Rada Tilly"],
   alternates: { canonical: `${theme.site.url}/sistemas-gestion` },
   openGraph: {
     title: "Sistemas de Gestión - MGA Informática",
@@ -25,6 +25,28 @@ const heroImage = "/images/hero/hero-1.jpg"
 export default function SistemasGestionPage() {
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Service",
+        name: "Sistemas de Gestión y Punto de Venta",
+        description: "Distribuidor certificado ZooLogic en Chubut. Sistemas de punto de venta, control de stock, facturación electrónica AFIP y gestión empresarial para pymes en Rada Tilly y Comodoro Rivadavia.",
+        url: "https://mgadigital.com.ar/sistemas-gestion",
+        provider: { "@type": "LocalBusiness", name: "MGA Informática", url: "https://mgadigital.com.ar" },
+        areaServed: [
+          { "@type": "City", name: "Rada Tilly" },
+          { "@type": "City", name: "Comodoro Rivadavia" },
+          { "@type": "State", name: "Chubut" },
+        ],
+        hasOfferCatalog: {
+          "@type": "OfferCatalog",
+          name: "Sistemas ZooLogic",
+          itemListElement: [
+            { "@type": "Offer", itemOffered: { "@type": "SoftwareApplication", name: "Lince Indumentaria", url: "https://mgadigital.com.ar/lince" } },
+            { "@type": "Offer", itemOffered: { "@type": "SoftwareApplication", name: "Dragonfish Color y Talle", url: "https://mgadigital.com.ar/dragonfish" } },
+            { "@type": "Offer", itemOffered: { "@type": "SoftwareApplication", name: "Pantera Comercios", url: "https://mgadigital.com.ar/pantera" } },
+          ],
+        },
+      }) }} />
       <MovingBanner />
       <Navbar />
       <main className="min-h-screen pt-32" style={{ backgroundColor: "#fff" }}>

@@ -8,7 +8,7 @@ import Footer from "@/components/landing/footer"
 export const metadata: Metadata = {
   title: "Pantera Comercios - Sistema de Gestión Web en Chubut | MGA Informática",
   description: "Pantera Comercios: sistema de gestión 100% web para comercios. Control de stock, facturación electrónica, caja y venta en Mercado Libre desde cualquier dispositivo. Distribuidor en Chubut.",
-  keywords: ["Pantera Comercios Chubut", "sistema gestión web Patagonia", "ZooLogic Pantera", "software comercios Comodoro Rivadavia", "gestión online Chubut"],
+  keywords: ["Pantera Comercios Chubut", "sistema gestión web Patagonia", "ZooLogic Pantera", "software comercios Comodoro Rivadavia", "gestión online Chubut", "Pantera sistema gestión web", "sistema punto de venta web", "facturación electrónica web", "integración Mercado Libre web", "control stock online Patagonia"],
   alternates: { canonical: `${theme.site.url}/pantera` },
   openGraph: {
     title: "Pantera Comercios - MGA Informática",
@@ -26,6 +26,17 @@ export default function PanteraPage() {
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        name: "Pantera Comercios",
+        description: "Sistema de gestión 100% web para comercios. Control de stock, facturación electrónica, caja y venta en Mercado Libre desde cualquier dispositivo. Distribuidor en Chubut.",
+        applicationCategory: "BusinessApplication",
+        operatingSystem: "Web browser",
+        url: "https://mgadigital.com.ar/pantera",
+        offers: { "@type": "Offer", seller: { "@type": "LocalBusiness", name: "MGA Informática", url: "https://mgadigital.com.ar", areaServed: "AR-U" } },
+        featureList: ["Gestión de Ventas Online", "Control de Stock", "Facturación Electrónica", "Integración Mercado Libre", "Caja"],
+      }) }} />
       <MovingBanner />
       <Navbar />
       <main className="min-h-screen pt-48 pb-12 px-4 md:px-8 relative overflow-hidden">

@@ -8,7 +8,7 @@ import Footer from "@/components/landing/footer"
 export const metadata: Metadata = {
   title: "Desarrollo Web en Rada Tilly y Comodoro Rivadavia - MGA Informática",
   description: "Creamos sitios web modernos, rápidos y escalables. Landing pages, tiendas online, aplicaciones web a medida en Rada Tilly, Chubut. Desarrollo con Next.js, React y Tailwind CSS.",
-  keywords: ["desarrollo web Rada Tilly", "diseño web Comodoro Rivadavia", "páginas web Chubut", "tienda online Patagonia", "landing page", "aplicación web a medida"],
+  keywords: ["desarrollo web Rada Tilly", "diseño web Comodoro Rivadavia", "páginas web Chubut", "tienda online Patagonia", "landing page", "aplicación web a medida", "aplicaciones web Patagonia", "e-commerce Patagonia", "venta online Comodoro Rivadavia", "sistemas web Patagonia"],
   alternates: { canonical: `${theme.site.url}/desarrollo-web` },
   openGraph: {
     title: "Desarrollo Web - MGA Informática",

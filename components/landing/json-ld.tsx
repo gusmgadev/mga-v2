@@ -1,7 +1,7 @@
 import { theme } from "@/lib/theme"
 
 export default function JsonLd() {
-  const { site, contact, footer, services, logo } = theme
+  const { site, contact, footer, services, logo, sistemasZoologic } = theme
 
   const data = {
     "@context": "https://schema.org",
@@ -66,10 +66,34 @@ export default function JsonLd() {
     },
   }
 
+  const zoologicData = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Sistemas ZooLogic — Representantes en Chubut",
+    url: `${site.url}/sistemas-gestion`,
+    itemListElement: sistemasZoologic.items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      item: {
+        "@type": "SoftwareApplication",
+        name: item.name,
+        description: item.description,
+        url: `${site.url}${item.url}`,
+        applicationCategory: "BusinessApplication",
+      },
+    })),
+  }
+
   return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(zoologicData) }}
+      />
+    </>
   )
 }

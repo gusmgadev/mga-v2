@@ -8,7 +8,7 @@ import Footer from "@/components/landing/footer"
 export const metadata: Metadata = {
   title: "Lince Indumentaria - Sistema de Gestión en Chubut | MGA Informática",
   description: "Lince Indumentaria: el sistema más elegido por la industria textil con más de 25 años en el mercado. Gestión de ventas, stock, producción y facturación electrónica. Distribuidor certificado en Chubut.",
-  keywords: ["Lince Indumentaria Chubut", "sistema gestión indumentaria", "ZooLogic Lince", "software textil Patagonia", "punto de venta indumentaria Comodoro Rivadavia"],
+  keywords: ["Lince Indumentaria Chubut", "sistema gestión indumentaria", "ZooLogic Lince", "software textil Patagonia", "punto de venta indumentaria Comodoro Rivadavia", "Lince indumentaria sistema", "sistema de stock indumentaria", "gestión producción textil", "facturación electrónica indumentaria"],
   alternates: { canonical: `${theme.site.url}/lince` },
   openGraph: {
     title: "Lince Indumentaria - MGA Informática",
@@ -26,6 +26,17 @@ export default function LincePage() {
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        name: "Lince Indumentaria",
+        description: "Sistema líder para la industria de la indumentaria. Gestión de ventas, producción, stock, inventario y facturación electrónica AFIP. Distribuidor certificado en Chubut.",
+        applicationCategory: "BusinessApplication",
+        operatingSystem: "Windows",
+        url: "https://mgadigital.com.ar/lince",
+        offers: { "@type": "Offer", seller: { "@type": "LocalBusiness", name: "MGA Informática", url: "https://mgadigital.com.ar", areaServed: "AR-U" } },
+        featureList: ["Gestión de Ventas", "Control de Stock", "Gestión de Producción", "Facturación Electrónica AFIP", "Toma de Inventario"],
+      }) }} />
       <MovingBanner />
       <Navbar />
       <main className="min-h-screen pt-48 pb-12 px-4 md:px-8 relative overflow-hidden">
