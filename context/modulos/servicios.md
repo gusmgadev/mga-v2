@@ -46,12 +46,20 @@ public.oportunidades {
   primer_nombre, apellido, empresa, provincia_ciudad, telefono, email_contacto, comentarios,
   email_subject, email_from, email_fecha (timestamptz nullable),
   email_message_id (text, unique — deduplicación),
+  estado ('NUEVA'|'PRIMER_CONTACTO_WS'|'EN_PROCESO'|'GANADA'|'NO_GANADA'|'NO_OP', default 'NUEVA'),
   tipo_op ('OP_NUEVA'|'SEGUIMIENTO'|'CROSS_SELLING', default 'OP_NUEVA'),
-  created_at
+  notas (text nullable), motivo_cierre (text nullable),
+  servicio_id (FK nullable), presupuesto_id (FK nullable),
+  fecha_ultimo_estado_final (timestamptz nullable),
+  created_at, updated_at
 }
 -- SQL migrations (aplicar en Supabase si aún no están):
 --   ALTER TABLE oportunidades ADD COLUMN tipo_op TEXT DEFAULT 'OP_NUEVA';
 --   ALTER TABLE oportunidades ADD COLUMN nro_oportunidad_origen INTEGER;
+--   -- Agregar PRIMER_CONTACTO_WS al CHECK constraint de estado:
+--   ALTER TABLE oportunidades DROP CONSTRAINT IF EXISTS oportunidades_estado_check;
+--   ALTER TABLE oportunidades ADD CONSTRAINT oportunidades_estado_check
+--     CHECK (estado IN ('NUEVA','PRIMER_CONTACTO_WS','EN_PROCESO','GANADA','NO_GANADA','NO_OP'));
 ```
 
 ---
@@ -84,6 +92,41 @@ GMAIL_IMAP_USER=      # dirección Gmail
 GMAIL_IMAP_PASSWORD=  # App Password de Google (no la contraseña real)
 ```
 GROQ_API_KEY es compartida con el módulo de voz/remitos.
+
+**IMPORTANTE — seguridad Groq:** nunca commitear la API key en ningún archivo del repo (incluso `.docx` en carpetas ignoradas). GitHub secret scanning detecta keys y Groq las revoca automáticamente. Si se compromete una key: crear nueva en console.groq.com, actualizar en Vercel, hacer redeploy.
+
+---
+
+## Módulo Oportunidades — botón WhatsApp
+
+**Comportamiento del botón WA en la grilla/modal:**
+- Si `op.estado === 'NUEVA'`:
+  - Abre `wa.me/{digits}?text={WA_MENSAJE}` (mensaje pre-cargado de presentación Zoologic)
+  - Crea iteración automática: `{ tipo_contacto: 'whatsapp', contacto: nombre del cliente, detalle: 'Primer contacto por whatsapp' }`
+  - Transiciona el estado a `PRIMER_CONTACTO_WS` de forma optimista (actualiza UI + PATCH a la API)
+- Si `op.estado !== 'NUEVA'`:
+  - Abre `wa.me/{digits}` sin texto pre-cargado
+  - No crea iteración ni cambia estado
+
+**Helpers (definidos FUERA del componente, a nivel de módulo):**
+```ts
+const WA_MENSAJE = "Hola, ¿cómo estás?..." // mensaje completo de presentación Zoologic
+function whatsappUrl(phone: string, withMessage = false): string {
+  const digits = phone.replace(/\D/g, '')
+  return withMessage ? `https://wa.me/${digits}?text=${encodeURIComponent(WA_MENSAJE)}` : `https://wa.me/${digits}`
+}
+```
+
+**Auto-transición en `saveIteracion`:**
+Si se guarda una iteración con `tipo_contacto === 'whatsapp'` Y `detalle.toLowerCase().includes('primer contacto por whatsapp')` → transiciona estado a `PRIMER_CONTACTO_WS`. De lo contrario, si la op era `NUEVA` → transiciona a `EN_PROCESO` (comportamiento anterior).
+
+**Estados y colores:**
+- `NUEVA` → gris claro
+- `PRIMER_CONTACTO_WS` → verde claro (`#DCFCE7` / `#15803D`) — WhatsApp green
+- `EN_PROCESO` → azul
+- `GANADA` / `NO_GANADA` / `NO_OP` → estado final (setan `fecha_ultimo_estado_final`)
+
+**Filtro `__activas__`:** incluye `NUEVA`, `PRIMER_CONTACTO_WS`, `EN_PROCESO`.
 
 ---
 
@@ -123,3 +166,5 @@ Patrón para crear entidades relacionadas sin salir del formulario actual.
 - **`servicios` — campo `fecha`** — columna `date` con default `CURRENT_DATE`. En JS formatear con `const [y,m,d] = fecha.split('-')` para evitar desfase UTC. La grilla ordena descendente por `fecha`. Saldo = `Math.max(0, valor - totalPagado)` calculado en cliente desde pagos de cobranzas.
 - **Oportunidades — Groq TPD vs TPM:** El regex `/try again in ([\d.]+)s/` solo captura segundos; "9m19.008s" da 19s, no 9min. La detección de TPD depende del texto "per day"/"TPD" en el mensaje, no del tiempo de espera. Al detectar TPD → `break` inmediato del loop. No confundir con TPM (espera corta, reintentar una vez).
 - **Oportunidades — `p.html` es `string | false`** en mailparser. Usar `(p.html || '')` no `(p.html ?? '')` — `??` no reemplaza `false`, solo `null`/`undefined`.
+- **Oportunidades — WA auto-iteración:** `handleWhatsappClick` solo actúa si `op.estado === 'NUEVA'`. La iteración se crea con detalle exacto `'Primer contacto por whatsapp'` (minúsculas) para que la detección en `saveIteracion` funcione con `.includes()`.
+- **Oportunidades — filtro `__activas__`** debe incluir `PRIMER_CONTACTO_WS` además de `NUEVA` y `EN_PROCESO`.

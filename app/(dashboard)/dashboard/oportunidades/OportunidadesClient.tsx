@@ -208,8 +208,11 @@ Soy Gustavo, representante de Zoologic en Chubut. Me gustaría poder asesorarte 
 
 ¿Preferís que coordinemos una llamada o te envío información por WhatsApp?`
 
-function whatsappUrl(phone: string): string {
-  return `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(WA_MENSAJE)}`
+function whatsappUrl(phone: string, withMessage = false): string {
+  const digits = phone.replace(/\D/g, '')
+  return withMessage
+    ? `https://wa.me/${digits}?text=${encodeURIComponent(WA_MENSAJE)}`
+    : `https://wa.me/${digits}`
 }
 
 const genServicioSchema = z.object({
@@ -322,15 +325,25 @@ export default function OportunidadesClient({
     setIteracionContacto('')
     setIteracionFecha(new Date().toISOString().split('T')[0])
 
-    // Transición automática: NUEVA → EN_PROCESO al agregar primer contacto
-    if (historialTarget.estado === 'NUEVA') {
+    // Transición automática según tipo de iteración cargada
+    const esPrimerContactoWS =
+      iteracionTipo === 'whatsapp' &&
+      iteracionDetalle.toLowerCase().trim().includes('primer contacto por whatsapp')
+
+    const nuevoEstado: OportunidadEstado | null = esPrimerContactoWS
+      ? 'PRIMER_CONTACTO_WS'
+      : historialTarget.estado === 'NUEVA'
+        ? 'EN_PROCESO'
+        : null
+
+    if (nuevoEstado && nuevoEstado !== historialTarget.estado) {
       const patchRes = await fetch(`/api/dashboard/oportunidades/${historialTarget.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: 'EN_PROCESO' }),
+        body: JSON.stringify({ estado: nuevoEstado }),
       })
       if (patchRes.ok) {
-        const updated: Oportunidad = { ...historialTarget, estado: 'EN_PROCESO' }
+        const updated: Oportunidad = { ...historialTarget, estado: nuevoEstado }
         setHistorialTarget(updated)
         setOportunidades((prev) => prev.map((o) => o.id === updated.id ? updated : o))
       }
@@ -576,6 +589,41 @@ export default function OportunidadesClient({
     ))
     setGenLoading(false)
     setGenPresupuestoTarget(null)
+  }
+
+  const handleWhatsappClick = (op: Oportunidad) => {
+    if (op.estado !== 'NUEVA') return
+
+    const nombre = [op.primer_nombre, op.apellido].filter(Boolean).join(' ') || op.empresa || null
+    const today = new Date().toISOString().split('T')[0]
+
+    // Crear iteración automática
+    fetch(`/api/dashboard/oportunidades/${op.id}/iteraciones`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fecha: today,
+        tipo_contacto: 'whatsapp',
+        contacto: nombre,
+        detalle: 'Primer contacto por whatsapp',
+      }),
+    }).then(async (res) => {
+      if (res.ok && historialTarget?.id === op.id) {
+        const it = await res.json()
+        setIteraciones((prev) => [it, ...prev])
+      }
+    })
+
+    // Transición de estado optimista
+    const updated: Oportunidad = { ...op, estado: 'PRIMER_CONTACTO_WS' }
+    setOportunidades((prev) => prev.map((o) => o.id === op.id ? updated : o))
+    if (viewTarget?.id === op.id) setViewTarget(updated)
+    if (historialTarget?.id === op.id) setHistorialTarget(updated)
+    fetch(`/api/dashboard/oportunidades/${op.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estado: 'PRIMER_CONTACTO_WS' }),
+    })
   }
 
   const formatDate = (s: string | null | undefined) => {
@@ -843,9 +891,10 @@ export default function OportunidadesClient({
                         <button onClick={() => openHistorial(op)} style={{ ...actionBtnStyle, color: '#7C3AED' }} title="Historial de contactos"><History size={13} /></button>
                         {op.telefono && (
                           <a
-                            href={whatsappUrl(op.telefono)}
+                            href={whatsappUrl(op.telefono, op.estado === 'NUEVA')}
                             target="_blank"
                             rel="noopener noreferrer"
+                            onClick={() => handleWhatsappClick(op)}
                             style={{ ...actionBtnStyle, color: '#15803D', textDecoration: 'none' }}
                             title={`WhatsApp ${op.telefono}`}
                           >
@@ -935,9 +984,10 @@ export default function OportunidadesClient({
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.text, margin: 0 }}>{viewTarget.telefono}</p>
                         <a
-                          href={whatsappUrl(viewTarget.telefono)}
+                          href={whatsappUrl(viewTarget.telefono, viewTarget.estado === 'NUEVA')}
                           target="_blank"
                           rel="noopener noreferrer"
+                          onClick={() => handleWhatsappClick(viewTarget)}
                           style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 8px', backgroundColor: '#DCFCE7', color: '#15803D', borderRadius: theme.radii.full, fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium, textDecoration: 'none', whiteSpace: 'nowrap' }}
                         >
                           <MessageCircle size={11} />

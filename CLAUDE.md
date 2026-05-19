@@ -313,6 +313,8 @@ NEXT_PUBLIC_GA_ID=      # Google Analytics 4 Measurement ID (G-XXXXXXXX) — si 
 - **SQL `buscar_productos_por_nombre`** — debe actualizarse para incluir búsqueda por `codigo` en la función pg_trgm (ver script en historial de sesión 2026-05-13)
 - **Supabase bucket `clientes-logos`** — crear como Public si no existe aún
 - **DB `clientes.localidad`** — si no existe: `ALTER TABLE clientes ADD COLUMN localidad TEXT;`
+- **DB `oportunidades` CHECK constraint** — agregar `PRIMER_CONTACTO_WS` al constraint de estado (ver migration en `context/modulos/servicios.md`)
+- **Groq API key** — key anterior revocada por GitHub secret scanning (estaba en `.docx` en `/recursos`). Crear nueva en console.groq.com y actualizar en Vercel + redeploy.
 
 ---
 
