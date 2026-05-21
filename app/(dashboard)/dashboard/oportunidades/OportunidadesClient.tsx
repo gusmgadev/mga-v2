@@ -360,6 +360,7 @@ export default function OportunidadesClient({
   const [genServicioTarget, setGenServicioTarget] = useState<Oportunidad | null>(null)
   const [genPresupuestoTarget, setGenPresupuestoTarget] = useState<Oportunidad | null>(null)
   const [showQCCliente, setShowQCCliente] = useState(false)
+  const [qcInitialData, setQcInitialData] = useState<{ nombre?: string; tipo?: 'PARTICULAR' | 'EMPRESA' | 'COMERCIO'; email?: string; telefono?: string; localidad?: string; direccion?: string } | undefined>(undefined)
   const [genLoading, setGenLoading] = useState(false)
   const [genError, setGenError] = useState<string | null>(null)
 
@@ -384,6 +385,15 @@ export default function OportunidadesClient({
     return parts.join(' | ')
   }
 
+  const buildQcInitialData = (op: Oportunidad) => ({
+    nombre: op.empresa || [op.primer_nombre, op.apellido].filter(Boolean).join(' ') || '',
+    tipo: 'COMERCIO' as const,
+    email: op.email_contacto || '',
+    telefono: op.telefono || '',
+    localidad: op.provincia_ciudad || '',
+    direccion: op.provincia_ciudad || '',
+  })
+
   const openGenServicio = (op: Oportunidad) => {
     const nombre = [op.primer_nombre, op.apellido].filter(Boolean).join(' ') || op.empresa || ''
     servicioForm.reset({
@@ -395,6 +405,8 @@ export default function OportunidadesClient({
     })
     setGenError(null)
     setGenServicioTarget(op)
+    setQcInitialData(buildQcInitialData(op))
+    setShowQCCliente(true)
   }
 
   const openGenPresupuesto = (op: Oportunidad) => {
@@ -407,6 +419,8 @@ export default function OportunidadesClient({
     })
     setGenError(null)
     setGenPresupuestoTarget(op)
+    setQcInitialData(buildQcInitialData(op))
+    setShowQCCliente(true)
   }
 
   const handleClienteCreado = (c: { id: number; nombre: string }) => {
@@ -1137,7 +1151,7 @@ export default function OportunidadesClient({
                       <option value={0}>Seleccioná un cliente...</option>
                       {localClientes.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                     </select>
-                    <button type="button" onClick={() => setShowQCCliente(true)}
+                    <button type="button" onClick={() => { setQcInitialData(buildQcInitialData(genServicioTarget)); setShowQCCliente(true) }}
                       style={{ padding: '9px 10px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, background: '#fff', cursor: 'pointer', color: theme.colors.primary, display: 'flex', alignItems: 'center' }}>
                       +
                     </button>
@@ -1198,7 +1212,7 @@ export default function OportunidadesClient({
                       <option value={0}>Seleccioná un cliente...</option>
                       {localClientes.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                     </select>
-                    <button type="button" onClick={() => setShowQCCliente(true)}
+                    <button type="button" onClick={() => { setQcInitialData(buildQcInitialData(genPresupuestoTarget)); setShowQCCliente(true) }}
                       style={{ padding: '9px 10px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, background: '#fff', cursor: 'pointer', color: theme.colors.primary, display: 'flex', alignItems: 'center' }}>
                       +
                     </button>
@@ -1385,7 +1399,11 @@ export default function OportunidadesClient({
       )}
 
       {showQCCliente && (
-        <QuickCreateClienteModal onClose={() => setShowQCCliente(false)} onCreated={handleClienteCreado} />
+        <QuickCreateClienteModal
+          onClose={() => setShowQCCliente(false)}
+          onCreated={handleClienteCreado}
+          initialData={qcInitialData}
+        />
       )}
     </>
   )

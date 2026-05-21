@@ -7,9 +7,19 @@ import { z } from 'zod'
 import { X, Loader2, AlertCircle } from 'lucide-react'
 import { theme } from '@/lib/theme'
 
+interface InitialData {
+  nombre?: string
+  tipo?: 'PARTICULAR' | 'EMPRESA' | 'COMERCIO'
+  email?: string
+  telefono?: string
+  localidad?: string
+  direccion?: string
+}
+
 interface Props {
   onClose: () => void
   onCreated: (c: { id: number; nombre: string }) => void
+  initialData?: InitialData
 }
 
 const clienteSchema = z.object({
@@ -18,6 +28,7 @@ const clienteSchema = z.object({
   email: z.string().email('Email inválido').optional().or(z.literal('')),
   telefono: z.string().optional(),
   direccion: z.string().optional(),
+  localidad: z.string().optional(),
   cuit: z.string().optional(),
   rubro: z.string().optional(),
   notas: z.string().optional(),
@@ -38,12 +49,23 @@ const labelStyle = {
   fontWeight: theme.fontWeights.medium, color: theme.colors.text, marginBottom: '5px',
 }
 
-export default function QuickCreateClienteModal({ onClose, onCreated }: Props) {
+export default function QuickCreateClienteModal({ onClose, onCreated, initialData }: Props) {
   const form = useForm<ClienteForm>({
     resolver: zodResolver(clienteSchema),
     defaultValues: {
-      tipo: 'PARTICULAR', activo: true, mostrar_en_landing: false,
-      nombre: '', email: '', telefono: '', direccion: '', cuit: '', rubro: '', notas: '', imagen: '', pagina_web: '',
+      tipo: initialData?.tipo ?? 'COMERCIO',
+      activo: true,
+      mostrar_en_landing: false,
+      nombre: initialData?.nombre ?? '',
+      email: initialData?.email ?? '',
+      telefono: initialData?.telefono ?? '',
+      direccion: initialData?.direccion ?? '',
+      localidad: initialData?.localidad ?? '',
+      cuit: '',
+      rubro: '',
+      notas: '',
+      imagen: '',
+      pagina_web: '',
     },
   })
 
@@ -124,7 +146,12 @@ export default function QuickCreateClienteModal({ onClose, onCreated }: Props) {
 
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Dirección</label>
-              <input {...form.register('direccion')} style={inputStyle} placeholder="Calle, número, localidad" />
+              <input {...form.register('direccion')} style={inputStyle} placeholder="Calle, número" />
+            </div>
+
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={labelStyle}>Localidad</label>
+              <input {...form.register('localidad')} style={inputStyle} placeholder="Ciudad, Provincia" />
             </div>
 
             <div>
