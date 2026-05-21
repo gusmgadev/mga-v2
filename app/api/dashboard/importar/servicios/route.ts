@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { supabaseAdmin } from '@/services/supabase-admin'
-import XLSX from 'xlsx'
+import { readFile, utils } from 'xlsx'
+import type { WorkBook } from 'xlsx'
 import path from 'path'
 
 const EXCEL_PATH = path.join(process.cwd(), 'recursos', 'migracion', 'importacion.xlsx')
@@ -35,9 +36,9 @@ export async function POST() {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 
-  let wb: XLSX.WorkBook
+  let wb: WorkBook
   try {
-    wb = XLSX.readFile(EXCEL_PATH, { cellDates: true })
+    wb = readFile(EXCEL_PATH, { cellDates: true })
   } catch {
     return NextResponse.json({ error: `No se encontró el archivo Excel en: ${EXCEL_PATH}` }, { status: 404 })
   }
@@ -55,8 +56,8 @@ export async function POST() {
     FechaIngreso: Date | string | null
   }
 
-  const clientesRaw = XLSX.utils.sheet_to_json<ClienteRow>(wb.Sheets['clientes'], { defval: null })
-  const serviciosRaw = XLSX.utils.sheet_to_json<ServicioRow>(wb.Sheets['servicios'], { defval: null })
+  const clientesRaw = utils.sheet_to_json<ClienteRow>(wb.Sheets['clientes'], { defval: null })
+  const serviciosRaw = utils.sheet_to_json<ServicioRow>(wb.Sheets['servicios'], { defval: null })
 
   const clientes = clientesRaw.filter((r) => r.Cod_Cliente != null && r.Razon_Social)
   const servicios = serviciosRaw.filter((r) => r['Nro Servicio'] != null)
