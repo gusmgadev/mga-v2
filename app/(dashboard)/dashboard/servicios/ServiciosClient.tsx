@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
-import { Plus, Trash2, X, Loader2, AlertCircle, Eye, Pencil, Save } from 'lucide-react'
+import { Plus, Trash2, X, Loader2, AlertCircle, Eye, Pencil, Save, DollarSign } from 'lucide-react'
 import Link from 'next/link'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
@@ -58,6 +58,18 @@ const editSchema = z.object({
   fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida'),
 })
 type EditForm = z.infer<typeof editSchema>
+
+const METODOS_PAGO = ['EFECTIVO', 'TRANSFERENCIA', 'TARJETA', 'CHEQUE', 'OTRO'] as const
+type MetodoPago = (typeof METODOS_PAGO)[number]
+
+const pagoSchema = z.object({
+  monto: z.number().positive('Ingresá un monto'),
+  concepto: z.string().min(2, 'Mínimo 2 caracteres'),
+  metodo_pago: z.enum(METODOS_PAGO),
+  fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida'),
+  notas: z.string().optional(),
+})
+type PagoForm = z.infer<typeof pagoSchema>
 
 const ESTADO_COLORS: Record<ServicioEstado, { bg: string; text: string }> = {
   INGRESADO:     { bg: '#E3F2FD', text: '#1565C0' },
@@ -337,6 +349,7 @@ export default function ServiciosClient({
   const [showCreate, setShowCreate] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<Servicio | null>(null)
   const [editTarget, setEditTarget] = useState<Servicio | null>(null)
+  const [pagoTarget, setPagoTarget] = useState<Servicio | null>(null)
   const [globalError, setGlobalError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
 
@@ -362,6 +375,45 @@ export default function ServiciosClient({
   })
   const [editError, setEditError] = useState<string | null>(null)
   const [editLoading, setEditLoading] = useState(false)
+
+  const pagoForm = useForm<PagoForm>({
+    resolver: zodResolver(pagoSchema),
+    defaultValues: { monto: 0, concepto: '', metodo_pago: 'TRANSFERENCIA', fecha: new Date().toISOString().split('T')[0], notas: '' },
+  })
+  const [pagoError, setPagoError] = useState<string | null>(null)
+  const [pagoLoading, setPagoLoading] = useState(false)
+
+  const openPago = (s: Servicio) => {
+    pagoForm.reset({ monto: 0, concepto: 'Pago servicio', metodo_pago: 'TRANSFERENCIA', fecha: new Date().toISOString().split('T')[0], notas: '' })
+    setPagoError(null)
+    setPagoTarget(s)
+  }
+
+  const onPagoSubmit = async (data: PagoForm) => {
+    if (!pagoTarget) return
+    setPagoLoading(true)
+    setPagoError(null)
+    const res = await fetch('/api/dashboard/cobranzas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cliente_id: pagoTarget.cliente_id, servicio_id: pagoTarget.id, tipo: 'PAGO', ...data }),
+    })
+    const json = await res.json()
+    setPagoLoading(false)
+    if (!res.ok) { setPagoError(json.error ?? 'Error al registrar el pago'); return }
+    const monto = data.monto
+    setServicios((prev) => prev.map((s) => {
+      if (s.id !== pagoTarget.id) return s
+      const nuevoTotalPagado = (s.totalPagado ?? 0) + monto
+      const valor = Number(s.valor)
+      const nuevoEstadoPago: EstadoPago =
+        s.estado_pago === 'SIN CARGO' || s.estado_pago === 'GARANTIA'
+          ? s.estado_pago
+          : nuevoTotalPagado >= valor ? 'PAGADO' : nuevoTotalPagado > 0 ? 'PAGO PARCIAL' : 'PENDIENTE'
+      return { ...s, totalPagado: nuevoTotalPagado, estado_pago: nuevoEstadoPago }
+    }))
+    setPagoTarget(null)
+  }
 
   const openCreate = () => {
     createForm.reset({
@@ -598,6 +650,15 @@ export default function ServiciosClient({
                         <Pencil size={13} />
                       </button>
                     )}
+                    {permisos.can_create && (
+                      <button
+                        onClick={() => openPago(s)}
+                        title="Cargar pago"
+                        style={{ background: 'none', border: `1px solid ${theme.colors.success}55`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.success, padding: '5px 8px', display: 'flex', alignItems: 'center' }}
+                      >
+                        <DollarSign size={13} />
+                      </button>
+                    )}
                     {permisos.can_delete && (
                       <button
                         onClick={() => setDeleteTarget(s)}
@@ -721,6 +782,70 @@ export default function ServiciosClient({
               >
                 {editLoading && <Loader2 size={15} className="animate-spin" />}
                 {editLoading ? 'Guardando...' : 'Guardar cambios'}
+              </button>
+            </form>
+          </ModalCard>
+        </ModalOverlay>
+      )}
+
+      {/* Pago modal */}
+      {pagoTarget && (
+        <ModalOverlay onClose={() => setPagoTarget(null)}>
+          <ModalCard title="Cargar pago" onClose={() => setPagoTarget(null)} formId="pago-form">
+            <form id="pago-form" onSubmit={pagoForm.handleSubmit(onPagoSubmit)}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <label style={labelStyle}>Servicio</label>
+                  <div style={{ padding: '10px 14px', backgroundColor: '#F8F9FB', borderRadius: theme.radii.sm, border: `1px solid ${theme.colors.border}`, fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
+                    #{pagoTarget.id} — {pagoTarget.titulo}
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div>
+                    <label style={labelStyle}>Monto ($) <span style={{ color: theme.colors.error }}>*</span></label>
+                    <input
+                      type="number"
+                      min={0.01}
+                      step="0.01"
+                      {...pagoForm.register('monto', { valueAsNumber: true })}
+                      style={inputStyle}
+                      placeholder="0.00"
+                    />
+                    {pagoForm.formState.errors.monto && (
+                      <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{pagoForm.formState.errors.monto.message}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label style={labelStyle}>Fecha <span style={{ color: theme.colors.error }}>*</span></label>
+                    <input type="date" {...pagoForm.register('fecha')} style={inputStyle} />
+                  </div>
+                </div>
+                <div>
+                  <label style={labelStyle}>Concepto <span style={{ color: theme.colors.error }}>*</span></label>
+                  <input {...pagoForm.register('concepto')} style={inputStyle} placeholder="Pago servicio" />
+                  {pagoForm.formState.errors.concepto && (
+                    <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{pagoForm.formState.errors.concepto.message}</p>
+                  )}
+                </div>
+                <div>
+                  <label style={labelStyle}>Método de pago</label>
+                  <select {...pagoForm.register('metodo_pago')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+                    {METODOS_PAGO.map((m) => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Notas</label>
+                  <textarea {...pagoForm.register('notas')} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Opcional..." />
+                </div>
+              </div>
+              {pagoError && <div style={{ marginTop: '14px' }}><ErrorBox message={pagoError} /></div>}
+              <button
+                type="submit"
+                disabled={pagoLoading}
+                style={{ width: '100%', padding: '11px', marginTop: '20px', backgroundColor: pagoLoading ? `${theme.colors.success}99` : theme.colors.success, color: '#fff', fontSize: theme.fontSizes.base, fontWeight: theme.fontWeights.medium, border: 'none', borderRadius: theme.radii.sm, cursor: pagoLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              >
+                {pagoLoading && <Loader2 size={15} className="animate-spin" />}
+                {pagoLoading ? 'Registrando...' : 'Registrar pago'}
               </button>
             </form>
           </ModalCard>
