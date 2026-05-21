@@ -63,7 +63,7 @@ export default function ImportarClient() {
             Archivo: <code style={{ backgroundColor: '#F3F4F6', padding: '2px 6px', borderRadius: '4px', fontSize: theme.fontSizes.xs }}>recursos/migracion/importacion.xlsx</code>
           </p>
           <p style={{ margin: '0 0 20px', fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
-            Importa la hoja <strong>servicios</strong>. El valor almacenado será <strong>Valor − Pagos</strong> del Excel. Si el servicio ya existe, se actualiza.
+            Importa la hoja <strong>servicios</strong>. El valor del servicio es el campo <strong>Valor</strong> del Excel. Si hay pagos registrados, se importan como cobranza para que el saldo quede en <strong>Valor − Pagos</strong>. Si el servicio ya existe, se actualiza.
           </p>
 
           {error && (

@@ -94,9 +94,11 @@ export async function POST() {
       continue
     }
 
-    const valor = Math.max(0, (Number(row.Valor) || 0) - (Number(row.Pagos) || 0))
+    const valor = Number(row.Valor) || 0
+    const pagos = Number(row.Pagos) || 0
+    const fecha = toFecha(row.FechaIngreso)
 
-    const { error } = await supabaseAdmin.from('servicios').upsert(
+    const { error: errServicio } = await supabaseAdmin.from('servicios').upsert(
       {
         id:          nroServicio,
         cliente_id:  clienteId,
@@ -105,16 +107,37 @@ export async function POST() {
         estado:      ESTADO_MAP[row.Estado]          ?? 'INGRESADO',
         estado_pago: ESTADO_PAGO_MAP[row.EstadoPago] ?? 'PENDIENTE',
         valor,
-        fecha:       toFecha(row.FechaIngreso),
+        fecha,
       },
       { onConflict: 'id' }
     )
 
-    if (error) {
-      errores.push({ id: nroServicio, error: error.message })
-    } else {
-      importados++
+    if (errServicio) {
+      errores.push({ id: nroServicio, error: errServicio.message })
+      continue
     }
+
+    // Si hay pagos en el Excel, crear/actualizar una cobranza PAGO para que el saldo = Valor − Pagos
+    if (pagos > 0) {
+      // Eliminar cobranzas de importación previas para este servicio (idempotente)
+      await supabaseAdmin
+        .from('cobranzas')
+        .delete()
+        .eq('servicio_id', nroServicio)
+        .eq('concepto', 'Pago importado desde Excel')
+
+      await supabaseAdmin.from('cobranzas').insert({
+        cliente_id:  clienteId,
+        servicio_id: nroServicio,
+        tipo:        'PAGO',
+        concepto:    'Pago importado desde Excel',
+        monto:       pagos,
+        fecha:       fecha ?? new Date().toISOString().split('T')[0],
+        metodo_pago: 'OTRO',
+      })
+    }
+
+    importados++
   }
 
   return NextResponse.json({
