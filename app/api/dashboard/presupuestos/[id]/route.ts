@@ -10,6 +10,7 @@ const updateSchema = z.object({
   estado: z.enum(['BORRADOR', 'ENVIADO', 'APROBADO', 'RECHAZADO', 'VENCIDO']).optional(),
   fecha: z.string().optional(),
   fecha_vencimiento: z.string().nullable().optional(),
+  archivo_url: z.string().nullable().optional(),
 })
 
 async function requireSession() {

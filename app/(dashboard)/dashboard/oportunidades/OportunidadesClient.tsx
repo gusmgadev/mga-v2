@@ -12,7 +12,7 @@ import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 import QuickCreateClienteModal from '@/components/dashboard/QuickCreateClienteModal'
 
-type OportunidadEstado = 'NUEVA' | 'PRIMER_CONTACTO_WS' | 'EN_PROCESO' | 'GANADA' | 'NO_GANADA' | 'NO_OP'
+type OportunidadEstado = 'NUEVA' | 'PRIMER_CONTACTO_WS' | 'EN_PROCESO' | 'PRESUPUESTADA' | 'GANADA' | 'NO_GANADA' | 'NO_OP'
 type TipoOp = 'OP_NUEVA' | 'SEGUIMIENTO' | 'CROSS_SELLING'
 
 type Oportunidad = {
@@ -89,11 +89,12 @@ const TIPO_CONTACTO_COLORS: Record<TipoContacto, { bg: string; text: string }> =
   otro:       { bg: '#F1F5F9', text: '#475569' },
 }
 
-const ESTADOS: OportunidadEstado[] = ['NUEVA', 'PRIMER_CONTACTO_WS', 'EN_PROCESO', 'GANADA', 'NO_GANADA', 'NO_OP']
+const ESTADOS: OportunidadEstado[] = ['NUEVA', 'PRIMER_CONTACTO_WS', 'EN_PROCESO', 'PRESUPUESTADA', 'GANADA', 'NO_GANADA', 'NO_OP']
 const ESTADO_LABELS: Record<OportunidadEstado, string> = {
   NUEVA: 'Nueva',
   PRIMER_CONTACTO_WS: 'Primer contacto WS',
   EN_PROCESO: 'En proceso',
+  PRESUPUESTADA: 'Presupuestada',
   GANADA: 'Ganada',
   NO_GANADA: 'No ganada',
   NO_OP: 'No es OP',
@@ -102,6 +103,7 @@ const ESTADO_COLORS: Record<OportunidadEstado, { bg: string; text: string }> = {
   NUEVA:               { bg: '#E3F2FD', text: '#1565C0' },
   PRIMER_CONTACTO_WS:  { bg: '#DCFCE7', text: '#15803D' },
   EN_PROCESO:          { bg: '#FFF3E0', text: '#E65100' },
+  PRESUPUESTADA:       { bg: '#F3E8FF', text: '#7C3AED' },
   GANADA:              { bg: `${theme.colors.success}18`, text: theme.colors.success },
   NO_GANADA:           { bg: `${theme.colors.error}14`, text: theme.colors.error },
   NO_OP:               { bg: '#F1F5F9', text: '#475569' },
@@ -583,23 +585,14 @@ export default function OportunidadesClient({
     const json = await res.json()
     if (!res.ok) { setGenError(json.error); setGenLoading(false); return }
 
-    // Link presupuesto to oportunidad
+    // Vincula presupuesto y pasa OP a PRESUPUESTADA en un solo PATCH
     await fetch(`/api/dashboard/oportunidades/${genPresupuestoTarget.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ presupuesto_id: json.id }),
+      body: JSON.stringify({ presupuesto_id: json.id, estado: 'PRESUPUESTADA' }),
     })
-    // Transición automática: NUEVA → EN_PROCESO al generar presupuesto
-    const estadoTrasPresupuesto = genPresupuestoTarget.estado === 'NUEVA' ? 'EN_PROCESO' : genPresupuestoTarget.estado
-    if (genPresupuestoTarget.estado === 'NUEVA') {
-      await fetch(`/api/dashboard/oportunidades/${genPresupuestoTarget.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: 'EN_PROCESO' }),
-      })
-    }
     setOportunidades((prev) => prev.map((o) =>
-      o.id === genPresupuestoTarget.id ? { ...o, presupuesto_id: json.id, estado: estadoTrasPresupuesto } : o
+      o.id === genPresupuestoTarget.id ? { ...o, presupuesto_id: json.id, estado: 'PRESUPUESTADA' } : o
     ))
     setGenLoading(false)
     setGenPresupuestoTarget(null)
@@ -649,7 +642,7 @@ export default function OportunidadesClient({
 
   const filtered = oportunidades
     .filter((o) => {
-      if (filterEstado === '__activas__') return o.estado === 'NUEVA' || o.estado === 'EN_PROCESO'
+      if (filterEstado === '__activas__') return o.estado === 'NUEVA' || o.estado === 'PRIMER_CONTACTO_WS' || o.estado === 'EN_PROCESO' || o.estado === 'PRESUPUESTADA'
       if (filterEstado) return o.estado === filterEstado
       return true
     })
@@ -837,7 +830,7 @@ export default function OportunidadesClient({
             <option value="">Todos los estados</option>
             {ESTADOS.map((e) => <option key={e} value={e}>{ESTADO_LABELS[e]}</option>)}
             <option disabled style={{ color: theme.colors.textMuted }}>──────────</option>
-            <option value="__activas__">Solo activas (Nueva + En proceso)</option>
+            <option value="__activas__">Solo activas (Nueva + En proceso + Presupuestada)</option>
           </select>
           <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
             {filtered.length} oportunidad{filtered.length !== 1 ? 'es' : ''}
@@ -857,7 +850,7 @@ export default function OportunidadesClient({
                 <th style={thStyle}>Nro Tarea</th>
                 <th style={thStyle}>Fecha inicio</th>
                 <th style={thStyle}>Contacto</th>
-                <th style={{ ...thStyle, width: '20ch' }}>Teléfono</th>
+                <th style={{ ...thStyle, width: '10ch' }}>Teléfono</th>
                 <th style={thStyle}>Zona</th>
                 <th style={thStyle}>Tipo</th>
                 <th style={thStyle}>Estado</th>
@@ -883,7 +876,7 @@ export default function OportunidadesClient({
                       <p style={{ margin: 0, fontWeight: theme.fontWeights.medium }}>{nombre}</p>
                       {op.empresa && <p style={{ margin: 0, fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>{op.empresa}</p>}
                     </td>
-                    <td style={{ ...tdStyle, color: theme.colors.textMuted, whiteSpace: 'nowrap', width: '20ch' }}>{op.telefono ?? '—'}</td>
+                    <td style={{ ...tdStyle, color: theme.colors.textMuted, whiteSpace: 'nowrap', width: '10ch' }}>{op.telefono ?? '—'}</td>
                     <td style={{ ...tdStyle, color: theme.colors.textMuted, fontSize: theme.fontSizes.xs }}>{op.zona_gestion ?? '—'}</td>
                     <td style={tdStyle}>
                       {(() => {

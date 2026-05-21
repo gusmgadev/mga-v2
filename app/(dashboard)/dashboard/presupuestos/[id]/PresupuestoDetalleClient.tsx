@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Link from 'next/link'
-import { ArrowLeft, Pencil, X, Loader2, AlertCircle, Plus, Trash2, Wrench, ExternalLink, Save } from 'lucide-react'
+import { ArrowLeft, Pencil, X, Loader2, AlertCircle, Plus, Trash2, Wrench, ExternalLink, Save, FileText, Upload } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 import QuickCreateActivoModal from '@/components/dashboard/QuickCreateActivoModal'
@@ -32,6 +32,7 @@ type Presupuesto = {
   estado: PresupuestoEstado
   fecha: string
   fecha_vencimiento: string | null
+  archivo_url: string | null
   created_at: string
   clientes: { nombre: string } | null
   activos: { nombre: string } | null
@@ -173,6 +174,8 @@ export default function PresupuestoDetalleClient({
   const [editLoading, setEditLoading] = useState(false)
   const [genServicioLoading, setGenServicioLoading] = useState(false)
   const [genServicioError, setGenServicioError] = useState<string | null>(null)
+  const [uploadDocLoading, setUploadDocLoading] = useState(false)
+  const [uploadDocError, setUploadDocError] = useState<string | null>(null)
 
   // New item form state
   const [newDesc, setNewDesc] = useState('')
@@ -214,6 +217,28 @@ export default function PresupuestoDetalleClient({
       valor: total,
     },
   })
+
+  const handleUploadDoc = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadDocLoading(true)
+    setUploadDocError(null)
+    const fd = new FormData()
+    fd.append('file', file)
+    const uploadRes = await fetch('/api/dashboard/upload/presupuesto-doc', { method: 'POST', body: fd })
+    const uploadJson = await uploadRes.json()
+    if (!uploadRes.ok) { setUploadDocError(uploadJson.error); setUploadDocLoading(false); return }
+    const patchRes = await fetch(`/api/dashboard/presupuestos/${presupuesto.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ archivo_url: uploadJson.url }),
+    })
+    const patchJson = await patchRes.json()
+    setUploadDocLoading(false)
+    if (!patchRes.ok) { setUploadDocError(patchJson.error); return }
+    setPresupuesto((prev) => ({ ...prev, archivo_url: uploadJson.url }))
+    e.target.value = ''
+  }
 
   const openGenServicio = () => {
     genServicioForm.reset({
@@ -525,6 +550,44 @@ export default function PresupuestoDetalleClient({
             Sin ítems registrados
           </p>
         )}
+      </div>
+
+      {/* Documento adjunto */}
+      <div style={{ ...cardStyle, marginBottom: '20px' }}>
+        <div style={cardHeaderStyle}>
+          <h3 style={{ margin: 0, fontSize: theme.fontSizes.base, fontWeight: theme.fontWeights.bold, color: theme.colors.text }}>
+            Documento adjunto
+          </h3>
+        </div>
+        <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          {presupuesto.archivo_url ? (
+            <a
+              href={presupuesto.archivo_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', backgroundColor: '#F3E8FF', border: '1px solid #C4B5FD', borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, color: '#7C3AED', textDecoration: 'none', fontWeight: theme.fontWeights.medium }}
+            >
+              <FileText size={14} />
+              {decodeURIComponent(presupuesto.archivo_url.split('/').pop() ?? 'Archivo adjunto')}
+            </a>
+          ) : (
+            <span style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>Sin documento adjunto</span>
+          )}
+          {permisos.can_edit && (
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, color: theme.colors.text, cursor: uploadDocLoading ? 'not-allowed' : 'pointer', backgroundColor: '#fff', opacity: uploadDocLoading ? 0.6 : 1 }}>
+              {uploadDocLoading ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
+              {presupuesto.archivo_url ? 'Reemplazar' : 'Subir documento'}
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                disabled={uploadDocLoading}
+                onChange={handleUploadDoc}
+                style={{ display: 'none' }}
+              />
+            </label>
+          )}
+          {uploadDocError && <ErrorBox message={uploadDocError} />}
+        </div>
       </div>
 
       {showQCActivo && (
