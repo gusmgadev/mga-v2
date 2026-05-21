@@ -18,6 +18,7 @@ import {
   Users,
   Shield,
   Lock,
+  FileSpreadsheet,
   LogOut,
   type LucideIcon,
 } from 'lucide-react'
@@ -74,6 +75,7 @@ const navGroups: NavGroup[] = [
       { label: 'Usuarios', href: '/dashboard/admin/usuarios', Icon: Users },
       { label: 'Roles', href: '/dashboard/admin/roles', Icon: Shield },
       { label: 'Permisos', href: '/dashboard/admin/permisos', Icon: Lock },
+      { label: 'Importar', href: '/dashboard/admin/importar', Icon: FileSpreadsheet },
     ],
   },
 ]
