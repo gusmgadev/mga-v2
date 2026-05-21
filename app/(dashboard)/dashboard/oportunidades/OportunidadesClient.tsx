@@ -857,8 +857,7 @@ export default function OportunidadesClient({
                 <th style={thStyle}>Nro Tarea</th>
                 <th style={thStyle}>Fecha inicio</th>
                 <th style={thStyle}>Contacto</th>
-                <th style={thStyle}>Teléfono</th>
-                <th style={thStyle}>Email</th>
+                <th style={{ ...thStyle, width: '20ch' }}>Teléfono</th>
                 <th style={thStyle}>Zona</th>
                 <th style={thStyle}>Tipo</th>
                 <th style={thStyle}>Estado</th>
@@ -868,7 +867,7 @@ export default function OportunidadesClient({
             <tbody>
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={10} style={{ ...tdStyle, textAlign: 'center', color: theme.colors.textMuted }}>
+                  <td colSpan={9} style={{ ...tdStyle, textAlign: 'center', color: theme.colors.textMuted }}>
                     No hay oportunidades registradas
                   </td>
                 </tr>
@@ -884,8 +883,7 @@ export default function OportunidadesClient({
                       <p style={{ margin: 0, fontWeight: theme.fontWeights.medium }}>{nombre}</p>
                       {op.empresa && <p style={{ margin: 0, fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>{op.empresa}</p>}
                     </td>
-                    <td style={{ ...tdStyle, color: theme.colors.textMuted, whiteSpace: 'nowrap' }}>{op.telefono ?? '—'}</td>
-                    <td style={{ ...tdStyle, color: theme.colors.textMuted, fontSize: theme.fontSizes.xs }}>{op.email_contacto ?? '—'}</td>
+                    <td style={{ ...tdStyle, color: theme.colors.textMuted, whiteSpace: 'nowrap', width: '20ch' }}>{op.telefono ?? '—'}</td>
                     <td style={{ ...tdStyle, color: theme.colors.textMuted, fontSize: theme.fontSizes.xs }}>{op.zona_gestion ?? '—'}</td>
                     <td style={tdStyle}>
                       {(() => {
