@@ -326,7 +326,7 @@ export default function ServiciosClient({
   initialServicios: Servicio[]
   clientes: ClienteSimple[]
   activos: ActivoSimple[]
-  filtros: { cliente_id: number | null; estado: string | null; estado_pago: string | null }
+  filtros: { cliente_id: number | null; estado: string | null; estado_pago: string | null; fecha_desde: string | null; fecha_hasta: string | null }
   permisos: ModulePermisos
 }) {
   const router = useRouter()
@@ -450,6 +450,8 @@ export default function ServiciosClient({
     if (merged.cliente_id) params.set('cliente_id', String(merged.cliente_id))
     if (merged.estado) params.set('estado', merged.estado)
     if (merged.estado_pago) params.set('estado_pago', merged.estado_pago)
+    if (merged.fecha_desde) params.set('fecha_desde', merged.fecha_desde)
+    if (merged.fecha_hasta) params.set('fecha_hasta', merged.fecha_hasta)
     const qs = params.toString()
     return `/dashboard/servicios${qs ? `?${qs}` : ''}`
   }
@@ -463,6 +465,8 @@ export default function ServiciosClient({
     const [y, m, d] = fecha.split('-')
     return `${d}/${m}/${y.slice(2)}`
   }
+
+  const saldoTotal = servicios.reduce((sum, s) => sum + Math.max(0, Number(s.valor) - (s.totalPagado ?? 0)), 0)
 
   return (
     <>
@@ -497,8 +501,27 @@ export default function ServiciosClient({
             {ESTADOS_PAGO.map((e) => <option key={e} value={e}>{e}</option>)}
           </select>
 
-          <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
+          <input
+            type="date"
+            value={filtros.fecha_desde ?? ''}
+            onChange={(e) => filterSelect('fecha_desde', e.target.value)}
+            title="Fecha desde"
+            style={{ padding: '8px 10px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', backgroundColor: '#fff', fontFamily: 'inherit', color: filtros.fecha_desde ? theme.colors.text : theme.colors.textMuted }}
+          />
+          <input
+            type="date"
+            value={filtros.fecha_hasta ?? ''}
+            onChange={(e) => filterSelect('fecha_hasta', e.target.value)}
+            title="Fecha hasta"
+            style={{ padding: '8px 10px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', backgroundColor: '#fff', fontFamily: 'inherit', color: filtros.fecha_hasta ? theme.colors.text : theme.colors.textMuted }}
+          />
+
+          <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textMuted, whiteSpace: 'nowrap' }}>
             {servicios.length} servicio{servicios.length !== 1 ? 's' : ''}
+            {' · '}
+            <span style={{ color: saldoTotal > 0 ? '#B45309' : theme.colors.textMuted }}>
+              Saldo pendiente: ${saldoTotal.toLocaleString('es-AR')}
+            </span>
           </p>
         </div>
 

@@ -20,6 +20,7 @@ type Tarea = {
   servicio_id: number
   descripcion: string
   estado: TareaEstado
+  fecha: string | null
   created_at: string
 }
 
@@ -195,6 +196,7 @@ export default function ServicioDetalleClient({
 
   // Tareas state
   const [nuevaTarea, setNuevaTarea] = useState('')
+  const [nuevaTareaFecha, setNuevaTareaFecha] = useState(new Date().toISOString().split('T')[0])
   const [tareaLoading, setTareaLoading] = useState(false)
   const [tareaError, setTareaError] = useState<string | null>(null)
   const [deletingTareaId, setDeletingTareaId] = useState<number | null>(null)
@@ -274,7 +276,7 @@ export default function ServicioDetalleClient({
     const res = await fetch(`/api/dashboard/servicios/${servicio.id}/tareas`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ descripcion: nuevaTarea.trim() }),
+      body: JSON.stringify({ descripcion: nuevaTarea.trim(), fecha: nuevaTareaFecha }),
     })
     const json = await res.json()
     setTareaLoading(false)
@@ -507,6 +509,11 @@ export default function ServicioDetalleClient({
                 <span style={{ flex: 1, fontSize: theme.fontSizes.sm, color: theme.colors.text }}>
                   {tarea.descripcion}
                 </span>
+                {tarea.fecha && (
+                  <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, whiteSpace: 'nowrap' }}>
+                    {tarea.fecha.split('-').reverse().join('/')}
+                  </span>
+                )}
                 {permisos.can_delete && (
                   <button
                     onClick={() => eliminarTarea(tarea.id)}
@@ -533,10 +540,16 @@ export default function ServicioDetalleClient({
                 placeholder="Descripción de la tarea..."
                 style={{ ...inputStyle, flex: 1, padding: '8px 12px', fontSize: theme.fontSizes.sm }}
               />
+              <input
+                type="date"
+                value={nuevaTareaFecha}
+                onChange={(e) => setNuevaTareaFecha(e.target.value)}
+                style={{ ...inputStyle, width: '145px', padding: '8px 10px', fontSize: theme.fontSizes.sm, flexShrink: 0 }}
+              />
               <button
                 onClick={agregarTarea}
                 disabled={tareaLoading || !nuevaTarea.trim()}
-                style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '8px 12px', backgroundColor: tareaLoading || !nuevaTarea.trim() ? `${theme.colors.primary}66` : theme.colors.primary, color: '#fff', border: 'none', borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, cursor: tareaLoading || !nuevaTarea.trim() ? 'not-allowed' : 'pointer' }}
+                style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '8px 12px', backgroundColor: tareaLoading || !nuevaTarea.trim() ? `${theme.colors.primary}66` : theme.colors.primary, color: '#fff', border: 'none', borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, cursor: tareaLoading || !nuevaTarea.trim() ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
               >
                 {tareaLoading ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
                 Agregar
