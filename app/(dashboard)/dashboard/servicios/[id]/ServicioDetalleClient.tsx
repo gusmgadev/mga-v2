@@ -201,6 +201,8 @@ export default function ServicioDetalleClient({
   const [tareaError, setTareaError] = useState<string | null>(null)
   const [deletingTareaId, setDeletingTareaId] = useState<number | null>(null)
   const [updatingTareaId, setUpdatingTareaId] = useState<number | null>(null)
+  const [editingTarea, setEditingTarea] = useState<{ id: number; descripcion: string; fecha: string } | null>(null)
+  const [savingTareaId, setSavingTareaId] = useState<number | null>(null)
 
   // Pagos state
   const [showAddPago, setShowAddPago] = useState(false)
@@ -305,6 +307,21 @@ export default function ServicioDetalleClient({
     if (updatedTareas.every((t) => t.estado === 'TERMINADA')) {
       setServicio((prev) => ({ ...prev, estado: 'TERMINADO' as ServicioEstado }))
     }
+  }
+
+  const guardarEditTarea = async () => {
+    if (!editingTarea || !editingTarea.descripcion.trim()) return
+    setSavingTareaId(editingTarea.id)
+    const res = await fetch(`/api/dashboard/servicios/${servicio.id}/tareas/${editingTarea.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ descripcion: editingTarea.descripcion.trim(), fecha: editingTarea.fecha || null }),
+    })
+    const json = await res.json()
+    setSavingTareaId(null)
+    if (!res.ok) return
+    setTareas((prev) => prev.map((t) => (t.id === editingTarea.id ? json : t)))
+    setEditingTarea(null)
   }
 
   const eliminarTarea = async (tareaId: number) => {
@@ -495,33 +512,78 @@ export default function ServicioDetalleClient({
                 {permisos.can_edit ? (
                   <select
                     value={tarea.estado}
-                    disabled={updatingTareaId === tarea.id}
+                    disabled={updatingTareaId === tarea.id || editingTarea?.id === tarea.id}
                     onChange={(e) => cambiarEstadoTarea(tarea, e.target.value as TareaEstado)}
-                    style={{ padding: '4px 8px', fontSize: theme.fontSizes.xs, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', backgroundColor: '#fff', fontFamily: 'inherit', cursor: 'pointer', color: TAREA_COLORS[tarea.estado].text }}
+                    style={{ padding: '4px 8px', fontSize: theme.fontSizes.xs, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', backgroundColor: '#fff', fontFamily: 'inherit', cursor: 'pointer', color: TAREA_COLORS[tarea.estado].text, flexShrink: 0 }}
                   >
                     {TAREA_ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
                   </select>
                 ) : (
-                  <span style={{ padding: '4px 8px', fontSize: theme.fontSizes.xs, borderRadius: theme.radii.sm, backgroundColor: TAREA_COLORS[tarea.estado].bg, color: TAREA_COLORS[tarea.estado].text }}>
+                  <span style={{ padding: '4px 8px', fontSize: theme.fontSizes.xs, borderRadius: theme.radii.sm, backgroundColor: TAREA_COLORS[tarea.estado].bg, color: TAREA_COLORS[tarea.estado].text, flexShrink: 0 }}>
                     {tarea.estado}
                   </span>
                 )}
-                <span style={{ flex: 1, fontSize: theme.fontSizes.sm, color: theme.colors.text }}>
-                  {tarea.descripcion}
-                </span>
-                {tarea.fecha && (
-                  <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, whiteSpace: 'nowrap' }}>
-                    {tarea.fecha.split('-').reverse().join('/')}
-                  </span>
-                )}
-                {permisos.can_delete && (
-                  <button
-                    onClick={() => eliminarTarea(tarea.id)}
-                    disabled={deletingTareaId === tarea.id}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.textMuted, display: 'flex', padding: '4px' }}
-                  >
-                    {deletingTareaId === tarea.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
-                  </button>
+
+                {editingTarea?.id === tarea.id ? (
+                  <>
+                    <input
+                      value={editingTarea.descripcion}
+                      onChange={(e) => setEditingTarea((prev) => prev && { ...prev, descripcion: e.target.value })}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') { e.preventDefault(); guardarEditTarea() }
+                        if (e.key === 'Escape') setEditingTarea(null)
+                      }}
+                      autoFocus
+                      style={{ flex: 1, padding: '4px 8px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', fontFamily: 'inherit' }}
+                    />
+                    <input
+                      type="date"
+                      value={editingTarea.fecha}
+                      onChange={(e) => setEditingTarea((prev) => prev && { ...prev, fecha: e.target.value })}
+                      style={{ padding: '4px 8px', fontSize: theme.fontSizes.xs, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', fontFamily: 'inherit', width: '130px', flexShrink: 0 }}
+                    />
+                    <button
+                      onClick={guardarEditTarea}
+                      disabled={savingTareaId === tarea.id || !editingTarea.descripcion.trim()}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.success, display: 'flex', padding: '4px', flexShrink: 0 }}
+                    >
+                      {savingTareaId === tarea.id ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle2 size={13} />}
+                    </button>
+                    <button
+                      onClick={() => setEditingTarea(null)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.textMuted, display: 'flex', padding: '4px', flexShrink: 0 }}
+                    >
+                      <X size={13} />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span style={{ flex: 1, fontSize: theme.fontSizes.sm, color: theme.colors.text }}>
+                      {tarea.descripcion}
+                    </span>
+                    {tarea.fecha && (
+                      <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, whiteSpace: 'nowrap' }}>
+                        {tarea.fecha.split('-').reverse().join('/')}
+                      </span>
+                    )}
+                    {permisos.can_edit && (
+                      <button
+                        onClick={() => setEditingTarea({ id: tarea.id, descripcion: tarea.descripcion, fecha: tarea.fecha ?? new Date().toISOString().split('T')[0] })}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.textMuted, display: 'flex', padding: '4px', flexShrink: 0 }}
+                      >
+                        <Pencil size={13} />
+                      </button>
+                    )}
+                    {permisos.can_delete && (
+                      <button
+                        onClick={() => eliminarTarea(tarea.id)}
+                        disabled={deletingTareaId === tarea.id}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.textMuted, display: 'flex', padding: '4px', flexShrink: 0 }}
+                      >
+                        {deletingTareaId === tarea.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             ))}
