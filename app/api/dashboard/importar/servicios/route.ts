@@ -1,11 +1,8 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { supabaseAdmin } from '@/services/supabase-admin'
-import { readFile, utils } from 'xlsx'
+import { read, utils } from 'xlsx'
 import type { WorkBook } from 'xlsx'
-import path from 'path'
-
-const EXCEL_PATH = path.join(process.cwd(), 'recursos', 'migracion', 'importacion.xlsx')
 
 const ESTADO_MAP: Record<string, string> = {
   'TERMINADO':     'TERMINADO',
@@ -30,17 +27,30 @@ function toFecha(val: unknown): string | null {
   return null
 }
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   const session = await auth()
   if (!session || session.user.role !== 'Administrador') {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
 
+  let formData: FormData
+  try {
+    formData = await req.formData()
+  } catch {
+    return NextResponse.json({ error: 'No se pudo leer el formulario' }, { status: 400 })
+  }
+
+  const file = formData.get('file')
+  if (!file || !(file instanceof Blob)) {
+    return NextResponse.json({ error: 'No se recibió ningún archivo' }, { status: 400 })
+  }
+
   let wb: WorkBook
   try {
-    wb = readFile(EXCEL_PATH, { cellDates: true })
+    const buffer = Buffer.from(await file.arrayBuffer())
+    wb = read(buffer, { cellDates: true })
   } catch {
-    return NextResponse.json({ error: `No se encontró el archivo Excel en: ${EXCEL_PATH}` }, { status: 404 })
+    return NextResponse.json({ error: 'No se pudo leer el archivo Excel. Verificá que sea un .xlsx válido.' }, { status: 400 })
   }
 
   type ClienteRow = { Cod_Cliente: number; Razon_Social: string }
@@ -62,7 +72,6 @@ export async function POST() {
   const clientes = clientesRaw.filter((r) => r.Cod_Cliente != null && r.Razon_Social)
   const servicios = serviciosRaw.filter((r) => r['Nro Servicio'] != null)
 
-  // Mapa: Cod_Cliente → nombre del cliente en el Excel
   const codToNombre = new Map<number, string>()
   for (const row of clientes) {
     codToNombre.set(row.Cod_Cliente, String(row.Razon_Social).trim())
@@ -81,7 +90,6 @@ export async function POST() {
       continue
     }
 
-    // Buscar cliente en DB por nombre (case-insensitive)
     const { data: match } = await supabaseAdmin
       .from('clientes')
       .select('id')
@@ -117,9 +125,7 @@ export async function POST() {
       continue
     }
 
-    // Si hay pagos en el Excel, crear/actualizar una cobranza PAGO para que el saldo = Valor − Pagos
     if (pagos > 0) {
-      // Eliminar cobranzas de importación previas para este servicio (idempotente)
       await supabaseAdmin
         .from('cobranzas')
         .delete()
