@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { Plus, Trash2, X, Loader2, AlertCircle, TrendingUp, TrendingDown, Wallet, CreditCard, Save } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
+import { ClienteFormCombobox, ClienteFilterCombobox } from '@/components/dashboard/ClienteCombobox'
 
 type CobranzaTipo = 'CARGO' | 'PAGO' | 'NOTA_CREDITO'
 type MetodoPago = 'EFECTIVO' | 'TRANSFERENCIA' | 'TARJETA' | 'CHEQUE' | 'OTRO'
@@ -167,15 +168,11 @@ function CobranzaFormFields({
 
         <div style={{ gridColumn: '1 / -1' }}>
           <label style={labelStyle}>Cliente <span style={{ color: theme.colors.error }}>*</span></label>
-          <select
-            {...form.register('cliente_id', { valueAsNumber: true })}
-            style={{ ...inputStyle, backgroundColor: '#fff' }}
-          >
-            <option value={0}>Seleccioná un cliente...</option>
-            {clientes.map((c) => (
-              <option key={c.id} value={c.id}>{c.nombre}</option>
-            ))}
-          </select>
+          <ClienteFormCombobox
+            clientes={clientes}
+            value={clienteId || 0}
+            onChange={(id) => form.setValue('cliente_id', id, { shouldValidate: true })}
+          />
           {form.formState.errors.cliente_id && (
             <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
               {form.formState.errors.cliente_id.message}
@@ -464,14 +461,11 @@ export default function CobranzasClient({
       {/* Barra de filtros y acciones */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', gap: '12px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <select
+          <ClienteFilterCombobox
+            clientes={clientes}
             value={filtros.cliente_id ?? ''}
-            onChange={(e) => filterSelect('cliente_id', e.target.value)}
-            style={{ padding: '8px 14px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', backgroundColor: '#fff', fontFamily: 'inherit', color: theme.colors.text }}
-          >
-            <option value="">Todos los clientes</option>
-            {clientes.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-          </select>
+            onChange={(val) => filterSelect('cliente_id', val)}
+          />
 
           <select
             value={filtros.tipo ?? ''}

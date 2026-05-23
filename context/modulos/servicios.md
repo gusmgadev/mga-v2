@@ -159,6 +159,17 @@ Patrón para crear entidades relacionadas sin salir del formulario actual.
 
 ---
 
+## Servicios — botón "Cargar pago" en la grilla
+
+La grilla de servicios (`ServiciosClient.tsx`) tiene un botón icono verde por fila (`DollarSign`) que abre un modal de carga rápida de pago, visible solo si `permisos.can_create`.
+
+- Llama a `POST /api/dashboard/cobranzas` con `{ cliente_id, servicio_id, tipo: 'PAGO', monto, concepto, metodo_pago, fecha, notas }`
+- **Método de pago por defecto: `TRANSFERENCIA`**
+- Actualización optimista: suma el monto a `totalPagado` y recalcula `estado_pago` en el estado local sin recargar
+- Lógica optimista: `SIN CARGO` y `GARANTIA` se preservan; para el resto → `PENDIENTE → PAGO PARCIAL → PAGADO` según `totalPagado >= valor`
+
+---
+
 ## Notas importantes — Servicios
 
 - **Presupuestos sin `valor`** — el total es calculado, no guardado. No agregar esa columna.

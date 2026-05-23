@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { supabaseAdmin } from '@/services/supabase-admin'
 import { getModulePermisos } from '@/lib/permisos'
+import { fetchAllClientes, fetchAllActivos } from '@/lib/fetchAllClientes'
 import ServiciosClient from './ServiciosClient'
 
 export default async function ServiciosPage({
@@ -17,17 +18,7 @@ export default async function ServiciosPage({
 
   const { cliente_id, estado, estado_pago, fecha_desde, fecha_hasta } = await searchParams
 
-  const { data: clientes } = await supabaseAdmin
-    .from('clientes')
-    .select('id, nombre')
-    .eq('activo', true)
-    .order('nombre')
-
-  const { data: activos } = await supabaseAdmin
-    .from('activos')
-    .select('id, nombre, cliente_id')
-    .eq('activo', true)
-    .order('nombre')
+  const [clientes, activos] = await Promise.all([fetchAllClientes(), fetchAllActivos()])
 
   let query = supabaseAdmin
     .from('servicios')
@@ -64,8 +55,8 @@ export default async function ServiciosPage({
   return (
     <ServiciosClient
       initialServicios={serviciosConPagos}
-      clientes={clientes ?? []}
-      activos={activos ?? []}
+      clientes={clientes}
+      activos={activos}
       filtros={{ cliente_id: cliente_id ? Number(cliente_id) : null, estado: estado ?? null, estado_pago: estado_pago ?? null, fecha_desde: fecha_desde ?? null, fecha_hasta: fecha_hasta ?? null }}
       permisos={permisos}
     />

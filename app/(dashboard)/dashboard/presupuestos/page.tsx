@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { supabaseAdmin } from '@/services/supabase-admin'
 import { getModulePermisos } from '@/lib/permisos'
+import { fetchAllClientes, fetchAllActivos } from '@/lib/fetchAllClientes'
 import PresupuestosClient from './PresupuestosClient'
 
 export default async function PresupuestosPage({
@@ -27,17 +28,17 @@ export default async function PresupuestosPage({
   if (clienteId) query = query.eq('cliente_id', clienteId)
   if (estado) query = query.eq('estado', estado)
 
-  const [{ data: presupuestos }, { data: clientes }, { data: activos }] = await Promise.all([
+  const [{ data: presupuestos }, clientes, activos] = await Promise.all([
     query,
-    supabaseAdmin.from('clientes').select('id, nombre').eq('activo', true).order('nombre'),
-    supabaseAdmin.from('activos').select('id, nombre, cliente_id').eq('activo', true).order('nombre'),
+    fetchAllClientes(),
+    fetchAllActivos(),
   ])
 
   return (
     <PresupuestosClient
       initialPresupuestos={presupuestos ?? []}
-      clientes={clientes ?? []}
-      activos={activos ?? []}
+      clientes={clientes}
+      activos={activos}
       filtros={{ cliente_id: clienteId, estado }}
       permisos={permisos}
     />

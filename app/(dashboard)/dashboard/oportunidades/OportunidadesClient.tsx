@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -11,6 +12,7 @@ import {
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 import QuickCreateClienteModal from '@/components/dashboard/QuickCreateClienteModal'
+import { ClienteFormCombobox, ClienteFilterCombobox } from '@/components/dashboard/ClienteCombobox'
 
 type OportunidadEstado = 'NUEVA' | 'PRIMER_CONTACTO_WS' | 'EN_PROCESO' | 'PRESUPUESTADA' | 'GANADA' | 'NO_GANADA' | 'NO_OP'
 type TipoOp = 'OP_NUEVA' | 'SEGUIMIENTO' | 'CROSS_SELLING'
@@ -237,12 +239,15 @@ type GenPresupuestoForm = z.infer<typeof genPresupuestoSchema>
 export default function OportunidadesClient({
   initialOportunidades,
   clientes,
+  filtros,
   permisos,
 }: {
   initialOportunidades: Oportunidad[]
   clientes: ClienteSimple[]
+  filtros: { estado: string | null; tipo: string | null; contacto: string | null; empresa: string | null }
   permisos: ModulePermisos
 }) {
+  const router = useRouter()
   const [oportunidades, setOportunidades] = useState(initialOportunidades)
   useEffect(() => { setOportunidades(initialOportunidades) }, [initialOportunidades])
 
@@ -264,9 +269,9 @@ export default function OportunidadesClient({
   const [extracting, setExtracting] = useState(false)
   const [extractResult, setExtractResult] = useState<{ procesados: number; duplicados: number; errores: number; errorDetails?: string[] } | null>(null)
 
-  // Table filters
-  const [filterEstado, setFilterEstado] = useState('')
-  const [filterTipo, setFilterTipo] = useState('')
+  // Table filters (URL-based)
+  const [filterContacto, setFilterContacto] = useState(filtros.contacto ?? '')
+  const [filterEmpresa, setFilterEmpresa] = useState(filtros.empresa ?? '')
 
   // Modals
   const [viewTarget, setViewTarget] = useState<Oportunidad | null>(null)
@@ -640,18 +645,25 @@ export default function OportunidadesClient({
     return `${d}/${m}/${y.slice(2)}`
   }
 
-  const filtered = oportunidades
-    .filter((o) => {
-      if (filterEstado === '__activas__') return o.estado === 'NUEVA' || o.estado === 'PRIMER_CONTACTO_WS' || o.estado === 'EN_PROCESO' || o.estado === 'PRESUPUESTADA'
-      if (filterEstado) return o.estado === filterEstado
-      return true
-    })
-    .filter((o) => !filterTipo || (o.tipo_op ?? 'OP_NUEVA') === filterTipo)
-    .sort((a, b) => {
-      const da = a.fecha_inicio ?? a.created_at
-      const db = b.fecha_inicio ?? b.created_at
-      return db.localeCompare(da)
-    })
+  const buildUrl = (overrides: Partial<typeof filtros>) => {
+    const merged = { ...filtros, ...overrides }
+    const p = new URLSearchParams()
+    if (merged.estado) p.set('estado', merged.estado)
+    if (merged.tipo) p.set('tipo', merged.tipo)
+    if (merged.contacto) p.set('contacto', merged.contacto)
+    if (merged.empresa) p.set('empresa', merged.empresa)
+    const qs = p.toString()
+    return `/dashboard/oportunidades${qs ? `?${qs}` : ''}`
+  }
+
+  const pushFilter = (key: keyof typeof filtros, value: string) =>
+    router.push(buildUrl({ [key]: value || null }))
+
+  const filtered = oportunidades.sort((a, b) => {
+    const da = a.fecha_inicio ?? a.created_at
+    const db = b.fecha_inicio ?? b.created_at
+    return db.localeCompare(da)
+  })
 
   const actionBtnStyle: React.CSSProperties = {
     background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm,
@@ -813,8 +825,8 @@ export default function OportunidadesClient({
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           <select
-            value={filterTipo}
-            onChange={(e) => setFilterTipo(e.target.value)}
+            value={filtros.tipo ?? ''}
+            onChange={(e) => pushFilter('tipo', e.target.value)}
             style={{ padding: '8px 12px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', backgroundColor: '#fff', fontFamily: 'inherit', color: theme.colors.text }}
           >
             <option value="">Todos los tipos</option>
@@ -823,8 +835,8 @@ export default function OportunidadesClient({
             <option value="CROSS_SELLING">Cross Selling</option>
           </select>
           <select
-            value={filterEstado}
-            onChange={(e) => setFilterEstado(e.target.value)}
+            value={filtros.estado ?? ''}
+            onChange={(e) => pushFilter('estado', e.target.value)}
             style={{ padding: '8px 12px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', backgroundColor: '#fff', fontFamily: 'inherit', color: theme.colors.text }}
           >
             <option value="">Todos los estados</option>
@@ -832,6 +844,24 @@ export default function OportunidadesClient({
             <option disabled style={{ color: theme.colors.textMuted }}>──────────</option>
             <option value="__activas__">Solo activas (Nueva + En proceso + Presupuestada)</option>
           </select>
+          <input
+            type="text"
+            value={filterContacto}
+            onChange={(e) => setFilterContacto(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && pushFilter('contacto', filterContacto)}
+            onBlur={() => { if (filterContacto !== (filtros.contacto ?? '')) pushFilter('contacto', filterContacto) }}
+            placeholder="Contacto..."
+            style={{ padding: '8px 12px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', backgroundColor: '#fff', fontFamily: 'inherit', color: theme.colors.text, width: '150px' }}
+          />
+          <input
+            type="text"
+            value={filterEmpresa}
+            onChange={(e) => setFilterEmpresa(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && pushFilter('empresa', filterEmpresa)}
+            onBlur={() => { if (filterEmpresa !== (filtros.empresa ?? '')) pushFilter('empresa', filterEmpresa) }}
+            placeholder="Empresa..."
+            style={{ padding: '8px 12px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', backgroundColor: '#fff', fontFamily: 'inherit', color: theme.colors.text, width: '150px' }}
+          />
           <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
             {filtered.length} oportunidad{filtered.length !== 1 ? 'es' : ''}
           </p>
@@ -1135,13 +1165,11 @@ export default function OportunidadesClient({
                 <div>
                   <label style={{ ...labelStyle, fontSize: theme.fontSizes.sm }}>Cliente <span style={{ color: theme.colors.error }}>*</span></label>
                   <div style={{ display: 'flex', gap: '6px' }}>
-                    <select
-                      {...servicioForm.register('cliente_id', { valueAsNumber: true })}
-                      style={{ ...inputStyle, flex: 1, fontSize: theme.fontSizes.base }}
-                    >
-                      <option value={0}>Seleccioná un cliente...</option>
-                      {localClientes.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-                    </select>
+                    <ClienteFormCombobox
+                      clientes={localClientes}
+                      value={servicioForm.watch('cliente_id') || 0}
+                      onChange={(id) => servicioForm.setValue('cliente_id', id, { shouldValidate: true })}
+                    />
                     <button type="button" onClick={() => { setQcInitialData(buildQcInitialData(genServicioTarget)); setShowQCCliente(true) }}
                       style={{ padding: '9px 10px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, background: '#fff', cursor: 'pointer', color: theme.colors.primary, display: 'flex', alignItems: 'center' }}>
                       +
@@ -1196,13 +1224,11 @@ export default function OportunidadesClient({
                 <div>
                   <label style={{ ...labelStyle, fontSize: theme.fontSizes.sm }}>Cliente <span style={{ color: theme.colors.error }}>*</span></label>
                   <div style={{ display: 'flex', gap: '6px' }}>
-                    <select
-                      {...presupuestoForm.register('cliente_id', { valueAsNumber: true })}
-                      style={{ ...inputStyle, flex: 1, fontSize: theme.fontSizes.base }}
-                    >
-                      <option value={0}>Seleccioná un cliente...</option>
-                      {localClientes.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-                    </select>
+                    <ClienteFormCombobox
+                      clientes={localClientes}
+                      value={presupuestoForm.watch('cliente_id') || 0}
+                      onChange={(id) => presupuestoForm.setValue('cliente_id', id, { shouldValidate: true })}
+                    />
                     <button type="button" onClick={() => { setQcInitialData(buildQcInitialData(genPresupuestoTarget)); setShowQCCliente(true) }}
                       style={{ padding: '9px 10px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, background: '#fff', cursor: 'pointer', color: theme.colors.primary, display: 'flex', alignItems: 'center' }}>
                       +

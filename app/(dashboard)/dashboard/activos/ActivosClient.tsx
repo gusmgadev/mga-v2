@@ -9,6 +9,7 @@ import { Plus, Pencil, Trash2, X, Loader2, AlertCircle, Save } from 'lucide-reac
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 import QuickCreateClienteModal from '@/components/dashboard/QuickCreateClienteModal'
+import { ClienteFormCombobox, ClienteFilterCombobox } from '@/components/dashboard/ClienteCombobox'
 
 type Activo = {
   id: number
@@ -124,15 +125,11 @@ function ActivoFormFields({
         <div style={{ gridColumn: '1 / -1' }}>
           <label style={labelStyle}>Cliente <span style={{ color: theme.colors.error }}>*</span></label>
           <div style={{ display: 'flex', gap: '6px' }}>
-            <select
-              {...form.register('cliente_id', { valueAsNumber: true })}
-              style={{ ...inputStyle, flex: 1, backgroundColor: '#fff' }}
-            >
-              <option value={0}>Seleccioná un cliente...</option>
-              {clientes.map((c) => (
-                <option key={c.id} value={c.id}>{c.nombre}</option>
-              ))}
-            </select>
+            <ClienteFormCombobox
+              clientes={clientes}
+              value={form.watch('cliente_id') || 0}
+              onChange={(id) => form.setValue('cliente_id', id, { shouldValidate: true })}
+            />
             <button type="button" title="Crear nuevo cliente" onClick={() => setShowQCCliente(true)} style={quickAddBtnStyle}>
               <Plus size={14} />
             </button>
@@ -297,16 +294,11 @@ export default function ActivosClient({
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '16px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <select
-            defaultValue={clienteIdFilter ?? ''}
-            onChange={(e) => handleFilterChange(e.target.value)}
-            style={{ padding: '8px 14px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', backgroundColor: '#fff', fontFamily: 'inherit', color: theme.colors.text }}
-          >
-            <option value="">Todos los clientes</option>
-            {clientes.map((c) => (
-              <option key={c.id} value={c.id}>{c.nombre}</option>
-            ))}
-          </select>
+          <ClienteFilterCombobox
+            clientes={clientes}
+            value={clienteIdFilter ?? ''}
+            onChange={handleFilterChange}
+          />
           <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
             {activos.length} activo{activos.length !== 1 ? 's' : ''}
           </p>

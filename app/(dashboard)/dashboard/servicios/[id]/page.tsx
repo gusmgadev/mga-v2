@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth'
 import { redirect, notFound } from 'next/navigation'
 import { supabaseAdmin } from '@/services/supabase-admin'
 import { getModulePermisos } from '@/lib/permisos'
+import { fetchAllClientes, fetchAllActivos } from '@/lib/fetchAllClientes'
 import ServicioDetalleClient from './ServicioDetalleClient'
 
 export default async function ServicioDetallePage({
@@ -25,10 +26,10 @@ export default async function ServicioDetallePage({
 
   if (error || !servicio) notFound()
 
-  const [{ data: clientes }, { data: activos }, { data: pagosServicio }, { data: pagosACuenta }] =
+  const [clientes, activos, { data: pagosServicio }, { data: pagosACuenta }] =
     await Promise.all([
-      supabaseAdmin.from('clientes').select('id, nombre').eq('activo', true).order('nombre'),
-      supabaseAdmin.from('activos').select('id, nombre, cliente_id').eq('activo', true).order('nombre'),
+      fetchAllClientes(),
+      fetchAllActivos(),
       supabaseAdmin
         .from('cobranzas')
         .select('*')
@@ -49,8 +50,8 @@ export default async function ServicioDetallePage({
       initialServicio={servicio}
       initialPagos={pagosServicio ?? []}
       pagosACuenta={pagosACuenta ?? []}
-      clientes={clientes ?? []}
-      activos={activos ?? []}
+      clientes={clientes}
+      activos={activos}
       permisos={permisos}
     />
   )

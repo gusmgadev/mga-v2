@@ -11,6 +11,7 @@ import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 import QuickCreateClienteModal from '@/components/dashboard/QuickCreateClienteModal'
 import QuickCreateActivoModal from '@/components/dashboard/QuickCreateActivoModal'
+import { ClienteFormCombobox, ClienteFilterCombobox } from '@/components/dashboard/ClienteCombobox'
 
 type PresupuestoEstado = 'BORRADOR' | 'ENVIADO' | 'APROBADO' | 'RECHAZADO' | 'VENCIDO'
 type ItemSimple = { id: number; cantidad: number; precio_unitario: number }
@@ -167,15 +168,11 @@ function PresupuestoFormFields({
         <div style={{ gridColumn: '1 / -1' }}>
           <label style={labelStyle}>Cliente <span style={{ color: theme.colors.error }}>*</span></label>
           <div style={{ display: 'flex', gap: '6px' }}>
-            <select
-              {...form.register('cliente_id', { valueAsNumber: true })}
-              style={{ ...inputStyle, flex: 1, backgroundColor: '#fff' }}
-            >
-              <option value={0}>Seleccioná un cliente...</option>
-              {clientes.map((c) => (
-                <option key={c.id} value={c.id}>{c.nombre}</option>
-              ))}
-            </select>
+            <ClienteFormCombobox
+              clientes={clientes}
+              value={clienteId || 0}
+              onChange={(id) => form.setValue('cliente_id', id, { shouldValidate: true })}
+            />
             <button type="button" title="Crear nuevo cliente" onClick={() => setShowQCCliente(true)} style={quickAddBtnStyle}>
               <Plus size={14} />
             </button>
@@ -382,16 +379,11 @@ export default function PresupuestosClient({
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '16px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <select
-            defaultValue={filtros.cliente_id ?? ''}
-            onChange={(e) => filterSelect('cliente_id', e.target.value)}
-            style={{ padding: '8px 14px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', backgroundColor: '#fff', fontFamily: 'inherit', color: theme.colors.text }}
-          >
-            <option value="">Todos los clientes</option>
-            {clientes.map((c) => (
-              <option key={c.id} value={c.id}>{c.nombre}</option>
-            ))}
-          </select>
+          <ClienteFilterCombobox
+            clientes={clientes}
+            value={filtros.cliente_id ?? ''}
+            onChange={(val) => filterSelect('cliente_id', val)}
+          />
 
           <select
             defaultValue={filtros.estado ?? ''}

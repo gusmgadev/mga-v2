@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth'
 import { redirect, notFound } from 'next/navigation'
 import { supabaseAdmin } from '@/services/supabase-admin'
 import { getModulePermisos } from '@/lib/permisos'
+import { fetchAllActivos } from '@/lib/fetchAllClientes'
 import PresupuestoDetalleClient from './PresupuestoDetalleClient'
 
 export default async function PresupuestoDetallePage({
@@ -27,11 +28,7 @@ export default async function PresupuestoDetallePage({
 
   if (error || !presupuesto) notFound()
 
-  const { data: activos } = await supabaseAdmin
-    .from('activos')
-    .select('id, nombre, cliente_id')
-    .eq('activo', true)
-    .order('nombre')
+  const activos = await fetchAllActivos()
 
   const { data: servicioAsociado } = await supabaseAdmin
     .from('servicios')
@@ -42,7 +39,7 @@ export default async function PresupuestoDetallePage({
   return (
     <PresupuestoDetalleClient
       initialPresupuesto={presupuesto}
-      activos={activos ?? []}
+      activos={activos}
       permisos={permisos}
       serviciosPermisos={serviciosPermisos}
       servicioAsociado={servicioAsociado ?? null}

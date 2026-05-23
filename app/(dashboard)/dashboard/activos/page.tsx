@@ -2,6 +2,7 @@ import { auth } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { supabaseAdmin } from '@/services/supabase-admin'
 import { getModulePermisos } from '@/lib/permisos'
+import { fetchAllClientes } from '@/lib/fetchAllClientes'
 import ActivosClient from './ActivosClient'
 
 export default async function ActivosPage({
@@ -17,11 +18,7 @@ export default async function ActivosPage({
 
   const { cliente_id } = await searchParams
 
-  const { data: clientes } = await supabaseAdmin
-    .from('clientes')
-    .select('id, nombre')
-    .eq('activo', true)
-    .order('nombre')
+  const clientes = await fetchAllClientes()
 
   let query = supabaseAdmin.from('activos').select('*').order('nombre')
   if (cliente_id) query = query.eq('cliente_id', Number(cliente_id))
@@ -30,7 +27,7 @@ export default async function ActivosPage({
   return (
     <ActivosClient
       initialActivos={activos ?? []}
-      clientes={clientes ?? []}
+      clientes={clientes}
       clienteIdFilter={cliente_id ? Number(cliente_id) : null}
       permisos={permisos}
     />
