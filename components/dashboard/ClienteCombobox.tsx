@@ -29,7 +29,7 @@ function DropdownItem({
         ...itemBase,
         color: isSelected ? theme.colors.primary : theme.colors.text,
         backgroundColor: isSelected ? `${theme.colors.primary}12` : 'transparent',
-        fontWeight: isSelected ? theme.fontWeights.medium : theme.fontWeights.normal,
+        fontWeight: isSelected ? theme.fontWeights.medium : theme.fontWeights.regular,
       }}
       onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${theme.colors.primary}12`)}
       onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = isSelected ? `${theme.colors.primary}12` : 'transparent')}
