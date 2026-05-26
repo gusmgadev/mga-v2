@@ -528,7 +528,7 @@ export default function CobranzasClient({
               <th style={thStyle}>Método</th>
               <th style={{ ...thStyle, textAlign: 'right' }}>Monto</th>
               <th style={thStyle}>Servicio</th>
-              {permisos.can_delete && <th style={{ ...thStyle, textAlign: 'right' }}>Acción</th>}
+              <th style={{ ...thStyle, textAlign: 'right' }}>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -570,16 +570,13 @@ export default function CobranzasClient({
                       c.servicios?.titulo ?? '—'
                     )}
                   </td>
-                  {permisos.can_delete && (
-                    <td style={{ ...tdStyle, textAlign: 'right' }}>
-                      <button
-                        onClick={() => setDeleteTarget(c)}
-                        style={{ background: 'none', border: `1px solid ${theme.colors.error}44`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.error, padding: '5px 8px', display: 'flex', alignItems: 'center' }}
-                      >
-                        <Trash2 size={13} />
+                  <td style={{ ...tdStyle, textAlign: 'right' }}>
+                    {permisos.can_delete && (
+                      <button onClick={() => setDeleteTarget(c)} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', background: 'none', border: `1px solid ${theme.colors.error}44`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.error, fontSize: '11px', whiteSpace: 'nowrap' }}>
+                        <Trash2 size={12} /> Eliminar
                       </button>
-                    </td>
-                  )}
+                    )}
+                  </td>
                 </tr>
               )
             })}

@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
+import { useState } from 'react'
 import { signOut } from 'next-auth/react'
 import {
   LayoutDashboard,
@@ -20,6 +21,7 @@ import {
   Lock,
   FileSpreadsheet,
   LogOut,
+  ChevronDown,
   type LucideIcon,
 } from 'lucide-react'
 import { theme } from '@/lib/theme'
@@ -88,6 +90,20 @@ export default function Sidebar({ userName, userRole }: SidebarProps) {
     .filter((g) => !g.adminOnly || isAdmin)
     .filter((g) => g.items.length > 0)
 
+  const initialCollapsed = Object.fromEntries(
+    visibleGroups
+      .filter((g) => g.label !== null)
+      .map((g) => [
+        g.label!,
+        // Collapsed by default unless the active route is inside this group
+        !g.items.some((item) => pathname === item.href),
+      ])
+  )
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(initialCollapsed)
+
+  const toggle = (label: string) =>
+    setCollapsed((prev) => ({ ...prev, [label]: !prev[label] }))
+
   return (
     <aside
       style={{
@@ -117,51 +133,85 @@ export default function Sidebar({ userName, userRole }: SidebarProps) {
 
       {/* Nav */}
       <nav style={{ flex: 1, padding: '16px 0' }}>
-        {visibleGroups.map((group, gi) => (
-          <div key={group.label ?? '__home'} style={{ marginTop: gi === 0 ? 0 : 8 }}>
-            {group.label && (
-              <p
-                style={{
-                  fontSize: theme.fontSizes.xs,
-                  color: 'rgba(255,255,255,0.35)',
-                  fontWeight: theme.fontWeights.medium,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                  padding: '4px 20px 4px',
-                  margin: 0,
-                }}
-              >
-                {group.label}
-              </p>
-            )}
-            {group.items.map(({ label, href, Icon }) => {
-              const active = pathname === href
-              return (
-                <Link
-                  key={href}
-                  href={href}
+        {visibleGroups.map((group, gi) => {
+          const isCollapsed = group.label ? (collapsed[group.label] ?? false) : false
+          return (
+            <div key={group.label ?? '__home'} style={{ marginTop: gi === 0 ? 0 : 4 }}>
+              {group.label && (
+                <button
+                  onClick={() => toggle(group.label!)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '10px',
-                    padding: '10px 20px',
-                    margin: '2px 8px',
+                    justifyContent: 'space-between',
+                    width: 'calc(100% - 16px)',
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.18)',
                     borderRadius: theme.radii.sm,
-                    textDecoration: 'none',
-                    fontSize: theme.fontSizes.sm,
-                    fontWeight: active ? theme.fontWeights.medium : theme.fontWeights.regular,
-                    color: active ? '#ffffff' : 'rgba(255,255,255,0.55)',
-                    backgroundColor: active ? 'rgba(255,255,255,0.12)' : 'transparent',
-                    transition: theme.transitions.fast,
+                    cursor: 'pointer',
+                    padding: '7px 12px',
+                    margin: '0 8px',
                   }}
                 >
-                  <Icon size={16} />
-                  {label}
-                </Link>
-              )
-            })}
-          </div>
-        ))}
+                  <span
+                    style={{
+                      fontSize: theme.fontSizes.xs,
+                      color: '#ffffff',
+                      fontWeight: theme.fontWeights.medium,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em',
+                    }}
+                  >
+                    {group.label}
+                  </span>
+                  <ChevronDown
+                    size={13}
+                    style={{
+                      color: 'rgba(255,255,255,0.70)',
+                      transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.2s ease',
+                      flexShrink: 0,
+                    }}
+                  />
+                </button>
+              )}
+              <div
+                style={{
+                  overflow: 'hidden',
+                  maxHeight: isCollapsed ? '0px' : '600px',
+                  transition: 'max-height 0.22s ease',
+                }}
+              >
+                {group.items.map(({ label, href, Icon }) => {
+                  const active = pathname === href
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        padding: '10px 20px',
+                        margin: '2px 8px',
+                        borderRadius: theme.radii.sm,
+                        textDecoration: 'none',
+                        fontSize: theme.fontSizes.sm,
+                        fontWeight: active ? theme.fontWeights.medium : theme.fontWeights.regular,
+                        color: '#ffffff',
+                        backgroundColor: active ? 'rgba(255,255,255,0.12)' : 'transparent',
+                        transition: theme.transitions.fast,
+                      }}
+                    >
+                      <Icon size={16} />
+                      {label}
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })}
       </nav>
 
       {/* User + logout */}

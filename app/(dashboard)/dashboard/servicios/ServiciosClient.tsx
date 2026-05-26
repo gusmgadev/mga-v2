@@ -627,36 +627,23 @@ export default function ServiciosClient({
                   ${saldo.toLocaleString('es-AR')}
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right' }}>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                    <Link
-                      href={`/dashboard/servicios/${s.id}`}
-                      style={{ background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, padding: '5px 8px', display: 'flex', alignItems: 'center', textDecoration: 'none' }}
-                    >
-                      <Eye size={13} />
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', flexWrap: 'nowrap' }}>
+                    <Link href={`/dashboard/servicios/${s.id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, fontSize: '11px', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                      <Eye size={12} /> Ver
                     </Link>
                     {permisos.can_edit && (
-                      <button
-                        onClick={() => openEdit(s)}
-                        style={{ background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, padding: '5px 8px', display: 'flex', alignItems: 'center' }}
-                      >
-                        <Pencil size={13} />
+                      <button onClick={() => openEdit(s)} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, fontSize: '11px', whiteSpace: 'nowrap' }}>
+                        <Pencil size={12} /> Editar
                       </button>
                     )}
                     {permisos.can_create && (
-                      <button
-                        onClick={() => openPago(s)}
-                        title="Cargar pago"
-                        style={{ background: 'none', border: `1px solid ${theme.colors.success}55`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.success, padding: '5px 8px', display: 'flex', alignItems: 'center' }}
-                      >
-                        <DollarSign size={13} />
+                      <button onClick={() => openPago(s)} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', background: 'none', border: `1px solid ${theme.colors.success}55`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.success, fontSize: '11px', whiteSpace: 'nowrap' }}>
+                        <DollarSign size={12} /> Pago
                       </button>
                     )}
                     {permisos.can_delete && (
-                      <button
-                        onClick={() => setDeleteTarget(s)}
-                        style={{ background: 'none', border: `1px solid ${theme.colors.error}44`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.error, padding: '5px 8px', display: 'flex', alignItems: 'center' }}
-                      >
-                        <Trash2 size={13} />
+                      <button onClick={() => setDeleteTarget(s)} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', background: 'none', border: `1px solid ${theme.colors.error}44`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.error, fontSize: '11px', whiteSpace: 'nowrap' }}>
+                        <Trash2 size={12} /> Eliminar
                       </button>
                     )}
                   </div>

@@ -451,19 +451,13 @@ export default function PresupuestosClient({
                   <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{formatVencimiento(p.fecha_vencimiento)}</td>
                   <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{formatVencimiento(p.fecha)}</td>
                   <td style={{ ...tdStyle, textAlign: 'right' }}>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                      <Link
-                        href={`/dashboard/presupuestos/${p.id}`}
-                        style={{ background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, padding: '5px 8px', display: 'flex', alignItems: 'center', textDecoration: 'none' }}
-                      >
-                        <Eye size={13} />
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', flexWrap: 'nowrap' }}>
+                      <Link href={`/dashboard/presupuestos/${p.id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, fontSize: '11px', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                        <Eye size={12} /> Ver / Editar
                       </Link>
                       {permisos.can_delete && (
-                        <button
-                          onClick={() => setDeleteTarget(p)}
-                          style={{ background: 'none', border: `1px solid ${theme.colors.error}44`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.error, padding: '5px 8px', display: 'flex', alignItems: 'center' }}
-                        >
-                          <Trash2 size={13} />
+                        <button onClick={() => setDeleteTarget(p)} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', background: 'none', border: `1px solid ${theme.colors.error}44`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.error, fontSize: '11px', whiteSpace: 'nowrap' }}>
+                          <Trash2 size={12} /> Eliminar
                         </button>
                       )}
                     </div>

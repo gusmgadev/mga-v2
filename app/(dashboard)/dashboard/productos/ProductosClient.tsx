@@ -365,25 +365,14 @@ export default function ProductosClient({ initialProductos, permisos, initialMar
                     </span>
                   </td>
                   <td style={{ ...tdStyle, textAlign: 'right' }}>
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', flexWrap: 'nowrap' }}>
                       {permisos.can_edit && (
-                        <button
-                          onClick={() => openEdit(p)}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.textMuted, padding: '4px' }}
-                        >
-                          <Pencil size={15} />
+                        <button onClick={() => openEdit(p)} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, fontSize: '11px', whiteSpace: 'nowrap' }}>
+                          <Pencil size={12} /> Editar
                         </button>
                       )}
                       {permisos.can_edit && (
-                        <button
-                          onClick={() => toggleActivo(p)}
-                          style={{
-                            background: 'none', border: `1px solid ${theme.colors.border}`,
-                            cursor: 'pointer', color: theme.colors.textMuted,
-                            padding: '2px 8px', borderRadius: theme.radii.sm,
-                            fontSize: theme.fontSizes.xs,
-                          }}
-                        >
+                        <button onClick={() => toggleActivo(p)} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, fontSize: '11px', whiteSpace: 'nowrap' }}>
                           {p.activo ? 'Desactivar' : 'Activar'}
                         </button>
                       )}

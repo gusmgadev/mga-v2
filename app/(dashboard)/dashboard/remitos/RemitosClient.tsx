@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, ClipboardList, Loader2 } from 'lucide-react'
+import Link from 'next/link'
+import { Plus, ClipboardList, Loader2, Eye } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import type { Remito } from '@/types/stock'
 import type { ModulePermisos } from '@/lib/permisos'
@@ -188,14 +189,14 @@ export default function RemitosClient({ initialRemitos, filtros, permisos }: Pro
                 <th style={thStyle}>Origen / Destino</th>
                 <th style={thStyle}>Estado</th>
                 <th style={{ ...thStyle, textAlign: 'right' }}>Ítems</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {remitosFiltrados.map((r) => (
                 <tr
                   key={r.id}
-                  onClick={() => router.push(`/dashboard/remitos/${r.id}`)}
-                  style={{ cursor: 'pointer', transition: 'background 0.1s' }}
+                  style={{ transition: 'background 0.1s' }}
                   onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f9fafb')}
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '')}
                 >
@@ -210,6 +211,14 @@ export default function RemitosClient({ initialRemitos, filtros, permisos }: Pro
                   <td style={tdStyle}><EstadoBadge estado={r.estado} /></td>
                   <td style={{ ...tdStyle, textAlign: 'right', color: theme.colors.textMuted }}>
                     {r.remito_items?.length ?? 0}
+                  </td>
+                  <td style={{ ...tdStyle, textAlign: 'right' }}>
+                    <Link
+                      href={`/dashboard/remitos/${r.id}`}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, fontSize: '11px', textDecoration: 'none', whiteSpace: 'nowrap' }}
+                    >
+                      <Eye size={12} /> Ver detalle
+                    </Link>
                   </td>
                 </tr>
               ))}

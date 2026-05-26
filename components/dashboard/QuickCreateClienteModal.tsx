@@ -10,6 +10,7 @@ import { theme } from '@/lib/theme'
 interface InitialData {
   nombre?: string
   tipo?: 'PARTICULAR' | 'EMPRESA' | 'COMERCIO'
+  contacto?: string
   email?: string
   telefono?: string
   localidad?: string
@@ -25,6 +26,7 @@ interface Props {
 const clienteSchema = z.object({
   nombre: z.string().min(2, 'Mínimo 2 caracteres'),
   tipo: z.enum(['PARTICULAR', 'EMPRESA', 'COMERCIO']),
+  contacto: z.string().optional(),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
   telefono: z.string().optional(),
   direccion: z.string().optional(),
@@ -57,6 +59,7 @@ export default function QuickCreateClienteModal({ onClose, onCreated, initialDat
       activo: true,
       mostrar_en_landing: false,
       nombre: initialData?.nombre ?? '',
+      contacto: initialData?.contacto ?? '',
       email: initialData?.email ?? '',
       telefono: initialData?.telefono ?? '',
       direccion: initialData?.direccion ?? '',
@@ -112,6 +115,11 @@ export default function QuickCreateClienteModal({ onClose, onCreated, initialDat
               <label style={labelStyle}>Nombre <span style={{ color: theme.colors.error }}>*</span></label>
               <input {...form.register('nombre')} autoFocus style={inputStyle} placeholder="Nombre completo o razón social" />
               {form.formState.errors.nombre && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{form.formState.errors.nombre.message}</p>}
+            </div>
+
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={labelStyle}>Contacto</label>
+              <input {...form.register('contacto')} style={inputStyle} placeholder="Nombre del contacto en la empresa" />
             </div>
 
             <div>

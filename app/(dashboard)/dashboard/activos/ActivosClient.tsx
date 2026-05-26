@@ -324,7 +324,7 @@ export default function ActivosClient({
               <th style={thStyle}>Tipo</th>
               <th style={thStyle}>N° Serie</th>
               <th style={thStyle}>Estado</th>
-              {(permisos.can_edit || permisos.can_delete) && <th style={{ ...thStyle, textAlign: 'right' }}>Acciones</th>}
+              <th style={{ ...thStyle, textAlign: 'right' }}>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -355,22 +355,20 @@ export default function ActivosClient({
                     {a.activo ? 'Activo' : 'De baja'}
                   </span>
                 </td>
-                {(permisos.can_edit || permisos.can_delete) && (
-                  <td style={{ ...tdStyle, textAlign: 'right' }}>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                      {permisos.can_edit && (
-                        <button onClick={() => openEdit(a)} style={{ background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, padding: '5px 8px', display: 'flex', alignItems: 'center' }}>
-                          <Pencil size={13} />
-                        </button>
-                      )}
-                      {permisos.can_delete && (
-                        <button onClick={() => setDeleteTarget(a)} style={{ background: 'none', border: `1px solid ${theme.colors.error}44`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.error, padding: '5px 8px', display: 'flex', alignItems: 'center' }}>
-                          <Trash2 size={13} />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                )}
+                <td style={{ ...tdStyle, textAlign: 'right' }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', flexWrap: 'nowrap' }}>
+                    {permisos.can_edit && (
+                      <button onClick={() => openEdit(a)} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, fontSize: '11px', whiteSpace: 'nowrap' }}>
+                        <Pencil size={12} /> Editar
+                      </button>
+                    )}
+                    {permisos.can_delete && (
+                      <button onClick={() => setDeleteTarget(a)} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', background: 'none', border: `1px solid ${theme.colors.error}44`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.error, fontSize: '11px', whiteSpace: 'nowrap' }}>
+                        <Trash2 size={12} /> Eliminar
+                      </button>
+                    )}
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>

@@ -546,18 +546,18 @@ export default function ClientesClient({
                   ) : <span style={{ color: theme.colors.textMuted }}>—</span>}
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right' }}>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                    <Link href={`/dashboard/activos?cliente_id=${c.id}`} style={{ background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, padding: '5px 8px', display: 'flex', alignItems: 'center', textDecoration: 'none' }} title="Ver activos">
-                      <HardDrive size={13} />
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', flexWrap: 'nowrap' }}>
+                    <Link href={`/dashboard/activos?cliente_id=${c.id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, fontSize: '11px', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                      <HardDrive size={12} /> Activos
                     </Link>
                     {permisos.can_edit && (
-                      <button onClick={() => openEdit(c)} style={{ background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, padding: '5px 8px', display: 'flex', alignItems: 'center' }}>
-                        <Pencil size={13} />
+                      <button onClick={() => openEdit(c)} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, fontSize: '11px', whiteSpace: 'nowrap' }}>
+                        <Pencil size={12} /> Editar
                       </button>
                     )}
                     {permisos.can_delete && (
-                      <button onClick={() => setDeleteTarget(c)} style={{ background: 'none', border: `1px solid ${theme.colors.error}44`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.error, padding: '5px 8px', display: 'flex', alignItems: 'center' }}>
-                        <Trash2 size={13} />
+                      <button onClick={() => setDeleteTarget(c)} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', background: 'none', border: `1px solid ${theme.colors.error}44`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.error, fontSize: '11px', whiteSpace: 'nowrap' }}>
+                        <Trash2 size={12} /> Eliminar
                       </button>
                     )}
                   </div>

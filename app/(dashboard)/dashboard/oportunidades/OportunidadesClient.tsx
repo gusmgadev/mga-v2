@@ -302,7 +302,8 @@ export default function OportunidadesClient({
     setIteracionError(null)
     setIteracionFecha(new Date().toISOString().split('T')[0])
     setIteracionTipo('telefono')
-    setIteracionContacto('')
+    const nombreContacto = [op.primer_nombre, op.apellido].filter(Boolean).join(' ') || op.empresa || ''
+    setIteracionContacto(nombreContacto)
     setIteracionDetalle('')
     setLoadingIteraciones(true)
     const res = await fetch(`/api/dashboard/oportunidades/${op.id}/iteraciones`)
@@ -367,7 +368,7 @@ export default function OportunidadesClient({
   const [genServicioTarget, setGenServicioTarget] = useState<Oportunidad | null>(null)
   const [genPresupuestoTarget, setGenPresupuestoTarget] = useState<Oportunidad | null>(null)
   const [showQCCliente, setShowQCCliente] = useState(false)
-  const [qcInitialData, setQcInitialData] = useState<{ nombre?: string; tipo?: 'PARTICULAR' | 'EMPRESA' | 'COMERCIO'; email?: string; telefono?: string; localidad?: string; direccion?: string } | undefined>(undefined)
+  const [qcInitialData, setQcInitialData] = useState<{ nombre?: string; tipo?: 'PARTICULAR' | 'EMPRESA' | 'COMERCIO'; contacto?: string; email?: string; telefono?: string; localidad?: string; direccion?: string } | undefined>(undefined)
   const [genLoading, setGenLoading] = useState(false)
   const [genError, setGenError] = useState<string | null>(null)
 
@@ -392,14 +393,18 @@ export default function OportunidadesClient({
     return parts.join(' | ')
   }
 
-  const buildQcInitialData = (op: Oportunidad) => ({
-    nombre: op.empresa || [op.primer_nombre, op.apellido].filter(Boolean).join(' ') || '',
-    tipo: 'COMERCIO' as const,
-    email: op.email_contacto || '',
-    telefono: op.telefono || '',
-    localidad: op.provincia_ciudad || '',
-    direccion: op.provincia_ciudad || '',
-  })
+  const buildQcInitialData = (op: Oportunidad) => {
+    const nombreContacto = [op.primer_nombre, op.apellido].filter(Boolean).join(' ')
+    return {
+      nombre: op.empresa || nombreContacto || '',
+      tipo: 'COMERCIO' as const,
+      contacto: nombreContacto || '',
+      email: op.email_contacto || '',
+      telefono: op.telefono || '',
+      localidad: op.provincia_ciudad || '',
+      direccion: op.provincia_ciudad || '',
+    }
+  }
 
   const openGenServicio = (op: Oportunidad) => {
     const nombre = [op.primer_nombre, op.apellido].filter(Boolean).join(' ') || op.empresa || ''
@@ -906,7 +911,11 @@ export default function OportunidadesClient({
                       <p style={{ margin: 0, fontWeight: theme.fontWeights.medium }}>{nombre}</p>
                       {op.empresa && <p style={{ margin: 0, fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>{op.empresa}</p>}
                     </td>
-                    <td style={{ ...tdStyle, color: theme.colors.textMuted, whiteSpace: 'nowrap', width: '10ch' }}>{op.telefono ?? '—'}</td>
+                    <td style={{ ...tdStyle, color: theme.colors.textMuted, whiteSpace: 'nowrap', width: '30ch', maxWidth: '30ch' }}>
+                      <span style={{ display: 'block', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {op.telefono ?? '—'}
+                      </span>
+                    </td>
                     <td style={{ ...tdStyle, color: theme.colors.textMuted, fontSize: theme.fontSizes.xs }}>{op.zona_gestion ?? '—'}</td>
                     <td style={tdStyle}>
                       {(() => {
@@ -963,6 +972,51 @@ export default function OportunidadesClient({
         <ModalOverlay>
           <ModalCard title={`Oportunidad #${viewTarget.nro_oportunidad ?? viewTarget.id}`} onClose={() => setViewTarget(null)}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+              {/* Barra de acciones */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', paddingBottom: '4px', borderBottom: `1px solid ${theme.colors.border}` }}>
+                <button
+                  onClick={() => { setViewTarget(null); openHistorial(viewTarget) }}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 12px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, background: '#fff', cursor: 'pointer', color: '#7C3AED' }}
+                >
+                  <History size={14} /> Iteración
+                </button>
+                {permisos.can_create && (
+                  <button
+                    onClick={() => { setViewTarget(null); openGenServicio(viewTarget) }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 12px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, background: '#fff', cursor: 'pointer', color: theme.colors.primary }}
+                  >
+                    <Wrench size={14} /> Servicio
+                  </button>
+                )}
+                {permisos.can_create && (
+                  <button
+                    onClick={() => { setViewTarget(null); openGenPresupuesto(viewTarget) }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 12px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, background: '#fff', cursor: 'pointer', color: theme.colors.primary }}
+                  >
+                    <FileText size={14} /> Presupuesto
+                  </button>
+                )}
+                {permisos.can_edit && (
+                  <button
+                    onClick={() => { setViewTarget(null); openEdit(viewTarget) }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 12px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, background: '#fff', cursor: 'pointer', color: theme.colors.text }}
+                  >
+                    <Pencil size={14} /> Editar
+                  </button>
+                )}
+                {viewTarget.telefono && (
+                  <a
+                    href={whatsappUrl(viewTarget.telefono, viewTarget.estado === 'NUEVA')}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => handleWhatsappClick(viewTarget)}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 12px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, background: '#fff', cursor: 'pointer', color: '#15803D', textDecoration: 'none' }}
+                  >
+                    <MessageCircle size={14} /> WhatsApp
+                  </a>
+                )}
+              </div>
 
               {/* Sección OP origen para Seguimiento y Cross Selling */}
               {viewTarget.nro_oportunidad_origen && (viewTarget.tipo_op === 'SEGUIMIENTO' || viewTarget.tipo_op === 'CROSS_SELLING') && (() => {
