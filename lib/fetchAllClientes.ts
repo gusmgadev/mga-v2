@@ -15,7 +15,7 @@ async function fetchAll<T extends Record<string, unknown>>(
     for (const f of filters) q = q.eq(f.column, f.value)
     const { data, error } = await q
     if (error || !data || data.length === 0) break
-    all.push(...(data as T[]))
+    all.push(...(data as unknown as T[]))
     if (data.length < PAGE) break
     from += PAGE
   }
