@@ -381,7 +381,8 @@ export default function ServiciosClient({
   const [pagoLoading, setPagoLoading] = useState(false)
 
   const openPago = (s: Servicio) => {
-    pagoForm.reset({ monto: 0, concepto: 'Pago servicio', metodo_pago: 'TRANSFERENCIA', fecha: new Date().toISOString().split('T')[0], notas: '' })
+    const saldo = Math.max(0, Number(s.valor) - (s.totalPagado ?? 0))
+    pagoForm.reset({ monto: saldo || 0, concepto: 'Pago servicio', metodo_pago: 'TRANSFERENCIA', fecha: new Date().toISOString().split('T')[0], notas: '' })
     setPagoError(null)
     setPagoTarget(s)
   }
@@ -779,6 +780,18 @@ export default function ServiciosClient({
                     #{pagoTarget.id} — {pagoTarget.titulo}
                   </div>
                 </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                  {[
+                    { label: 'Valor', value: Number(pagoTarget.valor), color: theme.colors.text },
+                    { label: 'Pagado', value: pagoTarget.totalPagado ?? 0, color: theme.colors.success },
+                    { label: 'Saldo', value: Math.max(0, Number(pagoTarget.valor) - (pagoTarget.totalPagado ?? 0)), color: '#B45309' },
+                  ].map(({ label, value, color }) => (
+                    <div key={label} style={{ padding: '8px 12px', backgroundColor: '#F8F9FB', borderRadius: theme.radii.sm, border: `1px solid ${theme.colors.border}`, textAlign: 'center' }}>
+                      <div style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, marginBottom: '2px' }}>{label}</div>
+                      <div style={{ fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, color }}>${value.toLocaleString('es-AR')}</div>
+                    </div>
+                  ))}
+                </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div>
                     <label style={labelStyle}>Monto ($) <span style={{ color: theme.colors.error }}>*</span></label>
@@ -788,7 +801,6 @@ export default function ServiciosClient({
                       step="0.01"
                       {...pagoForm.register('monto', { valueAsNumber: true })}
                       style={inputStyle}
-                      placeholder="0.00"
                     />
                     {pagoForm.formState.errors.monto && (
                       <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{pagoForm.formState.errors.monto.message}</p>
