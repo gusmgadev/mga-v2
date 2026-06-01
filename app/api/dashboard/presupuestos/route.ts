@@ -53,9 +53,10 @@ export async function POST(req: Request) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 })
   }
+  const { oportunidad_id, ...insertData } = parsed.data
   const { data, error } = await supabaseAdmin
     .from('presupuestos')
-    .insert(parsed.data)
+    .insert(insertData)
     .select('*, clientes(nombre), activos(nombre), presupuesto_items(id, cantidad, precio_unitario)')
     .single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -65,6 +66,13 @@ export async function POST(req: Request) {
       .from('servicios')
       .update({ estado: 'PRESUPUESTADO', updated_at: new Date().toISOString() })
       .eq('id', parsed.data.servicio_id)
+  }
+
+  if (oportunidad_id) {
+    await supabaseAdmin
+      .from('oportunidades')
+      .update({ presupuesto_id: data.id, updated_at: new Date().toISOString() })
+      .eq('id', oportunidad_id)
   }
 
   return NextResponse.json(data, { status: 201 })
