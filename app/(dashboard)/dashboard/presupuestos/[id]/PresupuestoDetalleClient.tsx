@@ -33,6 +33,8 @@ type Presupuesto = {
   fecha: string
   fecha_vencimiento: string | null
   archivo_url: string | null
+  nro_tarea: number | null
+  oportunidad_id: number | null
   created_at: string
   clientes: { nombre: string } | null
   activos: { nombre: string } | null
@@ -404,6 +406,11 @@ export default function PresupuestoDetalleClient({
                 {formatVencimiento(presupuesto.fecha_vencimiento) && (
                   <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>
                     · Vence: {formatVencimiento(presupuesto.fecha_vencimiento)}
+                  </span>
+                )}
+                {presupuesto.nro_tarea && (
+                  <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>
+                    · Nro Tarea: {presupuesto.nro_tarea}
                   </span>
                 )}
               </div>

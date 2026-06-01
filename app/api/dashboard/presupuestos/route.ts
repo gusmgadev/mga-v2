@@ -11,6 +11,10 @@ const createSchema = z.object({
   estado: z.enum(['BORRADOR', 'ENVIADO', 'APROBADO', 'RECHAZADO', 'VENCIDO']),
   fecha: z.string().min(1, 'La fecha es requerida'),
   fecha_vencimiento: z.string().nullable().optional(),
+  oportunidad_id: z.number().int().positive().nullable().optional(),
+  servicio_id: z.number().int().positive().nullable().optional(),
+  nro_tarea: z.number().int().nullable().optional(),
+  archivo_url: z.string().nullable().optional(),
 })
 
 async function requireSession() {
@@ -55,5 +59,13 @@ export async function POST(req: Request) {
     .select('*, clientes(nombre), activos(nombre), presupuesto_items(id, cantidad, precio_unitario)')
     .single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  if (parsed.data.servicio_id) {
+    await supabaseAdmin
+      .from('servicios')
+      .update({ estado: 'PRESUPUESTADO', updated_at: new Date().toISOString() })
+      .eq('id', parsed.data.servicio_id)
+  }
+
   return NextResponse.json(data, { status: 201 })
 }

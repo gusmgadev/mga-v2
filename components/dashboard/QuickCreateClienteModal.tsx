@@ -91,7 +91,6 @@ export default function QuickCreateClienteModal({ onClose, onCreated, initialDat
 
   return createPortal(
     <div
-      onClick={onClose}
       style={{ position: 'fixed', inset: 0, zIndex: 60, backgroundColor: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}
     >
       <div

@@ -22,6 +22,7 @@ import {
   FileSpreadsheet,
   LogOut,
   ChevronDown,
+  Receipt,
   type LucideIcon,
 } from 'lucide-react'
 import { theme } from '@/lib/theme'
@@ -67,6 +68,7 @@ const navGroups: NavGroup[] = [
     label: 'Fondos',
     items: [
       { label: 'Cobranzas', href: '/dashboard/cobranzas', Icon: Banknote },
+      { label: 'Gastos', href: '/dashboard/gastos', Icon: Receipt },
     ],
   },
   {

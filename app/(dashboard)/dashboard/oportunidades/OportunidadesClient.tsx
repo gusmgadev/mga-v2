@@ -371,6 +371,8 @@ export default function OportunidadesClient({
   const [qcInitialData, setQcInitialData] = useState<{ nombre?: string; tipo?: 'PARTICULAR' | 'EMPRESA' | 'COMERCIO'; contacto?: string; email?: string; telefono?: string; localidad?: string; direccion?: string } | undefined>(undefined)
   const [genLoading, setGenLoading] = useState(false)
   const [genError, setGenError] = useState<string | null>(null)
+  const [presupuestoFile, setPresupuestoFile] = useState<File | null>(null)
+  const [presupuestoFileError, setPresupuestoFileError] = useState<string | null>(null)
 
   const servicioForm = useForm<GenServicioForm>({
     resolver: zodResolver(genServicioSchema),
@@ -430,6 +432,8 @@ export default function OportunidadesClient({
       fecha_vencimiento: '',
     })
     setGenError(null)
+    setPresupuestoFile(null)
+    setPresupuestoFileError(null)
     setGenPresupuestoTarget(op)
     setQcInitialData(buildQcInitialData(op))
     setShowQCCliente(true)
@@ -582,6 +586,18 @@ export default function OportunidadesClient({
     if (!genPresupuestoTarget) return
     setGenLoading(true)
     setGenError(null)
+    setPresupuestoFileError(null)
+
+    let archivo_url: string | null = null
+    if (presupuestoFile) {
+      const fd = new FormData()
+      fd.append('file', presupuestoFile)
+      const uploadRes = await fetch('/api/dashboard/upload/presupuesto-doc', { method: 'POST', body: fd })
+      const uploadJson = await uploadRes.json()
+      if (!uploadRes.ok) { setPresupuestoFileError(uploadJson.error); setGenLoading(false); return }
+      archivo_url = uploadJson.url
+    }
+
     const res = await fetch('/api/dashboard/presupuestos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -590,6 +606,9 @@ export default function OportunidadesClient({
         estado: 'BORRADOR',
         fecha: new Date().toISOString().split('T')[0],
         fecha_vencimiento: data.fecha_vencimiento || null,
+        oportunidad_id: genPresupuestoTarget.id,
+        nro_tarea: genPresupuestoTarget.nro_tarea,
+        archivo_url,
       }),
     })
     const json = await res.json()
@@ -1306,6 +1325,19 @@ export default function OportunidadesClient({
                 <div>
                   <label style={{ ...labelStyle, fontSize: theme.fontSizes.sm }}>Fecha de vencimiento (opcional)</label>
                   <input type="date" {...presupuestoForm.register('fecha_vencimiento')} style={{ ...inputStyle, fontSize: theme.fontSizes.base }} />
+                </div>
+                <div>
+                  <label style={{ ...labelStyle, fontSize: theme.fontSizes.sm }}>Documento (PDF o Word, opcional)</label>
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    onChange={(e) => setPresupuestoFile(e.target.files?.[0] ?? null)}
+                    style={{ ...inputStyle, fontSize: theme.fontSizes.base, padding: '8px' }}
+                  />
+                  {presupuestoFile && (
+                    <p style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, marginTop: '4px' }}>{presupuestoFile.name}</p>
+                  )}
+                  {presupuestoFileError && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{presupuestoFileError}</p>}
                 </div>
                 {genError && <ErrorBox message={genError} />}
                 <button

@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Link from 'next/link'
-import { ArrowLeft, Pencil, X, Loader2, AlertCircle, Plus, Trash2, CheckCircle2, CreditCard, Save } from 'lucide-react'
+import { ArrowLeft, Pencil, X, Loader2, AlertCircle, Plus, Trash2, CheckCircle2, CreditCard, Save, FileText } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 import QuickCreateActivoModal from '@/components/dashboard/QuickCreateActivoModal'
@@ -96,6 +96,13 @@ const editSchema = z.object({
   fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida'),
 })
 type EditForm = z.infer<typeof editSchema>
+
+const genPresSchema = z.object({
+  titulo: z.string().min(2, 'Mínimo 2 caracteres'),
+  descripcion: z.string().optional(),
+  fecha_vencimiento: z.string().nullable().optional(),
+})
+type GenPresForm = z.infer<typeof genPresSchema>
 
 const inputStyle = {
   width: '100%', padding: '10px 14px', fontSize: theme.fontSizes.sm,
@@ -193,6 +200,10 @@ export default function ServicioDetalleClient({
   const [showQCActivo, setShowQCActivo] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
   const [editLoading, setEditLoading] = useState(false)
+  const [showGenPresupuesto, setShowGenPresupuesto] = useState(false)
+  const [genPresLoading, setGenPresLoading] = useState(false)
+  const [genPresError, setGenPresError] = useState<string | null>(null)
+  const [presupuestoGenerado, setPresupuestoGenerado] = useState<{ id: number; titulo: string } | null>(null)
 
   // Tareas state
   const [nuevaTarea, setNuevaTarea] = useState('')
@@ -253,6 +264,45 @@ export default function ServicioDetalleClient({
     })
     setEditError(null)
     setShowEdit(true)
+  }
+
+  const genPresForm = useForm<GenPresForm>({
+    resolver: zodResolver(genPresSchema),
+    defaultValues: { titulo: '', descripcion: '', fecha_vencimiento: null },
+  })
+
+  const openGenPresupuesto = () => {
+    genPresForm.reset({
+      titulo: servicio.titulo,
+      descripcion: servicio.descripcion ?? '',
+      fecha_vencimiento: null,
+    })
+    setGenPresError(null)
+    setShowGenPresupuesto(true)
+  }
+
+  const onGenPresupuestoSubmit = async (data: GenPresForm) => {
+    setGenPresLoading(true)
+    setGenPresError(null)
+    const res = await fetch('/api/dashboard/presupuestos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...data,
+        cliente_id: servicio.cliente_id,
+        activo_id: servicio.activo_id,
+        estado: 'BORRADOR',
+        fecha: new Date().toISOString().split('T')[0],
+        fecha_vencimiento: data.fecha_vencimiento || null,
+        servicio_id: servicio.id,
+      }),
+    })
+    const json = await res.json()
+    setGenPresLoading(false)
+    if (!res.ok) { setGenPresError(json.error); return }
+    setServicio((prev) => ({ ...prev, estado: 'PRESUPUESTADO' as ServicioEstado }))
+    setPresupuestoGenerado({ id: json.id, titulo: json.titulo })
+    setShowGenPresupuesto(false)
   }
 
   const onEditSubmit = async (data: EditForm) => {
@@ -432,15 +482,41 @@ export default function ServicioDetalleClient({
         >
           <ArrowLeft size={15} /> Volver a Servicios
         </Link>
-        {permisos.can_edit && (
-          <button
-            onClick={openEdit}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', backgroundColor: '#fff', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, cursor: 'pointer', color: theme.colors.text }}
-          >
-            <Pencil size={13} /> Editar servicio
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {permisos.can_create && (
+            <button
+              onClick={openGenPresupuesto}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', backgroundColor: '#fff', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, cursor: 'pointer', color: '#7C3AED' }}
+            >
+              <FileText size={13} /> Crear presupuesto
+            </button>
+          )}
+          {permisos.can_edit && (
+            <button
+              onClick={openEdit}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', backgroundColor: '#fff', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, cursor: 'pointer', color: theme.colors.text }}
+            >
+              <Pencil size={13} /> Editar servicio
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Banner de presupuesto generado */}
+      {presupuestoGenerado && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', backgroundColor: '#F3E8FF', border: '1px solid #C4B5FD', borderRadius: theme.radii.sm, marginBottom: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: theme.fontSizes.sm, color: '#5B21B6' }}>
+            <FileText size={15} />
+            <span>Presupuesto generado: <strong>{presupuestoGenerado.titulo}</strong></span>
+          </div>
+          <Link
+            href={`/dashboard/presupuestos/${presupuestoGenerado.id}`}
+            style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 12px', backgroundColor: '#7C3AED', color: '#fff', borderRadius: theme.radii.sm, fontSize: theme.fontSizes.xs, textDecoration: 'none', fontWeight: theme.fontWeights.medium }}
+          >
+            Ver presupuesto
+          </Link>
+        </div>
+      )}
 
       {/* Info card */}
       <div style={cardStyle}>

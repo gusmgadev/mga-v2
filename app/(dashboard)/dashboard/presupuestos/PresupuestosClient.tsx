@@ -25,6 +25,8 @@ type Presupuesto = {
   estado: PresupuestoEstado
   fecha: string
   fecha_vencimiento: string | null
+  nro_tarea: number | null
+  oportunidad_id: number | null
   created_at: string
   clientes: { nombre: string } | null
   activos: { nombre: string } | null
@@ -418,6 +420,7 @@ export default function PresupuestosClient({
               <th style={thStyle}>Cliente</th>
               <th style={thStyle}>Título</th>
               <th style={thStyle}>Activo</th>
+              <th style={thStyle}>Nro Tarea</th>
               <th style={thStyle}>Estado</th>
               <th style={{ ...thStyle, textAlign: 'center' }}>Ítems</th>
               <th style={{ ...thStyle, textAlign: 'right' }}>Total</th>
@@ -429,7 +432,7 @@ export default function PresupuestosClient({
           <tbody>
             {presupuestos.length === 0 && (
               <tr>
-                <td colSpan={9} style={{ ...tdStyle, textAlign: 'center', color: theme.colors.textMuted }}>
+                <td colSpan={10} style={{ ...tdStyle, textAlign: 'center', color: theme.colors.textMuted }}>
                   No hay presupuestos registrados
                 </td>
               </tr>
@@ -441,6 +444,7 @@ export default function PresupuestosClient({
                   <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{p.clientes?.nombre ?? '—'}</td>
                   <td style={{ ...tdStyle, fontWeight: theme.fontWeights.medium }}>{p.titulo}</td>
                   <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{p.activos?.nombre ?? '—'}</td>
+                  <td style={{ ...tdStyle, color: theme.colors.textMuted }}>{p.nro_tarea ?? '—'}</td>
                   <td style={tdStyle}><EstadoBadge estado={p.estado} /></td>
                   <td style={{ ...tdStyle, textAlign: 'center', color: theme.colors.textMuted }}>
                     {p.presupuesto_items.length}
