@@ -1,7 +1,7 @@
 # Módulo Administración — Contexto
 
-> Cubre el grupo **Administración** en el dashboard: Auth, Permisos, Noticias, Usuarios, Roles, Importar.
-> Solo accesible para el rol Administrador.
+> Cubre el grupo **Administración** en el dashboard: Auth, Permisos, Usuarios, Roles, Importar.
+> Solo accesible para el rol Administrador. Para Noticias ver `noticias.md`.
 
 ---
 
@@ -19,19 +19,6 @@ public.users { id (uuid, FK auth.users), email, name, role_id (FK roles) }
 public.role_permissions { id, role_id, module, can_view, can_create, can_edit, can_delete }
 -- UNIQUE(role_id, module)
 -- Módulos actuales: 'clientes', 'activos', 'servicios', 'presupuestos', 'cobranzas', 'productos', 'remitos'
-
--- Noticias (módulo público + dashboard)
-public.noticias {
-  id, titulo, resumen, contenido (html string),
-  imagen_card (nullable, URL Supabase Storage), imagen_portada (nullable, URL),
-  video_url (nullable, URL de YouTube o Vimeo — incrustado en el detalle público),
-  publicada (bool, default false), orden (int, default 0),
-  fecha (date, default CURRENT_DATE),
-  created_at, updated_at
-}
--- Migration: ALTER TABLE noticias ADD COLUMN video_url TEXT;
--- Bucket Supabase Storage: 'noticias-imagenes'
--- Al pasar publicada false→true: dispara auto-post a Instagram si hay imagen_card y env vars configuradas
 ```
 
 ---
@@ -52,10 +39,11 @@ session.user = { id: string, email: string, name: string, role: string, role_id:
 // role es el name del rol: 'Administrador' | 'Usuario'
 ```
 
-**Protección de rutas (proxy.ts):**
+**Protección de rutas (`proxy.ts`):**
 - `/dashboard/*` → requiere sesión activa
 - `/dashboard/admin/*` → requiere `role === 'Administrador'`
 - `/auth/signin`, `/auth/registro` → redirige al dashboard si hay sesión
+- `/superadmin/*` → protegido por cookie `sa_session` (lógica independiente de NextAuth)
 
 ---
 
@@ -84,29 +72,15 @@ if (!permisos.can_view) redirect('/dashboard')
 
 ---
 
-## Módulo Noticias
+## Módulo Usuarios y Roles
 
-**Rich text editor:** TipTap (Bold/Italic/Highlight) en `components/dashboard/RichTextEditor.tsx`.
-- Se carga con `next/dynamic({ ssr: false })` porque TipTap usa APIs del browser
-- El campo `contenido` almacena HTML generado por TipTap
-
-**Video thumbnail preview en admin:** componente `VideoPreview` (definido FUERA de `NoticiasAdminClient` para evitar remounting) en `NoticiasAdminClient.tsx`.
-- YouTube: thumbnail via `https://img.youtube.com/vi/${id}/hqdefault.jpg` (sin API key)
-- Vimeo: thumbnail via oEmbed `https://vimeo.com/api/oembed.json?url=...` (CORS habilitado, gratis)
-- Usa `useEffect` con `AbortController` para cleanup. Se activa con `form.watch('video_url')`
-- `VideoPreview` DEBE definirse fuera del componente padre — si se define adentro, React lo remonta en cada render
-
-**Imágenes en página pública:** tanto cards (`components/landing/noticias.tsx`) como portada de detalle (`app/noticias/[id]/page.tsx`) usan `objectFit: "contain"` (no `cover`) para mostrar la imagen completa sin recorte.
-
-**Layout de detalle público:** fecha + título van ANTES de la imagen portada, para que sean visibles sin scroll. Imagen en contenedor 16:9 con `backgroundColor: "#F0F2F4"`.
-
-**Instagram auto-post:** `services/instagram.ts` → `postNoticiaToInstagram()`
-- Se dispara en `PUT /api/dashboard/noticias/[id]` al pasar `publicada: false → true`
-- Requiere `imagen_card` + variables de entorno configuradas
-- Si las variables no están, se ignora silenciosamente
-
-**Bucket Supabase Storage:** `noticias-imagenes` (debe ser Public)
-**API de upload:** `POST /api/dashboard/upload/imagen` → devuelve `{ url: publicUrl }`
+| Ruta | Método | Descripción |
+|------|--------|-------------|
+| `/api/dashboard/usuarios` | GET + POST | Lista / crear usuario |
+| `/api/dashboard/usuarios/[id]` | GET + PUT + DELETE | Detalle / editar / eliminar |
+| `/api/dashboard/roles` | GET + POST | Lista / crear rol |
+| `/api/dashboard/roles/[id]` | GET + DELETE | Detalle / eliminar |
+| `/api/dashboard/permisos` | GET + PUT | Ver y editar permisos por módulo/rol |
 
 ---
 
@@ -130,32 +104,28 @@ Herramienta de migración one-shot para importar servicios desde un Excel con ho
 | `CodCliente` | `cliente_id` (via mapa construido desde hoja `clientes`) |
 | `Problema` | `titulo` |
 | `DetalleTrabajo` | `descripcion` |
-| `Estado` | `estado` (mapa: `TERMINADO`/`EN PROCESO`/`CANCELADO`/`RECHAZADO`/`INGRESADO`/`PRESUPUESTADO`, default `INGRESADO`) |
-| `EstadoPago` | `estado_pago` (mapa: `PAGADO`→`PAGADO`, `NO PAGADO`→`PENDIENTE`, `SIN CARGO`→`SIN CARGO`, `PAGO PARCIAL`→`PAGO PARCIAL`, default `PENDIENTE`) |
+| `Estado` | `estado` (mapa: `TERMINADO`/`EN PROCESO`/`CANCELADO`/`RECHAZADO`/`INGRESADO`/`PRESUPUESTADO`) |
+| `EstadoPago` | `estado_pago` (mapa: `PAGADO`→`PAGADO`, `NO PAGADO`→`PENDIENTE`, `SIN CARGO`→`SIN CARGO`, `PAGO PARCIAL`→`PAGO PARCIAL`) |
 | `Valor` | `valor` (valor total del servicio, **no** `Valor − Pagos`) |
 | `FechaIngreso` | `fecha` (Date → `yyyy-mm-dd`) |
 | `Pagos` | cobranza `tipo=PAGO, concepto='Pago importado desde Excel', monto=Pagos` |
 
 **SQL requerido antes de la primera importación:**
 ```sql
--- Permitir insertar ID manual (evita que Postgres ignore el id provisto)
 ALTER TABLE servicios ALTER COLUMN id SET GENERATED BY DEFAULT;
-
--- Después de importar, resetear la secuencia para que los nuevos servicios no colisionen
+-- Después del import, resetear la secuencia:
 SELECT setval(pg_get_serial_sequence('servicios', 'id'), (SELECT MAX(id) FROM servicios));
 ```
 
 **Importante — por qué upload y no archivo en disco:**
 - La carpeta `recursos/` está en `.gitignore` → Vercel no tiene el archivo en el build
-- `outputFileTracingIncludes` no sirve si el archivo no está en el repo
 - El upload desde browser resuelve esto sin necesidad de commitear el Excel
 
 ---
 
-## Notas importantes — Administración
+## Notas importantes
 
 - **Administrador shortcircuit** — `getModulePermisos` devuelve FULL sin tocar DB. No depende de que existan filas en `role_permissions` para el admin.
-- **Noticias — `contenido` es HTML** — generado por TipTap. Al renderizar en la página pública, usar `dangerouslySetInnerHTML`. Para backward compat con contenido antiguo en plain text, detectar con `/<[a-z]/i.test(contenido)` y convertir `\n` a `<br />` si no es HTML.
-- **Noticias — `fecha`** — columna `date` (default CURRENT_DATE), editable desde el dashboard. En la página pública mostrar `noticia.fecha ?? noticia.created_at`. Formatear con split para evitar desfase UTC: `const [y,m,d] = dateStr.split('-'); new Date(Number(y), Number(m)-1, Number(d))`.
-- **Importar — archivo en memoria, no en disco** — la API lee `xlsx.read(buffer)` desde `req.formData()`. No usar `readFile(path)` ni `outputFileTracingIncludes` — el archivo Excel está en `.gitignore` y Vercel no lo tiene.
-- **Importar — idempotencia de cobranzas** — antes de insertar el pago importado se eliminan las cobranzas anteriores con `concepto = 'Pago importado desde Excel'` para el mismo `servicio_id`. Esto permite re-importar sin duplicar pagos.
+- **Importar — archivo en memoria, no en disco** — la API lee `xlsx.read(buffer)` desde `req.formData()`. No usar `readFile(path)` ni `outputFileTracingIncludes`.
+- **Importar — idempotencia de cobranzas** — antes de insertar el pago importado se eliminan las cobranzas anteriores con `concepto = 'Pago importado desde Excel'` para el mismo `servicio_id`. Permite re-importar sin duplicar pagos.
+- **Módulo nuevo** → recordar agregar en: (a) SQL `role_permissions`, (b) `sidebar.tsx` navGroups, (c) array en `permissions/route.ts`.

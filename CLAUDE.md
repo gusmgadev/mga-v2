@@ -1,8 +1,14 @@
 @AGENTS.md
+@context/modulos/oportunidades.md
 @context/modulos/servicios.md
-@context/modulos/altas.md
-@context/modulos/stock.md
-@context/modulos/fondos.md
+@context/modulos/presupuestos.md
+@context/modulos/activos.md
+@context/modulos/clientes.md
+@context/modulos/productos.md
+@context/modulos/remitos.md
+@context/modulos/cobranzas.md
+@context/modulos/gastos.md
+@context/modulos/noticias.md
 @context/modulos/administracion.md
 
 # MGA Informática — Contexto completo del proyecto
