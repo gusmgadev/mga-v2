@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-const MODULOS = ['ventas', 'inventario', 'caja', 'contactos', 'finanzas', 'administracion']
+const MODULOS = ['ventas', 'inventario', 'caja', 'contactos', 'finanzas', 'administracion', 'optica']
 const PLANES = ['basico', 'profesional', 'enterprise']
 const ESTADOS_IMPL = ['en_progreso', 'activo', 'pausado', 'suspendido']
 

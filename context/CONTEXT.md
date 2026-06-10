@@ -56,13 +56,20 @@
 
 ## Contexto técnico por módulo
 
-| Módulo operativo | Archivo de contexto |
-|-----------------|---------------------|
-| Servicios (OPs, Servicios, Presupuestos, Activos) | [context/modulos/servicios.md](modulos/servicios.md) |
-| Altas (Clientes, Productos) | [context/modulos/altas.md](modulos/altas.md) |
-| Stock (Remitos) | [context/modulos/stock.md](modulos/stock.md) |
-| Fondos (Cobranzas) | [context/modulos/fondos.md](modulos/fondos.md) |
-| Administración (Auth, Noticias, Admin) | [context/modulos/administracion.md](modulos/administracion.md) |
+| Módulo | Archivo de contexto |
+|--------|---------------------|
+| Oportunidades | [context/modulos/oportunidades.md](modulos/oportunidades.md) |
+| Servicios | [context/modulos/servicios.md](modulos/servicios.md) |
+| Presupuestos | [context/modulos/presupuestos.md](modulos/presupuestos.md) |
+| Activos | [context/modulos/activos.md](modulos/activos.md) |
+| Clientes | [context/modulos/clientes.md](modulos/clientes.md) |
+| Productos | [context/modulos/productos.md](modulos/productos.md) |
+| Remitos | [context/modulos/remitos.md](modulos/remitos.md) |
+| Cobranzas | [context/modulos/cobranzas.md](modulos/cobranzas.md) |
+| Gastos | [context/modulos/gastos.md](modulos/gastos.md) |
+| Noticias | [context/modulos/noticias.md](modulos/noticias.md) |
+| Administración (Auth, Usuarios, Roles, Permisos, Importar) | [context/modulos/administracion.md](modulos/administracion.md) |
+| Superadmin (empresas POS + módulos) | [context/modulos/superadmin.md](modulos/superadmin.md) |
 
 ---
 
@@ -76,5 +83,5 @@
 
 ---
 
-**Última actualización:** 2026-05-16
+**Última actualización:** 2026-06-08
 **Actualizado por:** Claude Code

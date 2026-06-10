@@ -10,6 +10,7 @@
 @context/modulos/gastos.md
 @context/modulos/noticias.md
 @context/modulos/administracion.md
+@context/modulos/superadmin.md
 
 # MGA Informática — Contexto completo del proyecto
 
@@ -173,6 +174,11 @@ mga-v2/
 │   │       ├── permisos/route.ts
 │   │       └── importar/
 │   │           └── servicios/route.ts      # POST FormData — lee xlsx del buffer, upsert servicios + cobranzas
+│   │   └── superadmin/
+│   │       ├── auth/route.ts               # POST (login) + DELETE (logout) cookie sa_session
+│   │       ├── empresas/route.ts           # GET + POST — lista/crear empresa + empresa_modulos
+│   │       ├── empresas/[id]/route.ts      # GET + PUT — detalle/editar empresa
+│   │       └── empresas/[id]/modulos/route.ts  # PUT — upsert módulos (MODULOS_VALIDOS)
 │   ├── noticias/
 │   │   ├── page.tsx                    # Lista pública de noticias
 │   │   └── [id]/page.tsx               # Detalle público con rich text rendering
@@ -215,12 +221,19 @@ mga-v2/
 ├── context/                            # Documentación del proyecto
 │   ├── CONTEXT.md                      # Resumen general (para humanos)
 │   ├── AUTH_CONTEXT.md                 # Guía detallada del sistema de auth
-│   └── modulos/                        # Contexto por módulo operativo
-│       ├── servicios.md                # Oportunidades, Servicios, Presupuestos, Activos
-│       ├── altas.md                    # Clientes, Productos
-│       ├── stock.md                    # Remitos
-│       ├── fondos.md                   # Cobranzas
-│       └── administracion.md           # Auth, Permisos, Noticias, Admin
+│   └── modulos/                        # Contexto por módulo operativo (uno por módulo)
+│       ├── oportunidades.md
+│       ├── servicios.md
+│       ├── presupuestos.md
+│       ├── activos.md
+│       ├── clientes.md
+│       ├── productos.md
+│       ├── remitos.md
+│       ├── cobranzas.md
+│       ├── gastos.md
+│       ├── noticias.md
+│       ├── administracion.md           # Auth, Usuarios, Roles, Permisos, Importar
+│       └── superadmin.md               # Panel /superadmin — empresas POS + módulos
 ├── proxy.ts                            # Middleware de protección de rutas (nombre no estándar)
 └── public/images/                      # logos/, hero/, clientes/
 ```
@@ -394,9 +407,11 @@ ALTER TABLE oportunidades ADD CONSTRAINT oportunidades_estado_check
 1. **`git add` con rutas que contienen `(dashboard)` o `(superadmin)`** → usar Bash, no PowerShell. PowerShell interpreta los paréntesis como agrupación.
 2. **El archivo de middleware se llama `proxy.ts`**, no `middleware.ts`. Next.js lo detecta por el `export const config`.
    — `proxy.ts` protege `/superadmin/*` con cookie `sa_session` ANTES del bloque NextAuth. Las dos protecciones son independientes y no interfieren.
-3. **Módulo nuevo** → recordar agregar en: (a) SQL `role_permissions`, (b) `sidebar.tsx` (navGroups), (c) `permissions/route.ts` array de admin.
+3. **Módulo nuevo en dashboard** → recordar agregar en: (a) SQL `role_permissions`, (b) `sidebar.tsx` (navGroups), (c) `permissions/route.ts` array de admin.
+   **Módulo nuevo en superadmin (POS)** → actualizar la lista hardcodeada en 5 lugares (ver `context/modulos/superadmin.md`).
 4. **`params` en Next.js 16** → siempre `const { id } = await params`, nunca `params.id` directo.
-5. **Modales del dashboard — comportamiento estándar:**
+5. **Dev server usa webpack** (`next dev --webpack` en `package.json`). Turbopack está deshabilitado porque genera panics recurrentes en `/superadmin/login`. El build de producción en Vercel no se ve afectado.
+6. **Modales del dashboard — comportamiento estándar:**
    - **Click afuera NO cierra** el modal (evita pérdida de cambios). Solo se cierra con el botón X.
    - **Botón guardar en el header**: `ModalCard` acepta prop `formId?: string`. Si se pasa, renderiza un botón `<Save>` a la izquierda del X con `type="submit" form={formId}`. Dar `id="create-form"` / `id="edit-form"` al `<form>` correspondiente. NO pasar `formId` en modales de confirmación/eliminación.
    - Este patrón está implementado en todos los archivos `*Client.tsx` del dashboard.

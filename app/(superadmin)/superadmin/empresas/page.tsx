@@ -115,7 +115,7 @@ export default function EmpresasPage() {
                         {emp.estado_implementacion ? badge(emp.estado_implementacion.replace('_', ' '), estadoColors) : <span style={{ color: '#d1d5db' }}>—</span>}
                       </td>
                       <td style={{ padding: '14px 16px' }}>
-                        <span style={{ fontSize: 13, color: '#374151' }}>{modulosActivos} / 6</span>
+                        <span style={{ fontSize: 13, color: '#374151' }}>{modulosActivos} / 7</span>
                       </td>
                       <td style={{ padding: '14px 16px', fontSize: 13, color: '#374151' }}>
                         {emp.fecha_vencimiento ? new Date(emp.fecha_vencimiento + 'T00:00:00').toLocaleDateString('es-AR') : <span style={{ color: '#d1d5db' }}>—</span>}

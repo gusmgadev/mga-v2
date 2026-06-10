@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isSuperadminAuthenticated } from '@/lib/superadmin-auth'
 import { supabaseMaster } from '@/services/supabase-master'
 
-const MODULOS_DEFAULT = ['ventas', 'inventario', 'caja', 'contactos', 'finanzas', 'administracion']
+const MODULOS_DEFAULT = ['ventas', 'inventario', 'caja', 'contactos', 'finanzas', 'administracion', 'optica']
 
 export async function GET() {
   if (!await isSuperadminAuthenticated())
