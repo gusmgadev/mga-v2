@@ -4,7 +4,7 @@ import { supabaseMaster } from '@/services/supabase-master'
 
 type Ctx = { params: Promise<{ id: string }> }
 
-const MODULOS_VALIDOS = ['ventas', 'inventario', 'caja', 'contactos', 'finanzas', 'administracion', 'optica']
+const MODULOS_VALIDOS = ['ventas', 'inventario', 'caja', 'contactos', 'finanzas', 'administracion', 'optica', 'altas']
 
 export async function PUT(req: NextRequest, { params }: Ctx) {
   if (!await isSuperadminAuthenticated())
