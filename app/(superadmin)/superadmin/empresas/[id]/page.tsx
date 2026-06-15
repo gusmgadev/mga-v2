@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 
-const MODULOS = ['ventas', 'inventario', 'caja', 'contactos', 'finanzas', 'administracion', 'optica', 'altas']
 const PLANES = ['basico', 'profesional', 'enterprise']
 const ESTADOS_IMPL = ['en_progreso', 'activo', 'pausado', 'suspendido']
 
@@ -11,6 +10,7 @@ const labelStyle: React.CSSProperties = { display: 'block', fontSize: 13, fontWe
 const inputStyle: React.CSSProperties = { width: '100%', border: '1px solid #e5e7eb', borderRadius: 8, padding: '9px 12px', fontSize: 14, boxSizing: 'border-box', outline: 'none' }
 const gridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }
 
+type ModuloCatalogo = { id: number; nombre: string; activo: boolean; orden: number }
 type EmpresaModulo = { id: number; empresa_id: number; modulo: string; activo: boolean }
 type Empresa = {
   id: number; nombre: string; codigo: string; activo: boolean
@@ -41,40 +41,42 @@ export default function EditarEmpresaPage() {
   })
   const [modulos, setModulos] = useState<string[]>([])
   const [modulosOriginales, setModulosOriginales] = useState<string[]>([])
+  const [catalogoModulos, setCatalogoModulos] = useState<ModuloCatalogo[]>([])
 
   useEffect(() => {
-    fetch(`/api/superadmin/empresas/${id}`)
-      .then(r => {
+    Promise.all([
+      fetch(`/api/superadmin/empresas/${id}`).then(r => {
         if (r.status === 401) { router.push('/superadmin/login'); return null }
         if (!r.ok) { router.push('/superadmin/empresas'); return null }
         return r.json()
+      }),
+      fetch('/api/superadmin/modulos').then(r => r.ok ? r.json() : []),
+    ]).then(([d, cats]: [Empresa | null, ModuloCatalogo[]]) => {
+      if (!d) return
+      setForm({
+        nombre: d.nombre ?? '',
+        codigo: d.codigo ?? '',
+        activo: d.activo ?? true,
+        supabase_url: d.supabase_url ?? '',
+        supabase_anon_key: d.supabase_anon_key ?? '',
+        supabase_service_key: d.supabase_service_key ?? '',
+        razon_social: d.razon_social ?? '',
+        cuit: d.cuit ?? '',
+        telefono: d.telefono ?? '',
+        email: d.email ?? '',
+        direccion: d.direccion ?? '',
+        localidad: d.localidad ?? '',
+        plan: d.plan ?? '',
+        fecha_inicio: d.fecha_inicio ?? '',
+        fecha_vencimiento: d.fecha_vencimiento ?? '',
+        estado_implementacion: d.estado_implementacion ?? '',
+        notas: d.notas ?? '',
       })
-      .then((d: Empresa | null) => {
-        if (!d) return
-        setForm({
-          nombre: d.nombre ?? '',
-          codigo: d.codigo ?? '',
-          activo: d.activo ?? true,
-          supabase_url: d.supabase_url ?? '',
-          supabase_anon_key: d.supabase_anon_key ?? '',
-          supabase_service_key: d.supabase_service_key ?? '',
-          razon_social: d.razon_social ?? '',
-          cuit: d.cuit ?? '',
-          telefono: d.telefono ?? '',
-          email: d.email ?? '',
-          direccion: d.direccion ?? '',
-          localidad: d.localidad ?? '',
-          plan: d.plan ?? '',
-          fecha_inicio: d.fecha_inicio ?? '',
-          fecha_vencimiento: d.fecha_vencimiento ?? '',
-          estado_implementacion: d.estado_implementacion ?? '',
-          notas: d.notas ?? '',
-        })
-        const activos = d.empresa_modulos?.filter(m => m.activo).map(m => m.modulo) ?? []
-        setModulos(activos)
-        setModulosOriginales(activos)
-      })
-      .finally(() => setLoading(false))
+      const activos = d.empresa_modulos?.filter(m => m.activo).map(m => m.modulo) ?? []
+      setModulos(activos)
+      setModulosOriginales(activos)
+      setCatalogoModulos(cats ?? [])
+    }).finally(() => setLoading(false))
   }, [id, router])
 
   function field(key: keyof typeof form) {
@@ -258,19 +260,23 @@ export default function EditarEmpresaPage() {
               Módulos habilitados
               {modulosCambiaron && <span style={{ fontSize: 12, color: '#f59e0b', marginLeft: 10, fontWeight: 400 }}>Modificado</span>}
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-              {MODULOS.map(m => (
-                <label key={m} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14, userSelect: 'none' }}>
-                  <input
-                    type="checkbox"
-                    checked={modulos.includes(m)}
-                    onChange={() => toggleModulo(m)}
-                    style={{ width: 16, height: 16 }}
-                  />
-                  {m}
-                </label>
-              ))}
-            </div>
+            {catalogoModulos.length === 0 ? (
+              <div style={{ fontSize: 13, color: '#9ca3af' }}>Cargando módulos...</div>
+            ) : (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                {catalogoModulos.map(m => (
+                  <label key={m.nombre} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14, userSelect: 'none' }}>
+                    <input
+                      type="checkbox"
+                      checked={modulos.includes(m.nombre)}
+                      onChange={() => toggleModulo(m.nombre)}
+                      style={{ width: 16, height: 16 }}
+                    />
+                    {m.nombre}
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
 
           {error && (

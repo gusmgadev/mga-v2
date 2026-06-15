@@ -74,6 +74,12 @@ export default function EmpresasPage() {
               Cerrar sesión
             </button>
             <button
+              onClick={() => router.push('/superadmin/modulos')}
+              style={{ background: '#fff', border: '1px solid #ddd', borderRadius: 8, padding: '8px 16px', fontSize: 13, cursor: 'pointer', color: '#374151' }}
+            >
+              Módulos
+            </button>
+            <button
               onClick={() => router.push('/superadmin/empresas/nueva')}
               style={{ background: '#111', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 18px', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
             >
@@ -115,7 +121,7 @@ export default function EmpresasPage() {
                         {emp.estado_implementacion ? badge(emp.estado_implementacion.replace('_', ' '), estadoColors) : <span style={{ color: '#d1d5db' }}>—</span>}
                       </td>
                       <td style={{ padding: '14px 16px' }}>
-                        <span style={{ fontSize: 13, color: '#374151' }}>{modulosActivos} / 8</span>
+                        <span style={{ fontSize: 13, color: '#374151' }}>{modulosActivos}</span>
                       </td>
                       <td style={{ padding: '14px 16px', fontSize: 13, color: '#374151' }}>
                         {emp.fecha_vencimiento ? new Date(emp.fecha_vencimiento + 'T00:00:00').toLocaleDateString('es-AR') : <span style={{ color: '#d1d5db' }}>—</span>}

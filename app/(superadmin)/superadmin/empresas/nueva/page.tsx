@@ -1,8 +1,7 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-const MODULOS = ['ventas', 'inventario', 'caja', 'contactos', 'finanzas', 'administracion', 'optica', 'altas']
 const PLANES = ['basico', 'profesional', 'enterprise']
 const ESTADOS_IMPL = ['en_progreso', 'activo', 'pausado', 'suspendido']
 
@@ -11,10 +10,13 @@ const labelStyle: React.CSSProperties = { display: 'block', fontSize: 13, fontWe
 const inputStyle: React.CSSProperties = { width: '100%', border: '1px solid #e5e7eb', borderRadius: 8, padding: '9px 12px', fontSize: 14, boxSizing: 'border-box', outline: 'none' }
 const gridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }
 
+type ModuloCatalogo = { id: number; nombre: string; activo: boolean; orden: number }
+
 export default function NuevaEmpresaPage() {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [catalogoModulos, setCatalogoModulos] = useState<ModuloCatalogo[]>([])
 
   const [form, setForm] = useState({
     nombre: '', codigo: '', supabase_url: '', supabase_anon_key: '', supabase_service_key: '',
@@ -22,7 +24,17 @@ export default function NuevaEmpresaPage() {
     plan: '', fecha_inicio: '', fecha_vencimiento: '',
     estado_implementacion: 'en_progreso', notas: '',
   })
-  const [modulos, setModulos] = useState<string[]>([...MODULOS])
+  const [modulos, setModulos] = useState<string[]>([])
+
+  useEffect(() => {
+    fetch('/api/superadmin/modulos')
+      .then(r => { if (r.status === 401) { router.push('/superadmin/login'); return null } return r.json() })
+      .then((d: ModuloCatalogo[] | null) => {
+        if (!d) return
+        setCatalogoModulos(d)
+        setModulos(d.map(m => m.nombre))
+      })
+  }, [router])
 
   function field(key: keyof typeof form) {
     return {
@@ -165,19 +177,23 @@ export default function NuevaEmpresaPage() {
           {/* Sección Módulos */}
           <div style={sectionStyle}>
             <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 18, paddingBottom: 12, borderBottom: '1px solid #f3f4f6' }}>Módulos habilitados</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-              {MODULOS.map(m => (
-                <label key={m} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14, userSelect: 'none' }}>
-                  <input
-                    type="checkbox"
-                    checked={modulos.includes(m)}
-                    onChange={() => toggleModulo(m)}
-                    style={{ width: 16, height: 16 }}
-                  />
-                  {m}
-                </label>
-              ))}
-            </div>
+            {catalogoModulos.length === 0 ? (
+              <div style={{ fontSize: 13, color: '#9ca3af' }}>Cargando módulos...</div>
+            ) : (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                {catalogoModulos.map(m => (
+                  <label key={m.nombre} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14, userSelect: 'none' }}>
+                    <input
+                      type="checkbox"
+                      checked={modulos.includes(m.nombre)}
+                      onChange={() => toggleModulo(m.nombre)}
+                      style={{ width: 16, height: 16 }}
+                    />
+                    {m.nombre}
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
 
           {error && (

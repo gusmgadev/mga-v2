@@ -4,8 +4,6 @@ import { supabaseMaster } from '@/services/supabase-master'
 
 type Ctx = { params: Promise<{ id: string }> }
 
-const MODULOS_VALIDOS = ['ventas', 'inventario', 'caja', 'contactos', 'finanzas', 'administracion', 'optica', 'altas']
-
 export async function PUT(req: NextRequest, { params }: Ctx) {
   if (!await isSuperadminAuthenticated())
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
@@ -13,10 +11,17 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
   const { id } = await params
   const { modulos } = await req.json()
 
-  const upserts = MODULOS_VALIDOS.map(m => ({
+  const { data: catalogo, error: catError } = await supabaseMaster
+    .from('modulos')
+    .select('nombre')
+    .order('orden')
+
+  if (catError) return NextResponse.json({ error: catError.message }, { status: 500 })
+
+  const upserts = catalogo.map(m => ({
     empresa_id: id,
-    modulo: m,
-    activo: (modulos as string[]).includes(m),
+    modulo: m.nombre,
+    activo: (modulos as string[]).includes(m.nombre),
   }))
 
   const { error } = await supabaseMaster

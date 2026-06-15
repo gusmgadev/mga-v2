@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { isSuperadminAuthenticated } from '@/lib/superadmin-auth'
 import { supabaseMaster } from '@/services/supabase-master'
 
-const MODULOS_DEFAULT = ['ventas', 'inventario', 'caja', 'contactos', 'finanzas', 'administracion', 'optica', 'altas']
-
 export async function GET() {
   if (!await isSuperadminAuthenticated())
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
@@ -48,9 +46,11 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const modulosActivos = (modulos ?? MODULOS_DEFAULT) as string[]
+  const { data: catalogoModulos } = await supabaseMaster.from('modulos').select('nombre').order('orden')
+  const nombresModulos = catalogoModulos?.map(m => m.nombre) ?? []
+  const modulosActivos = (modulos ?? nombresModulos) as string[]
   await supabaseMaster.from('empresa_modulos').insert(
-    MODULOS_DEFAULT.map(m => ({
+    nombresModulos.map(m => ({
       empresa_id: empresa.id,
       modulo: m,
       activo: modulosActivos.includes(m),
