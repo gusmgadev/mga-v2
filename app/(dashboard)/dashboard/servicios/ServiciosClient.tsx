@@ -519,6 +519,8 @@ export default function ServiciosClient({
     return `${d}/${m}/${y.slice(2)}`
   }
 
+  const valorTotal = servicios.reduce((sum, s) => sum + Number(s.valor), 0)
+  const pagadoTotal = servicios.reduce((sum, s) => sum + (s.totalPagado ?? 0), 0)
   const saldoTotal = servicios.reduce((sum, s) => sum + Math.max(0, Number(s.valor) - (s.totalPagado ?? 0)), 0)
 
   return (
@@ -567,8 +569,12 @@ export default function ServiciosClient({
           <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textMuted, whiteSpace: 'nowrap' }}>
             {servicios.length} servicio{servicios.length !== 1 ? 's' : ''}
             {' · '}
+            <span style={{ color: theme.colors.textMuted }}>
+              Total: ${valorTotal.toLocaleString('es-AR')}
+            </span>
+            {' · '}
             <span style={{ color: saldoTotal > 0 ? '#B45309' : theme.colors.textMuted }}>
-              Saldo pendiente: ${saldoTotal.toLocaleString('es-AR')}
+              Saldo: ${saldoTotal.toLocaleString('es-AR')}
             </span>
           </p>
         </div>
@@ -657,6 +663,25 @@ export default function ServiciosClient({
               )
             })}
           </tbody>
+          {servicios.length > 0 && (
+            <tfoot>
+              <tr style={{ backgroundColor: '#F8F9FB', borderTop: `2px solid ${theme.colors.border}` }}>
+                <td colSpan={5} style={{ ...tdStyle, fontWeight: theme.fontWeights.medium, color: theme.colors.textMuted, fontSize: theme.fontSizes.xs, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Total ({servicios.length})
+                </td>
+                <td style={{ ...tdStyle, textAlign: 'right', fontWeight: theme.fontWeights.bold, color: theme.colors.text }}>
+                  ${valorTotal.toLocaleString('es-AR')}
+                </td>
+                <td style={{ ...tdStyle, textAlign: 'right', fontWeight: theme.fontWeights.bold, color: pagadoTotal > 0 ? theme.colors.success : theme.colors.textMuted }}>
+                  ${pagadoTotal.toLocaleString('es-AR')}
+                </td>
+                <td style={{ ...tdStyle, textAlign: 'right', fontWeight: theme.fontWeights.bold, color: saldoTotal > 0 ? '#B45309' : theme.colors.textMuted }}>
+                  ${saldoTotal.toLocaleString('es-AR')}
+                </td>
+                <td style={tdStyle} />
+              </tr>
+            </tfoot>
+          )}
         </table>
         </div>
       </div>
