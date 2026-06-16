@@ -143,7 +143,8 @@ export default function PermisosClient({
               {role.name}
             </h3>
           </div>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '560px' }}>
             <thead>
               <tr>
                 <th style={{ ...thStyle, textAlign: 'left' }}>Módulo</th>
@@ -172,6 +173,7 @@ export default function PermisosClient({
               })}
             </tbody>
           </table>
+          </div>
         </div>
       ))}
     </>

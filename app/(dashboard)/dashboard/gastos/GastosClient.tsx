@@ -1,6 +1,7 @@
 'use client'
 import { useState, useMemo } from 'react'
 import { theme } from '@/lib/theme'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import { Plus, ChevronLeft, ChevronRight, CheckCircle, Pencil, Trash2, Settings, X, CreditCard } from 'lucide-react'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -124,6 +125,7 @@ function ErrorBox({ msg }: { msg: string }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function GastosClient({ initialGastos, initialPlantillas, initialTarjetas, initialMes, initialAnio, permisos }: Props) {
+  const isMobile = useIsMobile()
   const [gastos, setGastos] = useState<Gasto[]>(initialGastos)
   const [plantillas, setPlantillas] = useState<Plantilla[]>(initialPlantillas)
   const [tarjetas, setTarjetas] = useState<Tarjeta[]>(initialTarjetas)
@@ -305,7 +307,7 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
               {showNueva && (
                 <div style={{ marginTop: 10, padding: 14, background: '#f9fafb', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm }}>
                   {ntErr && <ErrorBox msg={ntErr} />}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10, marginBottom: 10 }}>
                     <div>
                       <label style={labelStyle}>Nombre</label>
                       <input style={inputStyle} placeholder="VISA SANTANDER" value={ntNombre} onChange={e => setNtNombre(e.target.value)} />
@@ -493,7 +495,7 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
       return (
         <div style={{ border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, padding: 16, marginBottom: 12, background: '#f9fafb' }}>
           {err && <ErrorBox msg={err} />}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10, marginBottom: 10 }}>
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Nombre (visible en listados)</label>
               <input style={inputStyle} placeholder="VISA SANTANDER" value={nombre} onChange={e => setNombre(e.target.value)} />
@@ -619,7 +621,7 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
 
       return (
         <div style={{ border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, padding: 16, marginBottom: 12, background: '#f9fafb' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10, marginBottom: 10 }}>
             <div>
               <label style={labelStyle}>Categoría</label>
               <input style={inputStyle} list="cats-p" value={cat} onChange={e => setCat(e.target.value)} />
@@ -747,7 +749,7 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
 
       {/* ── KPI cards ── */}
       {!mesVacio && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
           {[
             { label: 'Total estimado', value: `$${fmt(totalEst)}`, color: theme.colors.primary },
             { label: 'Pagado', value: `$${fmt(totalPagado)}`, color: '#15803d' },
@@ -782,7 +784,8 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
       {/* ── Tabla ── */}
       {!mesVacio ? (
         <div style={{ background: '#fff', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.md, overflow: 'hidden', boxShadow: theme.shadows.sm }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '560px' }}>
             <thead>
               <tr style={{ borderBottom: `2px solid ${theme.colors.border}`, background: '#f9fafb' }}>
                 <th style={{ padding: '10px 14px', textAlign: 'left', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, fontWeight: theme.fontWeights.medium, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Descripción</th>
@@ -862,6 +865,7 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       ) : (
         !hayPlantillasActivas && (

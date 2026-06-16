@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { ArrowLeft, Pencil, X, Loader2, AlertCircle, Plus, Trash2, Wrench, ExternalLink, Save, FileText, Upload } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import QuickCreateActivoModal from '@/components/dashboard/QuickCreateActivoModal'
 
 type PresupuestoEstado = 'BORRADOR' | 'ENVIADO' | 'APROBADO' | 'RECHAZADO' | 'VENCIDO'
@@ -163,6 +164,7 @@ export default function PresupuestoDetalleClient({
   servicioAsociado: { id: number; titulo: string } | null
 }) {
   const router = useRouter()
+  const isMobile = useIsMobile()
   const [presupuesto, setPresupuesto] = useState(initialPresupuesto)
   const [items, setItems] = useState<Item[]>(
     [...initialPresupuesto.presupuesto_items].sort((a, b) => a.id - b.id)
@@ -442,7 +444,8 @@ export default function PresupuestoDetalleClient({
         </div>
 
         {items.length > 0 && (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '500px' }}>
             <thead>
               <tr>
                 <th style={thStyle}>Descripción</th>
@@ -483,6 +486,7 @@ export default function PresupuestoDetalleClient({
               })}
             </tbody>
           </table>
+          </div>
         )}
 
         {/* Total row */}
@@ -635,7 +639,7 @@ export default function PresupuestoDetalleClient({
                   />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
                   <div>
                     <label style={labelStyle}>Estado</label>
                     <select {...genServicioForm.register('estado')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
@@ -692,7 +696,7 @@ export default function PresupuestoDetalleClient({
           <ModalCard title="Editar presupuesto" onClose={() => setShowEdit(false)} formId="edit-form">
             <form id="edit-form" onSubmit={editForm.handleSubmit(onEditSubmit)}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={labelStyle}>Activo (opcional)</label>
                     <div style={{ display: 'flex', gap: '6px' }}>
@@ -730,7 +734,7 @@ export default function PresupuestoDetalleClient({
                     />
                   </div>
 
-                  <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                  <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '12px' }}>
                     <div>
                       <label style={labelStyle}>Estado</label>
                       <select {...editForm.register('estado')} style={{ ...inputStyle, backgroundColor: '#fff' }}>

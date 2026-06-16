@@ -8,6 +8,7 @@ import Link from 'next/link'
 import { Plus, Pencil, Trash2, X, Loader2, AlertCircle, HardDrive, Save, Upload } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 type Cliente = {
   id: number
@@ -212,6 +213,7 @@ function ClienteFormFields({
   rubros: string[]
   onNewRubro: (r: string) => void
 }) {
+  const isMobile = useIsMobile()
   const rubroValue = form.watch('rubro') ?? ''
   const imagenValue = form.watch('imagen') ?? ''
   const [uploadingLogo, setUploadingLogo] = useState(false)
@@ -235,7 +237,7 @@ function ClienteFormFields({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
         <div style={{ gridColumn: '1 / -1' }}>
           <label style={labelStyle}>Nombre <span style={{ color: theme.colors.error }}>*</span></label>
           <input {...form.register('nombre')} style={inputStyle} placeholder="Nombre completo o razón social" />
@@ -491,7 +493,8 @@ export default function ClientesClient({
       {globalError && <div style={{ marginBottom: '16px' }}><ErrorBox message={globalError} /></div>}
 
       <div style={{ backgroundColor: '#fff', borderRadius: theme.radii.md, border: `1px solid ${theme.colors.border}`, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '560px' }}>
           <thead>
             <tr>
               <th style={thStyle}>Nombre</th>
@@ -566,6 +569,7 @@ export default function ClientesClient({
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Create modal */}

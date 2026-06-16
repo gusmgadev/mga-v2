@@ -10,6 +10,7 @@ import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 import QuickCreateClienteModal from '@/components/dashboard/QuickCreateClienteModal'
 import { ClienteFormCombobox, ClienteFilterCombobox } from '@/components/dashboard/ClienteCombobox'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 type Activo = {
   id: number
@@ -110,6 +111,7 @@ function ActivoFormFields({
   clientes: ClienteSimple[]
   setClientes: React.Dispatch<React.SetStateAction<ClienteSimple[]>>
 }) {
+  const isMobile = useIsMobile()
   const [showQCCliente, setShowQCCliente] = useState(false)
 
   const handleClienteCreado = (c: { id: number; nombre: string }) => {
@@ -121,7 +123,7 @@ function ActivoFormFields({
   return (
     <>
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
         <div style={{ gridColumn: '1 / -1' }}>
           <label style={labelStyle}>Cliente <span style={{ color: theme.colors.error }}>*</span></label>
           <div style={{ display: 'flex', gap: '6px' }}>
@@ -316,7 +318,8 @@ export default function ActivosClient({
       {globalError && <div style={{ marginBottom: '16px' }}><ErrorBox message={globalError} /></div>}
 
       <div style={{ backgroundColor: '#fff', borderRadius: theme.radii.md, border: `1px solid ${theme.colors.border}`, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '500px' }}>
           <thead>
             <tr>
               <th style={thStyle}>Cliente</th>
@@ -373,6 +376,7 @@ export default function ActivosClient({
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Create modal */}

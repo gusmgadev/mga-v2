@@ -233,7 +233,8 @@ export default function UsuariosClient({
 
       {/* Table */}
       <div style={{ backgroundColor: '#fff', borderRadius: theme.radii.md, border: `1px solid ${theme.colors.border}`, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '500px' }}>
           <thead>
             <tr>
               <th style={thStyle}>Nombre</th>
@@ -283,6 +284,7 @@ export default function UsuariosClient({
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Create modal */}

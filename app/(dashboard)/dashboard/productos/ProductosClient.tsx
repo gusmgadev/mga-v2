@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Plus, Pencil, X, Loader2, AlertCircle, Package, Save } from 'lucide-react'
 import { theme } from '@/lib/theme'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import CatalogoCombobox from '@/components/dashboard/CatalogoCombobox'
 import type { Producto } from '@/types/stock'
 import type { ModulePermisos } from '@/lib/permisos'
@@ -144,6 +145,7 @@ function StockBadge({ value }: { value: number }) {
 
 
 export default function ProductosClient({ initialProductos, permisos, initialMarcas, initialRubros }: Props) {
+  const isMobile = useIsMobile()
   const [productos, setProductos] = useState<Producto[]>(initialProductos)
   const [localMarcas, setLocalMarcas] = useState<string[]>(initialMarcas)
   const [localRubros, setLocalRubros] = useState<string[]>(initialRubros)
@@ -323,7 +325,8 @@ export default function ProductosClient({ initialProductos, permisos, initialMar
             <p style={{ fontSize: theme.fontSizes.sm, margin: 0 }}>No hay productos</p>
           </div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '560px' }}>
             <thead>
               <tr>
                 <th style={thStyle}>Nombre / Rubro</th>
@@ -382,6 +385,7 @@ export default function ProductosClient({ initialProductos, permisos, initialMar
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 
@@ -390,7 +394,7 @@ export default function ProductosClient({ initialProductos, permisos, initialMar
         <ModalOverlay onClose={() => setShowModal(false)}>
           <ModalCard title={editTarget ? 'Editar producto' : 'Nuevo producto'} onClose={() => setShowModal(false)} formId="producto-form">
             <form id="producto-form" onSubmit={handleSubmit(onSubmit)}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
 
                 <div style={{ gridColumn: '1 / -1' }}>
                   <label style={labelStyle}>Nombre *</label>

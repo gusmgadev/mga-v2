@@ -9,6 +9,7 @@ import { ArrowLeft, Pencil, X, Loader2, AlertCircle, Plus, Trash2, CheckCircle2,
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 import QuickCreateActivoModal from '@/components/dashboard/QuickCreateActivoModal'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 type ServicioEstado = 'INGRESADO' | 'EN PROCESO' | 'CANCELADO' | 'RECHAZADO' | 'TERMINADO' | 'PRESUPUESTADO'
 type EstadoPago = 'PENDIENTE' | 'SIN CARGO' | 'GARANTIA' | 'PAGO PARCIAL' | 'PAGADO'
@@ -191,6 +192,7 @@ export default function ServicioDetalleClient({
   activos: ActivoSimple[]
   permisos: ModulePermisos
 }) {
+  const isMobile = useIsMobile()
   const [servicio, setServicio] = useState(initialServicio)
   const [tareas, setTareas] = useState<Tarea[]>(initialServicio.servicio_tareas ?? [])
   const [pagos, setPagos] = useState<CobranzaPago[]>(initialPagos)
@@ -722,7 +724,7 @@ export default function ServicioDetalleClient({
         {showAddPago && (
           <div style={{ padding: '16px 20px', borderBottom: `1px solid ${theme.colors.border}`, backgroundColor: '#FAFAFA' }}>
             {pagoError && <div style={{ marginBottom: '10px' }}><ErrorBox message={pagoError} /></div>}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '10px' }}>
               <div>
                 <label style={labelStyle}>Monto <span style={{ color: theme.colors.error }}>*</span></label>
                 <input
@@ -943,7 +945,7 @@ export default function ServicioDetalleClient({
           <ModalCard title="Editar servicio" onClose={() => setShowEdit(false)} formId="edit-form">
             <form id="edit-form" onSubmit={editForm.handleSubmit(onEditSubmit)}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={labelStyle}>Activo (opcional)</label>
                     <div style={{ display: 'flex', gap: '6px' }}>

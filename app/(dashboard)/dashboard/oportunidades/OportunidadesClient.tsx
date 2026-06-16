@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import QuickCreateClienteModal from '@/components/dashboard/QuickCreateClienteModal'
 import { ClienteFormCombobox, ClienteFilterCombobox } from '@/components/dashboard/ClienteCombobox'
 
@@ -248,6 +249,7 @@ export default function OportunidadesClient({
   permisos: ModulePermisos
 }) {
   const router = useRouter()
+  const isMobile = useIsMobile()
   const [oportunidades, setOportunidades] = useState(initialOportunidades)
   useEffect(() => { setOportunidades(initialOportunidades) }, [initialOportunidades])
 
@@ -1047,7 +1049,7 @@ export default function OportunidadesClient({
                       {tipoLabel} OP #{viewTarget.nro_oportunidad_origen}
                     </p>
                     {origen ? (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '8px' }}>
                         <Field label="Contacto" value={[origen.primer_nombre, origen.apellido].filter(Boolean).join(' ') || origen.empresa} />
                         <Field label="Empresa" value={origen.empresa} />
                         <Field label="Teléfono" value={origen.telefono} />
@@ -1062,7 +1064,7 @@ export default function OportunidadesClient({
                 )
               })()}
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
                 <Field label="Nro Oportunidad" value={viewTarget.nro_oportunidad} />
                 <Field label="Nro Tarea" value={viewTarget.nro_tarea} />
                 <Field label="Título" value={viewTarget.titulo} />
@@ -1083,7 +1085,7 @@ export default function OportunidadesClient({
               )}
               <div style={{ borderTop: `1px solid ${theme.colors.border}`, paddingTop: '12px' }}>
                 <p style={{ fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium, color: theme.colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '10px' }}>Datos del contacto</p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
                   <Field label="Nombre" value={[viewTarget.primer_nombre, viewTarget.apellido].filter(Boolean).join(' ')} />
                   <Field label="Empresa" value={viewTarget.empresa} />
                   <div>
@@ -1263,7 +1265,7 @@ export default function OportunidadesClient({
                   <label style={{ ...labelStyle, fontSize: theme.fontSizes.sm }}>Descripción</label>
                   <textarea {...servicioForm.register('descripcion')} rows={4} style={{ ...inputStyle, resize: 'vertical', fontSize: theme.fontSizes.base }} />
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
                   <div>
                     <label style={{ ...labelStyle, fontSize: theme.fontSizes.sm }}>Valor ($)</label>
                     <input type="number" min={0} step="0.01" {...servicioForm.register('valor', { valueAsNumber: true })} style={{ ...inputStyle, fontSize: theme.fontSizes.base }} />
@@ -1378,7 +1380,7 @@ export default function OportunidadesClient({
                   <p style={{ margin: '0 0 12px', fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium, color: theme.colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Agregar contacto
                   </p>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
                     <div>
                       <label style={labelStyle}>Fecha</label>
                       <input

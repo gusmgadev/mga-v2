@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { Plus, Trash2, X, Loader2, AlertCircle, TrendingUp, TrendingDown, Wallet, CreditCard, Save } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import { ClienteFormCombobox, ClienteFilterCombobox } from '@/components/dashboard/ClienteCombobox'
 
 type CobranzaTipo = 'CARGO' | 'PAGO' | 'NOTA_CREDITO'
@@ -157,6 +158,7 @@ function CobranzaFormFields({
   clientes: ClienteSimple[]
   servicios: ServicioSimple[]
 }) {
+  const isMobile = useIsMobile()
   const tipo = useWatch({ control: form.control, name: 'tipo' })
   const clienteId = useWatch({ control: form.control, name: 'cliente_id' })
   const serviciosFiltrados = servicios.filter((s) => s.cliente_id === clienteId)
@@ -164,7 +166,7 @@ function CobranzaFormFields({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
 
         <div style={{ gridColumn: '1 / -1' }}>
           <label style={labelStyle}>Cliente <span style={{ color: theme.colors.error }}>*</span></label>
@@ -518,7 +520,8 @@ export default function CobranzasClient({
 
       {/* Tabla */}
       <div style={{ backgroundColor: '#fff', borderRadius: theme.radii.md, border: `1px solid ${theme.colors.border}`, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '640px' }}>
           <thead>
             <tr>
               <th style={thStyle}>Fecha</th>
@@ -582,6 +585,7 @@ export default function CobranzasClient({
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Modal crear */}

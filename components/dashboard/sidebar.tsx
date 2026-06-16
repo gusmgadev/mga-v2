@@ -30,6 +30,7 @@ import { theme } from '@/lib/theme'
 interface SidebarProps {
   userName: string
   userRole: string
+  onClose?: () => void
 }
 
 type NavItem = { label: string; href: string; Icon: LucideIcon }
@@ -84,7 +85,7 @@ const navGroups: NavGroup[] = [
   },
 ]
 
-export default function Sidebar({ userName, userRole }: SidebarProps) {
+export default function Sidebar({ userName, userRole, onClose }: SidebarProps) {
   const pathname = usePathname()
   const isAdmin = userRole === 'Administrador'
 
@@ -190,6 +191,7 @@ export default function Sidebar({ userName, userRole }: SidebarProps) {
                     <Link
                       key={href}
                       href={href}
+                      onClick={onClose}
                       style={{
                         display: 'flex',
                         alignItems: 'center',

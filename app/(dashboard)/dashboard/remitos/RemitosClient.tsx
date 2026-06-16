@@ -180,7 +180,8 @@ export default function RemitosClient({ initialRemitos, filtros, permisos }: Pro
             <p style={{ fontSize: theme.fontSizes.sm, margin: 0 }}>No hay remitos</p>
           </div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '500px' }}>
             <thead>
               <tr>
                 <th style={thStyle}>Número</th>
@@ -224,6 +225,7 @@ export default function RemitosClient({ initialRemitos, filtros, permisos }: Pro
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

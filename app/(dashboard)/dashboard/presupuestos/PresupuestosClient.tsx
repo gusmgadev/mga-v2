@@ -9,6 +9,7 @@ import { Plus, Trash2, X, Loader2, AlertCircle, Eye, Save } from 'lucide-react'
 import Link from 'next/link'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import QuickCreateClienteModal from '@/components/dashboard/QuickCreateClienteModal'
 import QuickCreateActivoModal from '@/components/dashboard/QuickCreateActivoModal'
 import { ClienteFormCombobox, ClienteFilterCombobox } from '@/components/dashboard/ClienteCombobox'
@@ -146,6 +147,7 @@ function PresupuestoFormFields({
   activos: ActivoSimple[]
   setActivos: React.Dispatch<React.SetStateAction<ActivoSimple[]>>
 }) {
+  const isMobile = useIsMobile()
   const [showQCCliente, setShowQCCliente] = useState(false)
   const [showQCActivo, setShowQCActivo] = useState(false)
   const clienteId = form.watch('cliente_id')
@@ -166,7 +168,7 @@ function PresupuestoFormFields({
   return (
     <>
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
         <div style={{ gridColumn: '1 / -1' }}>
           <label style={labelStyle}>Cliente <span style={{ color: theme.colors.error }}>*</span></label>
           <div style={{ display: 'flex', gap: '6px' }}>
@@ -234,7 +236,7 @@ function PresupuestoFormFields({
           />
         </div>
 
-        <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+        <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '12px' }}>
           <div>
             <label style={labelStyle}>Estado</label>
             <select {...form.register('estado')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
@@ -414,7 +416,8 @@ export default function PresupuestosClient({
       {globalError && <div style={{ marginBottom: '16px' }}><ErrorBox message={globalError} /></div>}
 
       <div style={{ backgroundColor: '#fff', borderRadius: theme.radii.md, border: `1px solid ${theme.colors.border}`, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '640px' }}>
           <thead>
             <tr>
               <th style={thStyle}>Cliente</th>
@@ -471,6 +474,7 @@ export default function PresupuestosClient({
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Create modal */}

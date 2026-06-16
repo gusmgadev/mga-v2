@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { ArrowLeft, Plus, Trash2, AlertCircle, Loader2, Check, Mic, Search, X } from 'lucide-react'
 import { theme } from '@/lib/theme'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import VoiceRecorder from '@/components/dashboard/VoiceRecorder'
 import CatalogoCombobox from '@/components/dashboard/CatalogoCombobox'
 import type { Remito, RemitoItem, OrigenDestino, Producto, ProductoConMatch } from '@/types/stock'
@@ -239,6 +240,7 @@ export default function RemitoDetalleClient({
   initialRubros,
 }: Props) {
   const router = useRouter()
+  const isMobile = useIsMobile()
   const [remito, setRemito] = useState(initialRemito)
   const [items, setItems] = useState<RemitoItem[]>((initialRemito.remito_items as RemitoItem[]) ?? [])
   const [origenes, setOrigenes] = useState<OrigenDestino[]>(initialOrigenes)
@@ -566,7 +568,7 @@ export default function RemitoDetalleClient({
       {/* Encabezado */}
       <SectionCard title="Encabezado">
         <form onBlur={handleEnc(saveEncabezado)}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
             <div style={{ gridColumn: '1 / -1' }}>
               <label style={labelStyle}>Tipo *</label>
               <div style={{ display: 'flex', gap: '8px' }}>
@@ -1044,7 +1046,7 @@ export default function RemitoDetalleClient({
             <h2 style={{ fontSize: theme.fontSizes.lg, fontWeight: theme.fontWeights.bold, margin: '0 0 20px' }}>
               Nuevo producto
             </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={labelStyle}>Nombre *</label>
                 <input

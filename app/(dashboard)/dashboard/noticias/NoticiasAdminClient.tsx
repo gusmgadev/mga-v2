@@ -12,6 +12,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 type Noticia = {
   id: number
@@ -247,6 +248,7 @@ export default function NoticiasAdminClient({
   initialNoticias: Noticia[]
   permisos: ModulePermisos
 }) {
+  const isMobile = useIsMobile()
   const [noticias, setNoticias] = useState(initialNoticias)
   const [showCreate, setShowCreate] = useState(false)
   const [editTarget, setEditTarget] = useState<Noticia | null>(null)
@@ -391,7 +393,7 @@ export default function NoticiasAdminClient({
         {form.formState.errors.resumen && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.resumen.message}</p>}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
         <ImageUploader label="Imagen card (miniatura)" value={imagenCard} onChange={setImagenCard} />
         <ImageUploader label="Imagen portada (detalle)" value={imagenPortada} onChange={setImagenPortada} />
       </div>
@@ -413,7 +415,7 @@ export default function NoticiasAdminClient({
         {videoUrl && <VideoPreview url={videoUrl} />}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '16px' }}>
         <div>
           <label style={labelStyle}>Fecha <span style={{ color: theme.colors.error }}>*</span></label>
           <input
@@ -481,7 +483,8 @@ export default function NoticiasAdminClient({
       {globalError && <div style={{ marginBottom: '16px' }}><ErrorBox message={globalError} /></div>}
 
       <div style={{ backgroundColor: '#fff', borderRadius: theme.radii.md, border: `1px solid ${theme.colors.border}`, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '500px' }}>
           <thead>
             <tr>
               <th style={{ ...thStyle, width: '48px' }}>Ord.</th>
@@ -572,6 +575,7 @@ export default function NoticiasAdminClient({
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Create modal */}

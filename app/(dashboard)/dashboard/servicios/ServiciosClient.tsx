@@ -12,6 +12,7 @@ import type { ModulePermisos } from '@/lib/permisos'
 import QuickCreateClienteModal from '@/components/dashboard/QuickCreateClienteModal'
 import { ClienteFormCombobox, ClienteFilterCombobox } from '@/components/dashboard/ClienteCombobox'
 import QuickCreateActivoModal from '@/components/dashboard/QuickCreateActivoModal'
+import { useIsMobile } from '@/hooks/useIsMobile'
 
 type ServicioEstado = 'INGRESADO' | 'EN PROCESO' | 'CANCELADO' | 'RECHAZADO' | 'TERMINADO' | 'PRESUPUESTADO'
 type EstadoPago = 'PENDIENTE' | 'SIN CARGO' | 'GARANTIA' | 'PAGO PARCIAL' | 'PAGADO'
@@ -185,6 +186,7 @@ function ServicioFormFields({
   activos: ActivoSimple[]
   setActivos: React.Dispatch<React.SetStateAction<ActivoSimple[]>>
 }) {
+  const isMobile = useIsMobile()
   const [showQCCliente, setShowQCCliente] = useState(false)
   const [showQCActivo, setShowQCActivo] = useState(false)
   const clienteId = form.watch('cliente_id')
@@ -205,7 +207,7 @@ function ServicioFormFields({
   return (
     <>
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
         <div style={{ gridColumn: '1 / -1' }}>
           <label style={labelStyle}>Cliente <span style={{ color: theme.colors.error }}>*</span></label>
           <div style={{ display: 'flex', gap: '6px' }}>
@@ -339,6 +341,7 @@ export default function ServiciosClient({
   permisos: ModulePermisos
 }) {
   const router = useRouter()
+  const isMobile = useIsMobile()
   const [servicios, setServicios] = useState(initialServicios)
   useEffect(() => { setServicios(initialServicios) }, [initialServicios])
   const [localClientes, setLocalClientes] = useState(clientes)
@@ -583,7 +586,8 @@ export default function ServiciosClient({
       {globalError && <div style={{ marginBottom: '16px' }}><ErrorBox message={globalError} /></div>}
 
       <div style={{ backgroundColor: '#fff', borderRadius: theme.radii.md, border: `1px solid ${theme.colors.border}`, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '720px' }}>
           <thead>
             <tr>
               <th style={thStyle}>Fecha</th>
@@ -654,6 +658,7 @@ export default function ServiciosClient({
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Create modal */}
@@ -682,7 +687,7 @@ export default function ServiciosClient({
           <ModalCard title="Editar servicio" onClose={() => setEditTarget(null)} formId="edit-form">
             <form id="edit-form" onSubmit={editForm.handleSubmit(onEditSubmit)}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
                   <div style={{ gridColumn: '1 / -1' }}>
                     <label style={labelStyle}>Cliente</label>
                     <div style={{ padding: '10px 14px', backgroundColor: '#F8F9FB', borderRadius: theme.radii.sm, border: `1px solid ${theme.colors.border}`, fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
@@ -792,7 +797,7 @@ export default function ServiciosClient({
                     </div>
                   ))}
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
                   <div>
                     <label style={labelStyle}>Monto ($) <span style={{ color: theme.colors.error }}>*</span></label>
                     <input
