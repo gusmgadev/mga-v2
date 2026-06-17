@@ -7,6 +7,7 @@ const createSchema = z.object({
   descripcion: z.string().min(2, 'Mínimo 2 caracteres'),
   estado: z.enum(['INICIADA', 'EN PROCESO', 'PAUSADA', 'CANCELADA', 'TERMINADA']).optional(),
   fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  valor: z.number().min(0).nullable().optional(),
 })
 
 async function requireSession() {

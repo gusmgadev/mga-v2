@@ -22,6 +22,7 @@ type Tarea = {
   descripcion: string
   estado: TareaEstado
   fecha: string | null
+  valor: number | null
   created_at: string
 }
 
@@ -210,11 +211,12 @@ export default function ServicioDetalleClient({
   // Tareas state
   const [nuevaTarea, setNuevaTarea] = useState('')
   const [nuevaTareaFecha, setNuevaTareaFecha] = useState(new Date().toISOString().split('T')[0])
+  const [nuevaTareaValor, setNuevaTareaValor] = useState('')
   const [tareaLoading, setTareaLoading] = useState(false)
   const [tareaError, setTareaError] = useState<string | null>(null)
   const [deletingTareaId, setDeletingTareaId] = useState<number | null>(null)
   const [updatingTareaId, setUpdatingTareaId] = useState<number | null>(null)
-  const [editingTarea, setEditingTarea] = useState<{ id: number; descripcion: string; fecha: string } | null>(null)
+  const [editingTarea, setEditingTarea] = useState<{ id: number; descripcion: string; fecha: string; valor: string } | null>(null)
   const [savingTareaId, setSavingTareaId] = useState<number | null>(null)
 
   // Pagos state
@@ -327,10 +329,11 @@ export default function ServicioDetalleClient({
     if (!nuevaTarea.trim()) return
     setTareaLoading(true)
     setTareaError(null)
+    const valorNum = nuevaTareaValor !== '' ? parseFloat(nuevaTareaValor) : null
     const res = await fetch(`/api/dashboard/servicios/${servicio.id}/tareas`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ descripcion: nuevaTarea.trim(), fecha: nuevaTareaFecha }),
+      body: JSON.stringify({ descripcion: nuevaTarea.trim(), fecha: nuevaTareaFecha, valor: valorNum && valorNum > 0 ? valorNum : null }),
     })
     const json = await res.json()
     setTareaLoading(false)
@@ -341,6 +344,7 @@ export default function ServicioDetalleClient({
     }
     setTareas((prev) => [...prev, json])
     setNuevaTarea('')
+    setNuevaTareaValor('')
   }
 
   const cambiarEstadoTarea = async (tarea: Tarea, estado: TareaEstado) => {
@@ -364,10 +368,11 @@ export default function ServicioDetalleClient({
   const guardarEditTarea = async () => {
     if (!editingTarea || !editingTarea.descripcion.trim()) return
     setSavingTareaId(editingTarea.id)
+    const valorNum = editingTarea.valor !== '' ? parseFloat(editingTarea.valor) : null
     const res = await fetch(`/api/dashboard/servicios/${servicio.id}/tareas/${editingTarea.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ descripcion: editingTarea.descripcion.trim(), fecha: editingTarea.fecha || null }),
+      body: JSON.stringify({ descripcion: editingTarea.descripcion.trim(), fecha: editingTarea.fecha || null, valor: valorNum && valorNum > 0 ? valorNum : null }),
     })
     const json = await res.json()
     setSavingTareaId(null)
@@ -386,7 +391,9 @@ export default function ServicioDetalleClient({
 
   // Pagos
   const totalPagado = pagos.reduce((sum, p) => sum + Number(p.monto), 0)
-  const valor = Number(servicio.valor)
+  const valorBase = Number(servicio.valor)
+  const valorTareas = tareas.reduce((sum, t) => sum + (t.valor ? Number(t.valor) : 0), 0)
+  const valor = valorBase + valorTareas
   const saldo = Math.max(0, valor - totalPagado)
   const saldoACuenta = pagosACuenta.reduce((sum, p) => sum + Number(p.monto), 0)
 
@@ -549,6 +556,11 @@ export default function ServicioDetalleClient({
                 <p style={{ margin: 0, fontSize: theme.fontSizes.lg, fontWeight: theme.fontWeights.bold, color: theme.colors.text }}>
                   ${valor.toLocaleString('es-AR')}
                 </p>
+                {valorTareas > 0 && (
+                  <p style={{ margin: '2px 0 0', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>
+                    base ${valorBase.toLocaleString('es-AR')} + tareas ${valorTareas.toLocaleString('es-AR')}
+                  </p>
+                )}
               </div>
               <div>
                 <p style={{ margin: 0, fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>Pagado</p>
@@ -578,6 +590,11 @@ export default function ServicioDetalleClient({
           <h3 style={{ margin: 0, fontSize: theme.fontSizes.base, fontWeight: theme.fontWeights.bold, color: theme.colors.text }}>
             Tareas {tareas.length > 0 && <span style={{ color: theme.colors.textMuted, fontWeight: theme.fontWeights.regular }}>({tareas.length})</span>}
           </h3>
+          {valorTareas > 0 && (
+            <span style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
+              Subtotal: <strong style={{ color: theme.colors.text }}>${valorTareas.toLocaleString('es-AR')}</strong>
+            </span>
+          )}
         </div>
 
         {tareas.length > 0 && (
@@ -615,6 +632,15 @@ export default function ServicioDetalleClient({
                       style={{ flex: 1, padding: '4px 8px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', fontFamily: 'inherit' }}
                     />
                     <input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={editingTarea.valor}
+                      onChange={(e) => setEditingTarea((prev) => prev && { ...prev, valor: e.target.value })}
+                      placeholder="$ valor"
+                      style={{ padding: '4px 8px', fontSize: theme.fontSizes.xs, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', fontFamily: 'inherit', width: '90px', flexShrink: 0 }}
+                    />
+                    <input
                       type="date"
                       value={editingTarea.fecha}
                       onChange={(e) => setEditingTarea((prev) => prev && { ...prev, fecha: e.target.value })}
@@ -639,6 +665,11 @@ export default function ServicioDetalleClient({
                     <span style={{ flex: 1, fontSize: theme.fontSizes.sm, color: theme.colors.text }}>
                       {tarea.descripcion}
                     </span>
+                    {tarea.valor ? (
+                      <span style={{ fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium, color: theme.colors.text, whiteSpace: 'nowrap', padding: '2px 7px', backgroundColor: `${theme.colors.primary}12`, borderRadius: theme.radii.sm }}>
+                        ${Number(tarea.valor).toLocaleString('es-AR')}
+                      </span>
+                    ) : null}
                     {tarea.fecha && (
                       <span style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, whiteSpace: 'nowrap' }}>
                         {tarea.fecha.split('-').reverse().join('/')}
@@ -646,7 +677,7 @@ export default function ServicioDetalleClient({
                     )}
                     {permisos.can_edit && (
                       <button
-                        onClick={() => setEditingTarea({ id: tarea.id, descripcion: tarea.descripcion, fecha: tarea.fecha ?? new Date().toISOString().split('T')[0] })}
+                        onClick={() => setEditingTarea({ id: tarea.id, descripcion: tarea.descripcion, fecha: tarea.fecha ?? new Date().toISOString().split('T')[0], valor: tarea.valor ? String(tarea.valor) : '' })}
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.textMuted, display: 'flex', padding: '4px', flexShrink: 0 }}
                       >
                         <Pencil size={13} />
@@ -672,13 +703,22 @@ export default function ServicioDetalleClient({
         {permisos.can_create && (
           <div style={{ padding: '16px 20px' }}>
             {tareaError && <div style={{ marginBottom: '10px' }}><ErrorBox message={tareaError} /></div>}
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: isMobile ? 'wrap' : 'nowrap' }}>
               <input
                 value={nuevaTarea}
                 onChange={(e) => setNuevaTarea(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); agregarTarea() } }}
                 placeholder="Descripción de la tarea..."
-                style={{ ...inputStyle, flex: 1, padding: '8px 12px', fontSize: theme.fontSizes.sm }}
+                style={{ ...inputStyle, flex: 1, padding: '8px 12px', fontSize: theme.fontSizes.sm, minWidth: isMobile ? '100%' : undefined }}
+              />
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={nuevaTareaValor}
+                onChange={(e) => setNuevaTareaValor(e.target.value)}
+                placeholder="$ (opcional)"
+                style={{ ...inputStyle, width: '110px', padding: '8px 10px', fontSize: theme.fontSizes.sm, flexShrink: 0 }}
               />
               <input
                 type="date"
@@ -709,8 +749,8 @@ export default function ServicioDetalleClient({
             <button
               onClick={() => {
                 if (!showAddPago) {
-                  const saldo = Math.max(0, valor - totalPagado)
-                  setPagoMonto(valor > 0 && saldo > 0 ? String(saldo) : '')
+                  const saldoActual = Math.max(0, valor - totalPagado)
+                  setPagoMonto(valor > 0 && saldoActual > 0 ? String(saldoActual) : '')
                 }
                 setShowAddPago((v) => !v)
               }}
