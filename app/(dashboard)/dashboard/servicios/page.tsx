@@ -38,22 +38,29 @@ export default async function ServiciosPage({
   const { data: servicios } = await query
 
   const servicioIds = (servicios ?? []).map((s) => s.id)
-  const { data: cobranzasPagos } = servicioIds.length
-    ? await supabaseAdmin
-        .from('cobranzas')
-        .select('servicio_id, monto')
-        .in('servicio_id', servicioIds)
-        .eq('tipo', 'PAGO')
-    : { data: [] }
+  const [{ data: cobranzasPagos }, { data: tareasValores }] = await Promise.all([
+    servicioIds.length
+      ? supabaseAdmin.from('cobranzas').select('servicio_id, monto').in('servicio_id', servicioIds).eq('tipo', 'PAGO')
+      : Promise.resolve({ data: [] }),
+    servicioIds.length
+      ? supabaseAdmin.from('servicio_tareas').select('servicio_id, valor').in('servicio_id', servicioIds)
+      : Promise.resolve({ data: [] }),
+  ])
 
   const pagosMap = new Map<number, number>()
   for (const p of cobranzasPagos ?? []) {
     pagosMap.set(p.servicio_id, (pagosMap.get(p.servicio_id) ?? 0) + Number(p.monto))
   }
 
+  const tareasMap = new Map<number, number>()
+  for (const t of tareasValores ?? []) {
+    if (t.valor) tareasMap.set(t.servicio_id, (tareasMap.get(t.servicio_id) ?? 0) + Number(t.valor))
+  }
+
   const serviciosConPagos = (servicios ?? []).map((s) => ({
     ...s,
     totalPagado: pagosMap.get(s.id) ?? 0,
+    valorTareas: tareasMap.get(s.id) ?? 0,
   }))
 
   return (

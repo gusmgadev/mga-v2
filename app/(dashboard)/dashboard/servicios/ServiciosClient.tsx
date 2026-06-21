@@ -31,6 +31,7 @@ type Servicio = {
   clientes: { nombre: string } | null
   activos: { nombre: string } | null
   totalPagado: number
+  valorTareas: number
 }
 type ClienteSimple = { id: number; nombre: string }
 type ActivoSimple = { id: number; nombre: string; cliente_id: number }
@@ -105,13 +106,13 @@ const quickAddBtnStyle: React.CSSProperties = {
   display: 'flex', alignItems: 'center', flexShrink: 0,
 }
 const thStyle: React.CSSProperties = {
-  textAlign: 'left', padding: '12px 16px', fontSize: theme.fontSizes.xs,
+  textAlign: 'left', padding: '8px 12px', fontSize: '10px',
   fontWeight: theme.fontWeights.medium, color: theme.colors.textMuted,
   textTransform: 'uppercase', letterSpacing: '0.05em',
   borderBottom: `1px solid ${theme.colors.border}`, backgroundColor: '#F8F9FB',
 }
 const tdStyle: React.CSSProperties = {
-  padding: '8px 16px', fontSize: theme.fontSizes.sm, color: theme.colors.text,
+  padding: '6px 12px', fontSize: theme.fontSizes.xs, color: theme.colors.text,
   borderBottom: `1px solid ${theme.colors.border}`,
 }
 
@@ -384,7 +385,7 @@ export default function ServiciosClient({
   const [pagoLoading, setPagoLoading] = useState(false)
 
   const openPago = (s: Servicio) => {
-    const saldo = Math.max(0, Number(s.valor) - (s.totalPagado ?? 0))
+    const saldo = Math.max(0, Number(s.valor) + (s.valorTareas ?? 0) - (s.totalPagado ?? 0))
     pagoForm.reset({ monto: saldo || 0, concepto: 'Pago servicio', metodo_pago: 'TRANSFERENCIA', fecha: new Date().toISOString().split('T')[0], notas: '' })
     setPagoError(null)
     setPagoTarget(s)
@@ -406,7 +407,7 @@ export default function ServiciosClient({
     setServicios((prev) => prev.map((s) => {
       if (s.id !== pagoTarget.id) return s
       const nuevoTotalPagado = (s.totalPagado ?? 0) + monto
-      const valor = Number(s.valor)
+      const valor = Number(s.valor) + (s.valorTareas ?? 0)
       const nuevoEstadoPago: EstadoPago =
         s.estado_pago === 'SIN CARGO' || s.estado_pago === 'GARANTIA'
           ? s.estado_pago
@@ -519,9 +520,10 @@ export default function ServiciosClient({
     return `${d}/${m}/${y.slice(2)}`
   }
 
-  const valorTotal = servicios.reduce((sum, s) => sum + Number(s.valor), 0)
+  const valorTotal = servicios.reduce((sum, s) => sum + Number(s.valor) + (s.valorTareas ?? 0), 0)
+  const tareasTotal = servicios.reduce((sum, s) => sum + (s.valorTareas ?? 0), 0)
   const pagadoTotal = servicios.reduce((sum, s) => sum + (s.totalPagado ?? 0), 0)
-  const saldoTotal = servicios.reduce((sum, s) => sum + Math.max(0, Number(s.valor) - (s.totalPagado ?? 0)), 0)
+  const saldoTotal = servicios.reduce((sum, s) => sum + Math.max(0, Number(s.valor) + (s.valorTareas ?? 0) - (s.totalPagado ?? 0)), 0)
 
   return (
     <>
@@ -569,7 +571,7 @@ export default function ServiciosClient({
           <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textMuted, whiteSpace: 'nowrap' }}>
             {servicios.length} servicio{servicios.length !== 1 ? 's' : ''}
             {' · '}
-            <span style={{ color: theme.colors.textMuted }}>
+            <span style={{ color: theme.colors.text, fontWeight: theme.fontWeights.medium }}>
               Total: ${valorTotal.toLocaleString('es-AR')}
             </span>
             {' · '}
@@ -601,7 +603,9 @@ export default function ServiciosClient({
               <th style={thStyle}>Título</th>
               <th style={thStyle}>Estado</th>
               <th style={thStyle}>Pago</th>
-              <th style={{ ...thStyle, textAlign: 'right' }}>Valor</th>
+              <th style={{ ...thStyle, textAlign: 'right' }}>Base</th>
+              <th style={{ ...thStyle, textAlign: 'right' }}>Tareas/Repuestos</th>
+              <th style={{ ...thStyle, textAlign: 'right' }}>Total Servicio</th>
               <th style={{ ...thStyle, textAlign: 'right' }}>Pagado</th>
               <th style={{ ...thStyle, textAlign: 'right' }}>Saldo</th>
               <th style={{ ...thStyle, textAlign: 'right' }}>Acciones</th>
@@ -610,26 +614,35 @@ export default function ServiciosClient({
           <tbody>
             {servicios.length === 0 && (
               <tr>
-                <td colSpan={9} style={{ ...tdStyle, textAlign: 'center', color: theme.colors.textMuted }}>
+                <td colSpan={11} style={{ ...tdStyle, textAlign: 'center', color: theme.colors.textMuted }}>
                   No hay servicios registrados
                 </td>
               </tr>
             )}
             {servicios.map((s) => {
               const totalPagado = s.totalPagado ?? 0
-              const valor = Number(s.valor)
-              const saldo = Math.max(0, valor - totalPagado)
+              const base = Number(s.valor)
+              const tareas = s.valorTareas ?? 0
+              const totalServicio = base + tareas
+              const saldo = Math.max(0, totalServicio - totalPagado)
+              const iconBtn: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '4px 6px', background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted }
               return (
               <tr key={s.id}>
                 <td style={{ ...tdStyle, color: theme.colors.textMuted, whiteSpace: 'nowrap' }}>{formatFecha(s.fecha)}</td>
-                <td style={{ ...tdStyle, color: theme.colors.textMuted, whiteSpace: 'nowrap', maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.clientes?.nombre ?? '—'}</td>
-                <td style={{ ...tdStyle, maxWidth: '240px' }}>
+                <td style={{ ...tdStyle, color: theme.colors.textMuted, whiteSpace: 'nowrap', maxWidth: '140px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.clientes?.nombre ?? '—'}</td>
+                <td style={{ ...tdStyle, maxWidth: '220px' }}>
                   <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: theme.fontWeights.medium }}>{s.titulo}</div>
                 </td>
                 <td style={tdStyle}><EstadoBadge estado={s.estado} /></td>
                 <td style={tdStyle}><PagoBadge estado={s.estado_pago} /></td>
+                <td style={{ ...tdStyle, textAlign: 'right', color: theme.colors.textMuted }}>
+                  ${base.toLocaleString('es-AR')}
+                </td>
+                <td style={{ ...tdStyle, textAlign: 'right', color: tareas > 0 ? theme.colors.text : theme.colors.textMuted }}>
+                  {tareas > 0 ? `$${tareas.toLocaleString('es-AR')}` : '—'}
+                </td>
                 <td style={{ ...tdStyle, textAlign: 'right', fontWeight: theme.fontWeights.medium }}>
-                  ${valor.toLocaleString('es-AR')}
+                  ${totalServicio.toLocaleString('es-AR')}
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right', color: totalPagado > 0 ? theme.colors.success : theme.colors.textMuted }}>
                   ${totalPagado.toLocaleString('es-AR')}
@@ -638,23 +651,23 @@ export default function ServiciosClient({
                   ${saldo.toLocaleString('es-AR')}
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right' }}>
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '6px', flexWrap: 'nowrap' }}>
-                    <Link href={`/dashboard/servicios/${s.id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, fontSize: '11px', textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                      <Eye size={12} /> Ver
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '4px', flexWrap: 'nowrap' }}>
+                    <Link href={`/dashboard/servicios/${s.id}`} title="Ver detalle" style={{ ...iconBtn, textDecoration: 'none' }}>
+                      <Eye size={12} />
                     </Link>
                     {permisos.can_edit && (
-                      <button onClick={() => openEdit(s)} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', background: 'none', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.textMuted, fontSize: '11px', whiteSpace: 'nowrap' }}>
-                        <Pencil size={12} /> Editar
+                      <button title="Editar" onClick={() => openEdit(s)} style={iconBtn}>
+                        <Pencil size={12} />
                       </button>
                     )}
                     {permisos.can_create && (
-                      <button onClick={() => openPago(s)} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', background: 'none', border: `1px solid ${theme.colors.success}55`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.success, fontSize: '11px', whiteSpace: 'nowrap' }}>
-                        <DollarSign size={12} /> Pago
+                      <button title="Cargar pago" onClick={() => openPago(s)} style={{ ...iconBtn, border: `1px solid ${theme.colors.success}55`, color: theme.colors.success }}>
+                        <DollarSign size={12} />
                       </button>
                     )}
                     {permisos.can_delete && (
-                      <button onClick={() => setDeleteTarget(s)} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 9px', background: 'none', border: `1px solid ${theme.colors.error}44`, borderRadius: theme.radii.sm, cursor: 'pointer', color: theme.colors.error, fontSize: '11px', whiteSpace: 'nowrap' }}>
-                        <Trash2 size={12} /> Eliminar
+                      <button title="Eliminar" onClick={() => setDeleteTarget(s)} style={{ ...iconBtn, border: `1px solid ${theme.colors.error}44`, color: theme.colors.error }}>
+                        <Trash2 size={12} />
                       </button>
                     )}
                   </div>
@@ -666,8 +679,14 @@ export default function ServiciosClient({
           {servicios.length > 0 && (
             <tfoot>
               <tr style={{ backgroundColor: '#F8F9FB', borderTop: `2px solid ${theme.colors.border}` }}>
-                <td colSpan={5} style={{ ...tdStyle, fontWeight: theme.fontWeights.medium, color: theme.colors.textMuted, fontSize: theme.fontSizes.xs, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Total ({servicios.length})
+                <td colSpan={5} style={{ ...tdStyle, fontWeight: theme.fontWeights.medium, color: theme.colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Totales ({servicios.length})
+                </td>
+                <td style={{ ...tdStyle, textAlign: 'right', fontWeight: theme.fontWeights.bold, color: theme.colors.textMuted }}>
+                  ${servicios.reduce((s, x) => s + Number(x.valor), 0).toLocaleString('es-AR')}
+                </td>
+                <td style={{ ...tdStyle, textAlign: 'right', fontWeight: theme.fontWeights.bold, color: tareasTotal > 0 ? theme.colors.text : theme.colors.textMuted }}>
+                  {tareasTotal > 0 ? `$${tareasTotal.toLocaleString('es-AR')}` : '—'}
                 </td>
                 <td style={{ ...tdStyle, textAlign: 'right', fontWeight: theme.fontWeights.bold, color: theme.colors.text }}>
                   ${valorTotal.toLocaleString('es-AR')}
@@ -812,9 +831,9 @@ export default function ServiciosClient({
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
                   {[
-                    { label: 'Valor', value: Number(pagoTarget.valor), color: theme.colors.text },
+                    { label: 'Total', value: Number(pagoTarget.valor) + (pagoTarget.valorTareas ?? 0), color: theme.colors.text },
                     { label: 'Pagado', value: pagoTarget.totalPagado ?? 0, color: theme.colors.success },
-                    { label: 'Saldo', value: Math.max(0, Number(pagoTarget.valor) - (pagoTarget.totalPagado ?? 0)), color: '#B45309' },
+                    { label: 'Saldo', value: Math.max(0, Number(pagoTarget.valor) + (pagoTarget.valorTareas ?? 0) - (pagoTarget.totalPagado ?? 0)), color: '#B45309' },
                   ].map(({ label, value, color }) => (
                     <div key={label} style={{ padding: '8px 12px', backgroundColor: '#F8F9FB', borderRadius: theme.radii.sm, border: `1px solid ${theme.colors.border}`, textAlign: 'center' }}>
                       <div style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, marginBottom: '2px' }}>{label}</div>
