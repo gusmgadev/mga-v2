@@ -6,6 +6,7 @@ import { textSearch, getPlaceDetails, extractAddressComponents, API_COST } from 
 import { normalizePhone, extractDomain, normalizeName, getDominantCategory } from '@/lib/radar/normalization'
 import { findDuplicate } from '@/lib/radar/deduplication'
 import { calculateAllScores } from '@/lib/radar/scoring'
+import { fetchWebsiteEmails } from '@/lib/radar/website'
 
 export async function GET(req: Request) {
   const session = await auth()
@@ -124,6 +125,28 @@ export async function POST(req: Request) {
       const website = details.website ?? null
       const categories = details.types ?? []
 
+      let email: string | null = null
+      const requiresPhone = !!filters.phoneRequired
+      const requiresEmail = !!filters.emailRequired
+      if (requiresEmail && website) {
+        const emails = await fetchWebsiteEmails(website)
+        email = emails[0] ?? null
+      }
+
+      const hasPhone = !!phone
+      const hasEmail = !!email
+      const passesContactFilter = !requiresPhone && !requiresEmail
+        ? true
+        : requiresPhone && requiresEmail
+          ? hasPhone || hasEmail
+          : requiresPhone
+            ? hasPhone
+            : hasEmail
+      if (!passesContactFilter) {
+        processedPlaceIds.add(r.place_id)
+        return
+      }
+
       const duplicate = findDuplicate(
         {
           google_place_id: details.place_id,
@@ -188,6 +211,7 @@ export async function POST(req: Request) {
           phone,
           normalized_phone: normalizePhone(phone),
           whatsapp: phone ? normalizePhone(phone) : null,
+          email,
           website,
           website_domain: domain,
           google_maps_url: details.url ?? null,
