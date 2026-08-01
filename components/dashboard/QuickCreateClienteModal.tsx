@@ -6,6 +6,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { X, Loader2, AlertCircle } from 'lucide-react'
 import { theme } from '@/lib/theme'
+import FieldRow from '@/components/dashboard/FieldRow'
+import RubroCombobox from '@/components/dashboard/RubroCombobox'
 
 interface InitialData {
   nombre?: string
@@ -15,6 +17,8 @@ interface InitialData {
   telefono?: string
   localidad?: string
   direccion?: string
+  rubro?: string
+  pagina_web?: string
 }
 
 interface Props {
@@ -46,11 +50,6 @@ const inputStyle = {
   border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm,
   outline: 'none', boxSizing: 'border-box' as const, fontFamily: 'inherit',
 }
-const labelStyle = {
-  display: 'block', fontSize: theme.fontSizes.sm,
-  fontWeight: theme.fontWeights.medium, color: theme.colors.text, marginBottom: '5px',
-}
-
 export default function QuickCreateClienteModal({ onClose, onCreated, initialData }: Props) {
   const form = useForm<ClienteForm>({
     resolver: zodResolver(clienteSchema),
@@ -65,10 +64,10 @@ export default function QuickCreateClienteModal({ onClose, onCreated, initialDat
       direccion: initialData?.direccion ?? '',
       localidad: initialData?.localidad ?? '',
       cuit: '',
-      rubro: '',
+      rubro: initialData?.rubro ?? '',
       notas: '',
       imagen: '',
-      pagina_web: '',
+      pagina_web: initialData?.pagina_web ?? '',
     },
   })
 
@@ -111,75 +110,91 @@ export default function QuickCreateClienteModal({ onClose, onCreated, initialDat
         <form onSubmit={handleSubmit} style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             <div style={{ gridColumn: '1 / -1' }}>
-              <label style={labelStyle}>Nombre <span style={{ color: theme.colors.error }}>*</span></label>
-              <input {...form.register('nombre')} autoFocus style={inputStyle} placeholder="Nombre completo o razón social" />
-              {form.formState.errors.nombre && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{form.formState.errors.nombre.message}</p>}
+              <FieldRow label="Nombre" required>
+                <input {...form.register('nombre')} autoFocus style={inputStyle} placeholder="Nombre completo o razón social" />
+                {form.formState.errors.nombre && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{form.formState.errors.nombre.message}</p>}
+              </FieldRow>
             </div>
 
             <div style={{ gridColumn: '1 / -1' }}>
-              <label style={labelStyle}>Contacto</label>
-              <input {...form.register('contacto')} style={inputStyle} placeholder="Nombre del contacto en la empresa" />
+              <FieldRow label="Contacto">
+                <input {...form.register('contacto')} style={inputStyle} placeholder="Nombre del contacto en la empresa" />
+              </FieldRow>
             </div>
 
             <div>
-              <label style={labelStyle}>Tipo <span style={{ color: theme.colors.error }}>*</span></label>
-              <select {...form.register('tipo')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
-                <option value="PARTICULAR">Particular</option>
-                <option value="EMPRESA">Empresa</option>
-                <option value="COMERCIO">Comercio</option>
-              </select>
+              <FieldRow label="Tipo" required>
+                <select {...form.register('tipo')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+                  <option value="PARTICULAR">Particular</option>
+                  <option value="EMPRESA">Empresa</option>
+                  <option value="COMERCIO">Comercio</option>
+                </select>
+              </FieldRow>
             </div>
 
             <div>
-              <label style={labelStyle}>CUIT / DNI</label>
-              <input {...form.register('cuit')} style={inputStyle} placeholder="20-12345678-9" />
+              <FieldRow label="CUIT / DNI">
+                <input {...form.register('cuit')} style={inputStyle} placeholder="20-12345678-9" />
+              </FieldRow>
             </div>
 
             <div>
-              <label style={labelStyle}>Rubro</label>
-              <input {...form.register('rubro')} style={inputStyle} placeholder="Ej: Indumentaria, Óptica..." />
+              <FieldRow label="Rubro">
+                <RubroCombobox
+                  value={form.watch('rubro') ?? ''}
+                  onChange={(v) => form.setValue('rubro', v as string)}
+                  placeholder="Ej: Indumentaria, Óptica..."
+                />
+              </FieldRow>
             </div>
 
             <div>
-              <label style={labelStyle}>Email</label>
-              <input {...form.register('email')} type="email" style={inputStyle} placeholder="cliente@email.com" />
-              {form.formState.errors.email && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{form.formState.errors.email.message}</p>}
+              <FieldRow label="Email">
+                <input {...form.register('email')} type="email" style={inputStyle} placeholder="cliente@email.com" />
+                {form.formState.errors.email && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{form.formState.errors.email.message}</p>}
+              </FieldRow>
             </div>
 
             <div>
-              <label style={labelStyle}>Teléfono</label>
-              <input {...form.register('telefono')} style={inputStyle} placeholder="2664-123456" />
+              <FieldRow label="Teléfono">
+                <input {...form.register('telefono')} style={inputStyle} placeholder="2664-123456" />
+              </FieldRow>
             </div>
 
             <div style={{ gridColumn: '1 / -1' }}>
-              <label style={labelStyle}>Dirección</label>
-              <input {...form.register('direccion')} style={inputStyle} placeholder="Calle, número" />
+              <FieldRow label="Dirección">
+                <input {...form.register('direccion')} style={inputStyle} placeholder="Calle, número" />
+              </FieldRow>
             </div>
 
             <div style={{ gridColumn: '1 / -1' }}>
-              <label style={labelStyle}>Localidad</label>
-              <input {...form.register('localidad')} style={inputStyle} placeholder="Ciudad, Provincia" />
+              <FieldRow label="Localidad">
+                <input {...form.register('localidad')} style={inputStyle} placeholder="Ciudad, Provincia" />
+              </FieldRow>
             </div>
 
             <div>
-              <label style={labelStyle}>Imagen (URL del logo)</label>
-              <input {...form.register('imagen')} style={inputStyle} placeholder="https://..." />
+              <FieldRow label="Imagen (URL del logo)">
+                <input {...form.register('imagen')} style={inputStyle} placeholder="https://..." />
+              </FieldRow>
             </div>
 
             <div>
-              <label style={labelStyle}>Página web</label>
-              <input {...form.register('pagina_web')} type="url" style={inputStyle} placeholder="https://www.ejemplo.com" />
-              {form.formState.errors.pagina_web && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{form.formState.errors.pagina_web.message}</p>}
+              <FieldRow label="Página web">
+                <input {...form.register('pagina_web')} type="url" style={inputStyle} placeholder="https://www.ejemplo.com" />
+                {form.formState.errors.pagina_web && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{form.formState.errors.pagina_web.message}</p>}
+              </FieldRow>
             </div>
 
             <div style={{ gridColumn: '1 / -1' }}>
-              <label style={labelStyle}>Notas internas</label>
-              <textarea
-                {...form.register('notas')}
-                rows={2}
-                style={{ ...inputStyle, resize: 'vertical' }}
-                placeholder="Observaciones, condiciones especiales..."
-              />
+              <FieldRow label="Notas internas">
+                <textarea
+                  {...form.register('notas')}
+                  rows={2}
+                  style={{ ...inputStyle, resize: 'vertical' }}
+                  placeholder="Observaciones, condiciones especiales..."
+                />
+              </FieldRow>
             </div>
 
             <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '20px' }}>

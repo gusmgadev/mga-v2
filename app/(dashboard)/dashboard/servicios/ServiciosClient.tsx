@@ -9,6 +9,7 @@ import { Plus, Trash2, X, Loader2, AlertCircle, Eye, Pencil, Save, DollarSign } 
 import Link from 'next/link'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
+import FieldRow from '@/components/dashboard/FieldRow'
 import QuickCreateClienteModal from '@/components/dashboard/QuickCreateClienteModal'
 import { ClienteFormCombobox, ClienteFilterCombobox } from '@/components/dashboard/ClienteCombobox'
 import QuickCreateActivoModal from '@/components/dashboard/QuickCreateActivoModal'
@@ -95,10 +96,6 @@ const inputStyle = {
   width: '100%', padding: '10px 14px', fontSize: theme.fontSizes.base,
   border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm,
   outline: 'none', boxSizing: 'border-box' as const, fontFamily: 'inherit',
-}
-const labelStyle = {
-  display: 'block', fontSize: theme.fontSizes.sm,
-  fontWeight: theme.fontWeights.medium, color: theme.colors.text, marginBottom: '6px',
 }
 const quickAddBtnStyle: React.CSSProperties = {
   padding: '10px 10px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm,
@@ -210,106 +207,114 @@ function ServicioFormFields({
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
         <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>Cliente <span style={{ color: theme.colors.error }}>*</span></label>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <ClienteFormCombobox
-              clientes={clientes}
-              value={clienteId || 0}
-              onChange={(id) => form.setValue('cliente_id', id, { shouldValidate: true })}
+          <FieldRow label="Cliente" required>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <ClienteFormCombobox
+                clientes={clientes}
+                value={clienteId || 0}
+                onChange={(id) => form.setValue('cliente_id', id, { shouldValidate: true })}
+              />
+              <button type="button" title="Crear nuevo cliente" onClick={() => setShowQCCliente(true)} style={quickAddBtnStyle}>
+                <Plus size={14} />
+              </button>
+            </div>
+            {form.formState.errors.cliente_id && (
+              <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+                {form.formState.errors.cliente_id.message}
+              </p>
+            )}
+          </FieldRow>
+        </div>
+
+        <div style={{ gridColumn: '1 / -1' }}>
+          <FieldRow label="Activo (opcional)">
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <select
+                {...form.register('activo_id', { setValueAs: (v) => (v === '' || v === '0' || v === 0) ? null : Number(v) })}
+                style={{ ...inputStyle, flex: 1, backgroundColor: '#fff' }}
+              >
+                <option value="">Sin activo</option>
+                {activosFiltrados.map((a) => (
+                  <option key={a.id} value={a.id}>{a.nombre}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                title={clienteId ? 'Crear nuevo activo' : 'Seleccioná primero un cliente'}
+                onClick={() => setShowQCActivo(true)}
+                disabled={!clienteId}
+                style={{ ...quickAddBtnStyle, opacity: clienteId ? 1 : 0.35, cursor: clienteId ? 'pointer' : 'not-allowed' }}
+              >
+                <Plus size={14} />
+              </button>
+            </div>
+          </FieldRow>
+        </div>
+
+        <div style={{ gridColumn: '1 / -1' }}>
+          <FieldRow label="Título" required>
+            <input {...form.register('titulo')} style={inputStyle} placeholder="Ej: Reparación placa madre, Desarrollo módulo facturación..." />
+            {form.formState.errors.titulo && (
+              <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+                {form.formState.errors.titulo.message}
+              </p>
+            )}
+          </FieldRow>
+        </div>
+
+        <div style={{ gridColumn: '1 / -1' }}>
+          <FieldRow label="Descripción">
+            <textarea
+              {...form.register('descripcion')}
+              rows={3}
+              style={{ ...inputStyle, resize: 'vertical' }}
+              placeholder="Detalles del trabajo a realizar..."
             />
-            <button type="button" title="Crear nuevo cliente" onClick={() => setShowQCCliente(true)} style={quickAddBtnStyle}>
-              <Plus size={14} />
-            </button>
-          </div>
-          {form.formState.errors.cliente_id && (
-            <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
-              {form.formState.errors.cliente_id.message}
-            </p>
-          )}
+          </FieldRow>
         </div>
 
-        <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>Activo (opcional)</label>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <select
-              {...form.register('activo_id', { setValueAs: (v) => (v === '' || v === '0' || v === 0) ? null : Number(v) })}
-              style={{ ...inputStyle, flex: 1, backgroundColor: '#fff' }}
-            >
-              <option value="">Sin activo</option>
-              {activosFiltrados.map((a) => (
-                <option key={a.id} value={a.id}>{a.nombre}</option>
-              ))}
+        <div>
+          <FieldRow label="Estado">
+            <select {...form.register('estado')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+              {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
             </select>
-            <button
-              type="button"
-              title={clienteId ? 'Crear nuevo activo' : 'Seleccioná primero un cliente'}
-              onClick={() => setShowQCActivo(true)}
-              disabled={!clienteId}
-              style={{ ...quickAddBtnStyle, opacity: clienteId ? 1 : 0.35, cursor: clienteId ? 'pointer' : 'not-allowed' }}
-            >
-              <Plus size={14} />
-            </button>
-          </div>
-        </div>
-
-        <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>Título <span style={{ color: theme.colors.error }}>*</span></label>
-          <input {...form.register('titulo')} style={inputStyle} placeholder="Ej: Reparación placa madre, Desarrollo módulo facturación..." />
-          {form.formState.errors.titulo && (
-            <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
-              {form.formState.errors.titulo.message}
-            </p>
-          )}
-        </div>
-
-        <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>Descripción</label>
-          <textarea
-            {...form.register('descripcion')}
-            rows={3}
-            style={{ ...inputStyle, resize: 'vertical' }}
-            placeholder="Detalles del trabajo a realizar..."
-          />
+          </FieldRow>
         </div>
 
         <div>
-          <label style={labelStyle}>Estado</label>
-          <select {...form.register('estado')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
-            {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
-          </select>
+          <FieldRow label="Estado de pago">
+            <select {...form.register('estado_pago')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+              {ESTADOS_PAGO.map((e) => <option key={e} value={e}>{e}</option>)}
+            </select>
+          </FieldRow>
         </div>
 
         <div>
-          <label style={labelStyle}>Estado de pago</label>
-          <select {...form.register('estado_pago')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
-            {ESTADOS_PAGO.map((e) => <option key={e} value={e}>{e}</option>)}
-          </select>
+          <FieldRow label="Valor ($)">
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              {...form.register('valor', { valueAsNumber: true })}
+              style={inputStyle}
+              placeholder="0.00"
+            />
+          </FieldRow>
         </div>
 
         <div>
-          <label style={labelStyle}>Valor ($)</label>
-          <input
-            type="number"
-            min={0}
-            step="0.01"
-            {...form.register('valor', { valueAsNumber: true })}
-            style={inputStyle}
-            placeholder="0.00"
-          />
-        </div>
-
-        <div>
-          <label style={labelStyle}>Fecha <span style={{ color: theme.colors.error }}>*</span></label>
-          <input
-            type="date"
-            {...form.register('fecha')}
-            style={inputStyle}
-          />
-          {form.formState.errors.fecha && (
-            <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
-              {form.formState.errors.fecha.message}
-            </p>
-          )}
+          <FieldRow label="Fecha" required>
+            <input
+              type="date"
+              {...form.register('fecha')}
+              style={inputStyle}
+            />
+            {form.formState.errors.fecha && (
+              <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+                {form.formState.errors.fecha.message}
+              </p>
+            )}
+          </FieldRow>
         </div>
       </div>
     </div>
@@ -733,72 +738,80 @@ export default function ServiciosClient({
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
                   <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={labelStyle}>Cliente</label>
-                    <div style={{ padding: '10px 14px', backgroundColor: '#F8F9FB', borderRadius: theme.radii.sm, border: `1px solid ${theme.colors.border}`, fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
-                      {editTarget.clientes?.nombre ?? '—'}
-                    </div>
+                    <FieldRow label="Cliente">
+                      <div style={{ padding: '10px 14px', backgroundColor: '#F8F9FB', borderRadius: theme.radii.sm, border: `1px solid ${theme.colors.border}`, fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
+                        {editTarget.clientes?.nombre ?? '—'}
+                      </div>
+                    </FieldRow>
                   </div>
 
                   <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={labelStyle}>Activo (opcional)</label>
-                    <select
-                      {...editForm.register('activo_id', { setValueAs: (v) => (v === '' || v === '0' || v === 0) ? null : Number(v) })}
-                      style={{ ...inputStyle, backgroundColor: '#fff' }}
-                    >
-                      <option value="">Sin activo</option>
-                      {localActivos.filter((a) => a.cliente_id === editTarget.cliente_id).map((a) => (
-                        <option key={a.id} value={a.id}>{a.nombre}</option>
-                      ))}
-                    </select>
+                    <FieldRow label="Activo (opcional)">
+                      <select
+                        {...editForm.register('activo_id', { setValueAs: (v) => (v === '' || v === '0' || v === 0) ? null : Number(v) })}
+                        style={{ ...inputStyle, backgroundColor: '#fff' }}
+                      >
+                        <option value="">Sin activo</option>
+                        {localActivos.filter((a) => a.cliente_id === editTarget.cliente_id).map((a) => (
+                          <option key={a.id} value={a.id}>{a.nombre}</option>
+                        ))}
+                      </select>
+                    </FieldRow>
                   </div>
 
                   <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={labelStyle}>Título <span style={{ color: theme.colors.error }}>*</span></label>
-                    <input {...editForm.register('titulo')} style={inputStyle} />
-                    {editForm.formState.errors.titulo && (
-                      <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
-                        {editForm.formState.errors.titulo.message}
-                      </p>
-                    )}
+                    <FieldRow label="Título" required>
+                      <input {...editForm.register('titulo')} style={inputStyle} />
+                      {editForm.formState.errors.titulo && (
+                        <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+                          {editForm.formState.errors.titulo.message}
+                        </p>
+                      )}
+                    </FieldRow>
                   </div>
 
                   <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={labelStyle}>Descripción</label>
-                    <textarea {...editForm.register('descripcion')} rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
+                    <FieldRow label="Descripción">
+                      <textarea {...editForm.register('descripcion')} rows={3} style={{ ...inputStyle, resize: 'vertical' }} />
+                    </FieldRow>
                   </div>
 
                   <div>
-                    <label style={labelStyle}>Estado</label>
-                    <select {...editForm.register('estado')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
-                      {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
-                    </select>
+                    <FieldRow label="Estado">
+                      <select {...editForm.register('estado')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+                        {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
+                      </select>
+                    </FieldRow>
                   </div>
 
                   <div>
-                    <label style={labelStyle}>Estado de pago</label>
-                    <select {...editForm.register('estado_pago')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
-                      {ESTADOS_PAGO.map((e) => <option key={e} value={e}>{e}</option>)}
-                    </select>
+                    <FieldRow label="Estado de pago">
+                      <select {...editForm.register('estado_pago')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+                        {ESTADOS_PAGO.map((e) => <option key={e} value={e}>{e}</option>)}
+                      </select>
+                    </FieldRow>
                   </div>
 
                   <div>
-                    <label style={labelStyle}>Valor ($)</label>
-                    <input
-                      type="number"
-                      min={0}
-                      step="0.01"
-                      {...editForm.register('valor', { valueAsNumber: true })}
-                      style={inputStyle}
-                    />
+                    <FieldRow label="Valor ($)">
+                      <input
+                        type="number"
+                        min={0}
+                        step="0.01"
+                        {...editForm.register('valor', { valueAsNumber: true })}
+                        style={inputStyle}
+                      />
+                    </FieldRow>
                   </div>
 
                   <div>
-                    <label style={labelStyle}>Fecha <span style={{ color: theme.colors.error }}>*</span></label>
-                    <input
-                      type="date"
-                      {...editForm.register('fecha')}
-                      style={inputStyle}
-                    />
+                    <FieldRow label="Fecha" required>
+                      <input
+                        type="date"
+                        {...editForm.register('fecha')}
+                        style={inputStyle}
+                      />
+                    </FieldRow>
                   </div>
                 </div>
               </div>
@@ -823,12 +836,11 @@ export default function ServiciosClient({
           <ModalCard title="Cargar pago" onClose={() => setPagoTarget(null)} formId="pago-form">
             <form id="pago-form" onSubmit={pagoForm.handleSubmit(onPagoSubmit)}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div>
-                  <label style={labelStyle}>Servicio</label>
+                <FieldRow label="Servicio">
                   <div style={{ padding: '10px 14px', backgroundColor: '#F8F9FB', borderRadius: theme.radii.sm, border: `1px solid ${theme.colors.border}`, fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
                     #{pagoTarget.id} — {pagoTarget.titulo}
                   </div>
-                </div>
+                </FieldRow>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
                   {[
                     { label: 'Total', value: Number(pagoTarget.valor) + (pagoTarget.valorTareas ?? 0), color: theme.colors.text },
@@ -843,39 +855,44 @@ export default function ServiciosClient({
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
                   <div>
-                    <label style={labelStyle}>Monto ($) <span style={{ color: theme.colors.error }}>*</span></label>
-                    <input
-                      type="number"
-                      min={0.01}
-                      step="0.01"
-                      {...pagoForm.register('monto', { valueAsNumber: true })}
-                      style={inputStyle}
-                    />
-                    {pagoForm.formState.errors.monto && (
-                      <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{pagoForm.formState.errors.monto.message}</p>
-                    )}
+                    <FieldRow label="Monto ($)" required>
+                      <input
+                        type="number"
+                        min={0.01}
+                        step="0.01"
+                        {...pagoForm.register('monto', { valueAsNumber: true })}
+                        style={inputStyle}
+                      />
+                      {pagoForm.formState.errors.monto && (
+                        <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{pagoForm.formState.errors.monto.message}</p>
+                      )}
+                    </FieldRow>
                   </div>
                   <div>
-                    <label style={labelStyle}>Fecha <span style={{ color: theme.colors.error }}>*</span></label>
-                    <input type="date" {...pagoForm.register('fecha')} style={inputStyle} />
+                    <FieldRow label="Fecha" required>
+                      <input type="date" {...pagoForm.register('fecha')} style={inputStyle} />
+                    </FieldRow>
                   </div>
                 </div>
                 <div>
-                  <label style={labelStyle}>Concepto <span style={{ color: theme.colors.error }}>*</span></label>
-                  <input {...pagoForm.register('concepto')} style={inputStyle} placeholder="Pago servicio" />
-                  {pagoForm.formState.errors.concepto && (
-                    <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{pagoForm.formState.errors.concepto.message}</p>
-                  )}
+                  <FieldRow label="Concepto" required>
+                    <input {...pagoForm.register('concepto')} style={inputStyle} placeholder="Pago servicio" />
+                    {pagoForm.formState.errors.concepto && (
+                      <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{pagoForm.formState.errors.concepto.message}</p>
+                    )}
+                  </FieldRow>
                 </div>
                 <div>
-                  <label style={labelStyle}>Método de pago</label>
-                  <select {...pagoForm.register('metodo_pago')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
-                    {METODOS_PAGO.map((m) => <option key={m} value={m}>{m}</option>)}
-                  </select>
+                  <FieldRow label="Método de pago">
+                    <select {...pagoForm.register('metodo_pago')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+                      {METODOS_PAGO.map((m) => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                  </FieldRow>
                 </div>
                 <div>
-                  <label style={labelStyle}>Notas</label>
-                  <textarea {...pagoForm.register('notas')} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Opcional..." />
+                  <FieldRow label="Notas">
+                    <textarea {...pagoForm.register('notas')} rows={2} style={{ ...inputStyle, resize: 'vertical' }} placeholder="Opcional..." />
+                  </FieldRow>
                 </div>
               </div>
               {pagoError && <div style={{ marginTop: '14px' }}><ErrorBox message={pagoError} /></div>}

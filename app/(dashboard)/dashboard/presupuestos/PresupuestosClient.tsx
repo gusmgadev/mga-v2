@@ -10,6 +10,7 @@ import Link from 'next/link'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import FieldRow from '@/components/dashboard/FieldRow'
 import QuickCreateClienteModal from '@/components/dashboard/QuickCreateClienteModal'
 import QuickCreateActivoModal from '@/components/dashboard/QuickCreateActivoModal'
 import { ClienteFormCombobox, ClienteFilterCombobox } from '@/components/dashboard/ClienteCombobox'
@@ -64,10 +65,6 @@ const inputStyle = {
   width: '100%', padding: '10px 14px', fontSize: theme.fontSizes.base,
   border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm,
   outline: 'none', boxSizing: 'border-box' as const, fontFamily: 'inherit',
-}
-const labelStyle = {
-  display: 'block', fontSize: theme.fontSizes.sm,
-  fontWeight: theme.fontWeights.medium, color: theme.colors.text, marginBottom: '6px',
 }
 const quickAddBtnStyle: React.CSSProperties = {
   padding: '10px 10px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm,
@@ -170,96 +167,103 @@ function PresupuestoFormFields({
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
         <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>Cliente <span style={{ color: theme.colors.error }}>*</span></label>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <ClienteFormCombobox
-              clientes={clientes}
-              value={clienteId || 0}
-              onChange={(id) => form.setValue('cliente_id', id, { shouldValidate: true })}
+          <FieldRow label="Cliente" required>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <ClienteFormCombobox
+                clientes={clientes}
+                value={clienteId || 0}
+                onChange={(id) => form.setValue('cliente_id', id, { shouldValidate: true })}
+              />
+              <button type="button" title="Crear nuevo cliente" onClick={() => setShowQCCliente(true)} style={quickAddBtnStyle}>
+                <Plus size={14} />
+              </button>
+            </div>
+            {form.formState.errors.cliente_id && (
+              <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+                {form.formState.errors.cliente_id.message}
+              </p>
+            )}
+          </FieldRow>
+        </div>
+
+        <div style={{ gridColumn: '1 / -1' }}>
+          <FieldRow label="Activo (opcional)">
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <select
+                {...form.register('activo_id', { setValueAs: (v) => (v === '' || v === '0' || v === 0) ? null : Number(v) })}
+                style={{ ...inputStyle, flex: 1, backgroundColor: '#fff' }}
+              >
+                <option value="">Sin activo asociado</option>
+                {activosFiltrados.map((a) => (
+                  <option key={a.id} value={a.id}>{a.nombre}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                title={clienteId ? 'Crear nuevo activo' : 'Seleccioná primero un cliente'}
+                onClick={() => setShowQCActivo(true)}
+                disabled={!clienteId}
+                style={{ ...quickAddBtnStyle, opacity: clienteId ? 1 : 0.35, cursor: clienteId ? 'pointer' : 'not-allowed' }}
+              >
+                <Plus size={14} />
+              </button>
+            </div>
+          </FieldRow>
+        </div>
+
+        <div style={{ gridColumn: '1 / -1' }}>
+          <FieldRow label="Título" required>
+            <input
+              {...form.register('titulo')}
+              style={inputStyle}
+              placeholder="Ej: Presupuesto instalación red, Desarrollo sistema de gestión..."
             />
-            <button type="button" title="Crear nuevo cliente" onClick={() => setShowQCCliente(true)} style={quickAddBtnStyle}>
-              <Plus size={14} />
-            </button>
-          </div>
-          {form.formState.errors.cliente_id && (
-            <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
-              {form.formState.errors.cliente_id.message}
-            </p>
-          )}
+            {form.formState.errors.titulo && (
+              <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+                {form.formState.errors.titulo.message}
+              </p>
+            )}
+          </FieldRow>
         </div>
 
         <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>Activo (opcional)</label>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <select
-              {...form.register('activo_id', { setValueAs: (v) => (v === '' || v === '0' || v === 0) ? null : Number(v) })}
-              style={{ ...inputStyle, flex: 1, backgroundColor: '#fff' }}
-            >
-              <option value="">Sin activo asociado</option>
-              {activosFiltrados.map((a) => (
-                <option key={a.id} value={a.id}>{a.nombre}</option>
-              ))}
-            </select>
-            <button
-              type="button"
-              title={clienteId ? 'Crear nuevo activo' : 'Seleccioná primero un cliente'}
-              onClick={() => setShowQCActivo(true)}
-              disabled={!clienteId}
-              style={{ ...quickAddBtnStyle, opacity: clienteId ? 1 : 0.35, cursor: clienteId ? 'pointer' : 'not-allowed' }}
-            >
-              <Plus size={14} />
-            </button>
-          </div>
-        </div>
-
-        <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>Título <span style={{ color: theme.colors.error }}>*</span></label>
-          <input
-            {...form.register('titulo')}
-            style={inputStyle}
-            placeholder="Ej: Presupuesto instalación red, Desarrollo sistema de gestión..."
-          />
-          {form.formState.errors.titulo && (
-            <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
-              {form.formState.errors.titulo.message}
-            </p>
-          )}
-        </div>
-
-        <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>Descripción</label>
-          <textarea
-            {...form.register('descripcion')}
-            rows={3}
-            style={{ ...inputStyle, resize: 'vertical' }}
-            placeholder="Descripción general del presupuesto..."
-          />
+          <FieldRow label="Descripción">
+            <textarea
+              {...form.register('descripcion')}
+              rows={3}
+              style={{ ...inputStyle, resize: 'vertical' }}
+              placeholder="Descripción general del presupuesto..."
+            />
+          </FieldRow>
         </div>
 
         <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '12px' }}>
           <div>
-            <label style={labelStyle}>Estado</label>
-            <select {...form.register('estado')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
-              {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
-            </select>
+            <FieldRow label="Estado">
+              <select {...form.register('estado')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+                {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
+              </select>
+            </FieldRow>
           </div>
 
           <div>
-            <label style={labelStyle}>Fecha del presupuesto <span style={{ color: theme.colors.error }}>*</span></label>
-            <input
-              type="date"
-              {...form.register('fecha')}
-              style={inputStyle}
-            />
+            <FieldRow label="Fecha del presupuesto" required>
+              <input
+                type="date"
+                {...form.register('fecha')}
+                style={inputStyle}
+              />
+            </FieldRow>
           </div>
 
           <div>
-            <label style={labelStyle}>Vencimiento</label>
-            <input
-              type="date"
-              {...form.register('fecha_vencimiento', { setValueAs: (v) => v || null })}
-              style={inputStyle}
-            />
+            <FieldRow label="Vencimiento">
+              <input
+                type="date"
+                {...form.register('fecha_vencimiento', { setValueAs: (v) => v || null })}
+                style={inputStyle}
+              />
+            </FieldRow>
           </div>
         </div>
       </div>

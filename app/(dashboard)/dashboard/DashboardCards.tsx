@@ -6,6 +6,7 @@ import {
   Mail, Wrench, FileText, HardDrive,
   Building2, Package2, ClipboardList, Banknote,
   Newspaper, Users, Shield, Lock, FileSpreadsheet,
+  Radar, Target,
   type LucideIcon,
 } from 'lucide-react'
 import { theme } from '@/lib/theme'
@@ -17,6 +18,9 @@ const GROUPS: { label: string; cards: CardDef[] }[] = [
     label: 'Servicios',
     cards: [
       { label: 'Oportunidades', href: '/dashboard/oportunidades', Icon: Mail,      description: 'Leads y contactos comerciales',      color: '#60B4FF' },
+      { label: 'Radar',         href: '/dashboard/radar',            Icon: Radar,      description: 'Búsquedas y prospectos de Google',     color: '#60B4FF' },
+      { label: 'Prospectos',    href: '/dashboard/radar/prospectos', Icon: Users,     description: 'Base de prospectos y puntajes',         color: '#60B4FF' },
+      { label: 'Radar Servicios', href: '/dashboard/radar/servicios', Icon: Target,   description: 'Servicios ofrecidos a prospectos',       color: '#60B4FF' },
       { label: 'Servicios',     href: '/dashboard/servicios',     Icon: Wrench,    description: 'Órdenes de trabajo y seguimiento',   color: '#60B4FF' },
       { label: 'Presupuestos',  href: '/dashboard/presupuestos',  Icon: FileText,  description: 'Cotizaciones e ítems',               color: '#60B4FF' },
       { label: 'Activos',       href: '/dashboard/activos',       Icon: HardDrive, description: 'Equipos y dispositivos de clientes', color: '#60B4FF' },

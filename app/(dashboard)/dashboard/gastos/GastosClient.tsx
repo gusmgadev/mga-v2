@@ -2,6 +2,7 @@
 import { useState, useMemo } from 'react'
 import { theme } from '@/lib/theme'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import FieldRow from '@/components/dashboard/FieldRow'
 import { Plus, ChevronLeft, ChevronRight, CheckCircle, Pencil, Trash2, Settings, X, CreditCard } from 'lucide-react'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -81,10 +82,6 @@ const inputStyle: React.CSSProperties = {
   width: '100%', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm,
   padding: '8px 10px', fontSize: theme.fontSizes.sm, boxSizing: 'border-box', outline: 'none',
   color: theme.colors.text,
-}
-const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium,
-  marginBottom: 5, color: theme.colors.textMuted,
 }
 const btnPrimary: React.CSSProperties = {
   background: theme.colors.primary, color: '#fff', border: 'none', borderRadius: theme.radii.sm,
@@ -268,24 +265,20 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
       <Modal title={`Pagar — ${g.descripcion}`} onClose={() => setModalPagar(null)}>
         {err && <ErrorBox msg={err} />}
         <div style={{ display: 'grid', gap: 14 }}>
-          <div>
-            <label style={labelStyle}>Monto pagado</label>
+          <FieldRow label="Monto pagado">
             <input style={inputStyle} type="number" value={montoReal} onChange={e => setMontoReal(e.target.value)} />
-          </div>
-          <div>
-            <label style={labelStyle}>Fecha de pago</label>
+          </FieldRow>
+          <FieldRow label="Fecha de pago">
             <input style={inputStyle} type="date" value={fechaPago} onChange={e => setFechaPago(e.target.value)} />
-          </div>
-          <div>
-            <label style={labelStyle}>Método de pago</label>
+          </FieldRow>
+          <FieldRow label="Método de pago">
             <select style={inputStyle} value={metodo} onChange={e => handleMetodoChange(e.target.value)}>
               {METODOS.map(m => <option key={m} value={m}>{m}</option>)}
             </select>
-          </div>
+          </FieldRow>
 
           {metodo === 'TARJETA' && (
-            <div>
-              <label style={labelStyle}>Tarjeta</label>
+            <FieldRow label="Tarjeta">
               <select
                 style={inputStyle}
                 value={tarjetaId ?? ''}
@@ -309,18 +302,18 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
                   {ntErr && <ErrorBox msg={ntErr} />}
                   <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10, marginBottom: 10 }}>
                     <div>
-                      <label style={labelStyle}>Nombre</label>
+                      <label style={{ display: 'block', fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium, marginBottom: 5, color: theme.colors.textMuted }}>Nombre</label>
                       <input style={inputStyle} placeholder="VISA SANTANDER" value={ntNombre} onChange={e => setNtNombre(e.target.value)} />
                     </div>
                     <div>
-                      <label style={labelStyle}>Tipo</label>
+                      <label style={{ display: 'block', fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium, marginBottom: 5, color: theme.colors.textMuted }}>Tipo</label>
                       <input style={inputStyle} list="tipos-tarjeta" placeholder="VISA, MASTERCARD..." value={ntTipo} onChange={e => setNtTipo(e.target.value)} />
                       <datalist id="tipos-tarjeta">
                         {TIPOS_TARJETA.map(t => <option key={t} value={t} />)}
                       </datalist>
                     </div>
                     <div style={{ gridColumn: '1 / -1' }}>
-                      <label style={labelStyle}>Banco (opcional)</label>
+                      <label style={{ display: 'block', fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium, marginBottom: 5, color: theme.colors.textMuted }}>Banco (opcional)</label>
                       <input style={inputStyle} list="lista-bancos" placeholder="SANTANDER, MACRO..." value={ntBanco} onChange={e => setNtBanco(e.target.value)} />
                       <datalist id="lista-bancos">
                         {BANCOS.map(b => <option key={b} value={b} />)}
@@ -335,7 +328,7 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
                   </div>
                 </div>
               )}
-            </div>
+            </FieldRow>
           )}
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
@@ -387,23 +380,19 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
       <Modal title={isNew ? 'Agregar gasto' : 'Editar gasto'} onClose={() => setModalGasto(null)}>
         {err && <ErrorBox msg={err} />}
         <div style={{ display: 'grid', gap: 14 }}>
-          <div>
-            <label style={labelStyle}>Categoría</label>
+          <FieldRow label="Categoría">
             <input style={inputStyle} list="cats" value={cat} onChange={e => setCat(e.target.value)} placeholder="CASA, SERVICIOS..." />
             <datalist id="cats">{categorias.map(c => <option key={c} value={c} />)}</datalist>
-          </div>
-          <div>
-            <label style={labelStyle}>Descripción</label>
+          </FieldRow>
+          <FieldRow label="Descripción">
             <input style={inputStyle} value={desc} onChange={e => setDesc(e.target.value)} />
-          </div>
-          <div>
-            <label style={labelStyle}>Monto estimado</label>
+          </FieldRow>
+          <FieldRow label="Monto estimado">
             <input style={inputStyle} type="number" value={monto} onChange={e => setMonto(e.target.value)} />
-          </div>
-          <div>
-            <label style={labelStyle}>Notas</label>
+          </FieldRow>
+          <FieldRow label="Notas">
             <input style={inputStyle} value={notas} onChange={e => setNotas(e.target.value)} />
-          </div>
+          </FieldRow>
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
           <button style={btnSecondary} onClick={() => setModalGasto(null)}>Cancelar</button>
@@ -497,18 +486,21 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
           {err && <ErrorBox msg={err} />}
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10, marginBottom: 10 }}>
             <div style={{ gridColumn: '1 / -1' }}>
-              <label style={labelStyle}>Nombre (visible en listados)</label>
-              <input style={inputStyle} placeholder="VISA SANTANDER" value={nombre} onChange={e => setNombre(e.target.value)} />
+              <FieldRow label="Nombre (visible en listados)">
+                <input style={inputStyle} placeholder="VISA SANTANDER" value={nombre} onChange={e => setNombre(e.target.value)} />
+              </FieldRow>
             </div>
             <div>
-              <label style={labelStyle}>Tipo de tarjeta</label>
-              <input style={inputStyle} list="tipos-t" placeholder="VISA, MASTERCARD..." value={tipo} onChange={e => setTipo(e.target.value)} />
-              <datalist id="tipos-t">{TIPOS_TARJETA.map(x => <option key={x} value={x} />)}</datalist>
+              <FieldRow label="Tipo de tarjeta">
+                <input style={inputStyle} list="tipos-t" placeholder="VISA, MASTERCARD..." value={tipo} onChange={e => setTipo(e.target.value)} />
+                <datalist id="tipos-t">{TIPOS_TARJETA.map(x => <option key={x} value={x} />)}</datalist>
+              </FieldRow>
             </div>
             <div>
-              <label style={labelStyle}>Banco (opcional)</label>
-              <input style={inputStyle} list="bancos-t" placeholder="SANTANDER, MACRO..." value={banco} onChange={e => setBanco(e.target.value)} />
-              <datalist id="bancos-t">{BANCOS.map(b => <option key={b} value={b} />)}</datalist>
+              <FieldRow label="Banco (opcional)">
+                <input style={inputStyle} list="bancos-t" placeholder="SANTANDER, MACRO..." value={banco} onChange={e => setBanco(e.target.value)} />
+                <datalist id="bancos-t">{BANCOS.map(b => <option key={b} value={b} />)}</datalist>
+              </FieldRow>
             </div>
           </div>
           {!isNew && (
@@ -623,21 +615,25 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
         <div style={{ border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, padding: 16, marginBottom: 12, background: '#f9fafb' }}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10, marginBottom: 10 }}>
             <div>
-              <label style={labelStyle}>Categoría</label>
-              <input style={inputStyle} list="cats-p" value={cat} onChange={e => setCat(e.target.value)} />
-              <datalist id="cats-p">{categorias.map(c => <option key={c} value={c} />)}</datalist>
+              <FieldRow label="Categoría">
+                <input style={inputStyle} list="cats-p" value={cat} onChange={e => setCat(e.target.value)} />
+                <datalist id="cats-p">{categorias.map(c => <option key={c} value={c} />)}</datalist>
+              </FieldRow>
             </div>
             <div>
-              <label style={labelStyle}>Descripción</label>
-              <input style={inputStyle} value={desc} onChange={e => setDesc(e.target.value)} />
+              <FieldRow label="Descripción">
+                <input style={inputStyle} value={desc} onChange={e => setDesc(e.target.value)} />
+              </FieldRow>
             </div>
             <div>
-              <label style={labelStyle}>Monto estimado</label>
-              <input style={inputStyle} type="number" value={monto} onChange={e => setMonto(e.target.value)} />
+              <FieldRow label="Monto estimado">
+                <input style={inputStyle} type="number" value={monto} onChange={e => setMonto(e.target.value)} />
+              </FieldRow>
             </div>
             <div>
-              <label style={labelStyle}>Orden</label>
-              <input style={inputStyle} type="number" value={orden} onChange={e => setOrden(e.target.value)} />
+              <FieldRow label="Orden">
+                <input style={inputStyle} type="number" value={orden} onChange={e => setOrden(e.target.value)} />
+              </FieldRow>
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 10 }}>

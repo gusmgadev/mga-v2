@@ -12,6 +12,7 @@ import {
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import FieldRow from '@/components/dashboard/FieldRow'
 import QuickCreateClienteModal from '@/components/dashboard/QuickCreateClienteModal'
 import { ClienteFormCombobox, ClienteFilterCombobox } from '@/components/dashboard/ClienteCombobox'
 
@@ -135,10 +136,7 @@ const inputStyle = {
   outline: 'none', boxSizing: 'border-box' as const, fontFamily: 'inherit',
   backgroundColor: '#fff',
 }
-const labelStyle = {
-  display: 'block', fontSize: theme.fontSizes.xs,
-  fontWeight: theme.fontWeights.medium, color: theme.colors.textMuted, marginBottom: '4px',
-}
+
 const thStyle: React.CSSProperties = {
   textAlign: 'left', padding: '10px 14px', fontSize: theme.fontSizes.xs,
   fontWeight: theme.fontWeights.medium, color: theme.colors.textMuted,
@@ -715,40 +713,46 @@ export default function OportunidadesClient({
           <div style={{ padding: '0 20px 20px', borderTop: `1px solid ${theme.colors.border}` }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px', marginTop: '16px' }}>
               <div>
-                <label style={labelStyle}>Tipo de OP</label>
-                <select
-                  value={tipoBusqueda}
-                  onChange={(e) => {
-                    const t = e.target.value as TipoOp
-                    setTipoBusqueda(t)
-                    setPalabrasClave(TIPO_OP_KEYWORDS[t])
-                  }}
-                  style={{ ...inputStyle, cursor: 'pointer' }}
-                >
-                  <option value="OP_NUEVA">OP Nueva</option>
-                  <option value="SEGUIMIENTO">Seguimiento</option>
-                  <option value="CROSS_SELLING">Cross Selling</option>
-                </select>
+                <FieldRow label="Tipo de OP">
+                  <select
+                    value={tipoBusqueda}
+                    onChange={(e) => {
+                      const t = e.target.value as TipoOp
+                      setTipoBusqueda(t)
+                      setPalabrasClave(TIPO_OP_KEYWORDS[t])
+                    }}
+                    style={{ ...inputStyle, cursor: 'pointer' }}
+                  >
+                    <option value="OP_NUEVA">OP Nueva</option>
+                    <option value="SEGUIMIENTO">Seguimiento</option>
+                    <option value="CROSS_SELLING">Cross Selling</option>
+                  </select>
+                </FieldRow>
               </div>
               <div>
-                <label style={labelStyle}>Desde</label>
-                <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} style={inputStyle} />
+                <FieldRow label="Desde">
+                  <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} style={inputStyle} />
+                </FieldRow>
               </div>
               <div>
-                <label style={labelStyle}>Hasta</label>
-                <input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} style={inputStyle} />
+                <FieldRow label="Hasta">
+                  <input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} style={inputStyle} />
+                </FieldRow>
               </div>
               <div>
-                <label style={labelStyle}>Remitente</label>
-                <input type="text" value={remitente} onChange={(e) => setRemitente(e.target.value)} placeholder="email o dominio" style={inputStyle} />
+                <FieldRow label="Remitente">
+                  <input type="text" value={remitente} onChange={(e) => setRemitente(e.target.value)} placeholder="email o dominio" style={inputStyle} />
+                </FieldRow>
               </div>
               <div>
-                <label style={labelStyle}>Asunto</label>
-                <input type="text" value={asunto} onChange={(e) => setAsunto(e.target.value)} placeholder="palabras del asunto" style={inputStyle} />
+                <FieldRow label="Asunto">
+                  <input type="text" value={asunto} onChange={(e) => setAsunto(e.target.value)} placeholder="palabras del asunto" style={inputStyle} />
+                </FieldRow>
               </div>
               <div>
-                <label style={labelStyle}>Palabras clave en texto</label>
-                <input type="text" value={palabrasClave} onChange={(e) => setPalabrasClave(e.target.value)} placeholder="ej: oportunidad tarea" style={inputStyle} />
+                <FieldRow label="Palabras clave en texto">
+                  <input type="text" value={palabrasClave} onChange={(e) => setPalabrasClave(e.target.value)} placeholder="ej: oportunidad tarea" style={inputStyle} />
+                </FieldRow>
               </div>
             </div>
 
@@ -1159,38 +1163,39 @@ export default function OportunidadesClient({
           <ModalCard title="Editar oportunidad" onClose={() => setEditTarget(null)}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={{ ...labelStyle, fontSize: theme.fontSizes.sm }}>Estado</label>
-                <select
-                  value={editEstado}
-                  onChange={(e) => setEditEstado(e.target.value as OportunidadEstado)}
-                  style={{ ...inputStyle, fontSize: theme.fontSizes.base }}
-                >
-                  {ESTADOS.map((e) => <option key={e} value={e}>{ESTADO_LABELS[e]}</option>)}
-                </select>
+                <FieldRow label="Estado">
+                  <select
+                    value={editEstado}
+                    onChange={(e) => setEditEstado(e.target.value as OportunidadEstado)}
+                    style={{ ...inputStyle, fontSize: theme.fontSizes.base }}
+                  >
+                    {ESTADOS.map((e) => <option key={e} value={e}>{ESTADO_LABELS[e]}</option>)}
+                  </select>
+                </FieldRow>
               </div>
               {ESTADOS_CON_MOTIVO.includes(editEstado) && (
                 <div>
-                  <label style={{ ...labelStyle, fontSize: theme.fontSizes.sm }}>
-                    Motivo <span style={{ color: theme.colors.error }}>*</span>
-                  </label>
-                  <textarea
-                    value={editMotivo}
-                    onChange={(e) => setEditMotivo(e.target.value)}
-                    rows={3}
-                    placeholder="Describí el motivo de cierre..."
-                    style={{ ...inputStyle, resize: 'vertical', fontSize: theme.fontSizes.base }}
-                  />
+                  <FieldRow label="Motivo" required>
+                    <textarea
+                      value={editMotivo}
+                      onChange={(e) => setEditMotivo(e.target.value)}
+                      rows={3}
+                      placeholder="Describí el motivo de cierre..."
+                      style={{ ...inputStyle, resize: 'vertical', fontSize: theme.fontSizes.base }}
+                    />
+                  </FieldRow>
                 </div>
               )}
               <div>
-                <label style={{ ...labelStyle, fontSize: theme.fontSizes.sm }}>Notas internas</label>
-                <textarea
-                  value={editNotas}
-                  onChange={(e) => setEditNotas(e.target.value)}
-                  rows={3}
-                  placeholder="Observaciones, próximos pasos..."
-                  style={{ ...inputStyle, resize: 'vertical', fontSize: theme.fontSizes.base }}
-                />
+                <FieldRow label="Notas internas">
+                  <textarea
+                    value={editNotas}
+                    onChange={(e) => setEditNotas(e.target.value)}
+                    rows={3}
+                    placeholder="Observaciones, próximos pasos..."
+                    style={{ ...inputStyle, resize: 'vertical', fontSize: theme.fontSizes.base }}
+                  />
+                </FieldRow>
               </div>
               {editError && <ErrorBox message={editError} />}
               <button
@@ -1238,41 +1243,46 @@ export default function OportunidadesClient({
             <form id="gen-servicio-form" onSubmit={servicioForm.handleSubmit(onGenServicioSubmit)}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div>
-                  <label style={{ ...labelStyle, fontSize: theme.fontSizes.sm }}>Cliente <span style={{ color: theme.colors.error }}>*</span></label>
-                  <div style={{ display: 'flex', gap: '6px' }}>
-                    <ClienteFormCombobox
-                      clientes={localClientes}
-                      value={servicioForm.watch('cliente_id') || 0}
-                      onChange={(id) => servicioForm.setValue('cliente_id', id, { shouldValidate: true })}
-                    />
-                    <button type="button" onClick={() => { setQcInitialData(buildQcInitialData(genServicioTarget)); setShowQCCliente(true) }}
-                      style={{ padding: '9px 10px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, background: '#fff', cursor: 'pointer', color: theme.colors.primary, display: 'flex', alignItems: 'center' }}>
-                      +
-                    </button>
-                  </div>
-                  {servicioForm.formState.errors.cliente_id && (
-                    <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{servicioForm.formState.errors.cliente_id.message}</p>
-                  )}
+                  <FieldRow label="Cliente" required>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <ClienteFormCombobox
+                        clientes={localClientes}
+                        value={servicioForm.watch('cliente_id') || 0}
+                        onChange={(id) => servicioForm.setValue('cliente_id', id, { shouldValidate: true })}
+                      />
+                      <button type="button" onClick={() => { setQcInitialData(buildQcInitialData(genServicioTarget)); setShowQCCliente(true) }}
+                        style={{ padding: '9px 10px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, background: '#fff', cursor: 'pointer', color: theme.colors.primary, display: 'flex', alignItems: 'center' }}>
+                        +
+                      </button>
+                    </div>
+                    {servicioForm.formState.errors.cliente_id && (
+                      <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{servicioForm.formState.errors.cliente_id.message}</p>
+                    )}
+                  </FieldRow>
                 </div>
                 <div>
-                  <label style={{ ...labelStyle, fontSize: theme.fontSizes.sm }}>Título <span style={{ color: theme.colors.error }}>*</span></label>
-                  <input {...servicioForm.register('titulo')} style={{ ...inputStyle, fontSize: theme.fontSizes.base }} />
-                  {servicioForm.formState.errors.titulo && (
-                    <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{servicioForm.formState.errors.titulo.message}</p>
-                  )}
+                  <FieldRow label="Título" required>
+                    <input {...servicioForm.register('titulo')} style={{ ...inputStyle, fontSize: theme.fontSizes.base }} />
+                    {servicioForm.formState.errors.titulo && (
+                      <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{servicioForm.formState.errors.titulo.message}</p>
+                    )}
+                  </FieldRow>
                 </div>
                 <div>
-                  <label style={{ ...labelStyle, fontSize: theme.fontSizes.sm }}>Descripción</label>
-                  <textarea {...servicioForm.register('descripcion')} rows={4} style={{ ...inputStyle, resize: 'vertical', fontSize: theme.fontSizes.base }} />
+                  <FieldRow label="Descripción">
+                    <textarea {...servicioForm.register('descripcion')} rows={4} style={{ ...inputStyle, resize: 'vertical', fontSize: theme.fontSizes.base }} />
+                  </FieldRow>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
                   <div>
-                    <label style={{ ...labelStyle, fontSize: theme.fontSizes.sm }}>Valor ($)</label>
-                    <input type="number" min={0} step="0.01" {...servicioForm.register('valor', { valueAsNumber: true })} style={{ ...inputStyle, fontSize: theme.fontSizes.base }} />
+                    <FieldRow label="Valor ($)">
+                      <input type="number" min={0} step="0.01" {...servicioForm.register('valor', { valueAsNumber: true })} style={{ ...inputStyle, fontSize: theme.fontSizes.base }} />
+                    </FieldRow>
                   </div>
                   <div>
-                    <label style={{ ...labelStyle, fontSize: theme.fontSizes.sm }}>Fecha</label>
-                    <input type="date" {...servicioForm.register('fecha')} style={{ ...inputStyle, fontSize: theme.fontSizes.base }} />
+                    <FieldRow label="Fecha">
+                      <input type="date" {...servicioForm.register('fecha')} style={{ ...inputStyle, fontSize: theme.fontSizes.base }} />
+                    </FieldRow>
                   </div>
                 </div>
                 {genError && <ErrorBox message={genError} />}
@@ -1297,49 +1307,54 @@ export default function OportunidadesClient({
             <form id="gen-presupuesto-form" onSubmit={presupuestoForm.handleSubmit(onGenPresupuestoSubmit)}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div>
-                  <label style={{ ...labelStyle, fontSize: theme.fontSizes.sm }}>Cliente <span style={{ color: theme.colors.error }}>*</span></label>
-                  <div style={{ display: 'flex', gap: '6px' }}>
-                    <ClienteFormCombobox
-                      clientes={localClientes}
-                      value={presupuestoForm.watch('cliente_id') || 0}
-                      onChange={(id) => presupuestoForm.setValue('cliente_id', id, { shouldValidate: true })}
+                  <FieldRow label="Cliente" required>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <ClienteFormCombobox
+                        clientes={localClientes}
+                        value={presupuestoForm.watch('cliente_id') || 0}
+                        onChange={(id) => presupuestoForm.setValue('cliente_id', id, { shouldValidate: true })}
+                      />
+                      <button type="button" onClick={() => { setQcInitialData(buildQcInitialData(genPresupuestoTarget)); setShowQCCliente(true) }}
+                        style={{ padding: '9px 10px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, background: '#fff', cursor: 'pointer', color: theme.colors.primary, display: 'flex', alignItems: 'center' }}>
+                        +
+                      </button>
+                    </div>
+                    {presupuestoForm.formState.errors.cliente_id && (
+                      <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{presupuestoForm.formState.errors.cliente_id.message}</p>
+                    )}
+                  </FieldRow>
+                </div>
+                <div>
+                  <FieldRow label="Título" required>
+                    <input {...presupuestoForm.register('titulo')} style={{ ...inputStyle, fontSize: theme.fontSizes.base }} />
+                    {presupuestoForm.formState.errors.titulo && (
+                      <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{presupuestoForm.formState.errors.titulo.message}</p>
+                    )}
+                  </FieldRow>
+                </div>
+                <div>
+                  <FieldRow label="Descripción">
+                    <textarea {...presupuestoForm.register('descripcion')} rows={4} style={{ ...inputStyle, resize: 'vertical', fontSize: theme.fontSizes.base }} />
+                  </FieldRow>
+                </div>
+                <div>
+                  <FieldRow label="Fecha de vencimiento (opcional)">
+                    <input type="date" {...presupuestoForm.register('fecha_vencimiento')} style={{ ...inputStyle, fontSize: theme.fontSizes.base }} />
+                  </FieldRow>
+                </div>
+                <div>
+                  <FieldRow label="Documento (PDF o Word, opcional)">
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                      onChange={(e) => setPresupuestoFile(e.target.files?.[0] ?? null)}
+                      style={{ ...inputStyle, fontSize: theme.fontSizes.base, padding: '8px' }}
                     />
-                    <button type="button" onClick={() => { setQcInitialData(buildQcInitialData(genPresupuestoTarget)); setShowQCCliente(true) }}
-                      style={{ padding: '9px 10px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, background: '#fff', cursor: 'pointer', color: theme.colors.primary, display: 'flex', alignItems: 'center' }}>
-                      +
-                    </button>
-                  </div>
-                  {presupuestoForm.formState.errors.cliente_id && (
-                    <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{presupuestoForm.formState.errors.cliente_id.message}</p>
-                  )}
-                </div>
-                <div>
-                  <label style={{ ...labelStyle, fontSize: theme.fontSizes.sm }}>Título <span style={{ color: theme.colors.error }}>*</span></label>
-                  <input {...presupuestoForm.register('titulo')} style={{ ...inputStyle, fontSize: theme.fontSizes.base }} />
-                  {presupuestoForm.formState.errors.titulo && (
-                    <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{presupuestoForm.formState.errors.titulo.message}</p>
-                  )}
-                </div>
-                <div>
-                  <label style={{ ...labelStyle, fontSize: theme.fontSizes.sm }}>Descripción</label>
-                  <textarea {...presupuestoForm.register('descripcion')} rows={4} style={{ ...inputStyle, resize: 'vertical', fontSize: theme.fontSizes.base }} />
-                </div>
-                <div>
-                  <label style={{ ...labelStyle, fontSize: theme.fontSizes.sm }}>Fecha de vencimiento (opcional)</label>
-                  <input type="date" {...presupuestoForm.register('fecha_vencimiento')} style={{ ...inputStyle, fontSize: theme.fontSizes.base }} />
-                </div>
-                <div>
-                  <label style={{ ...labelStyle, fontSize: theme.fontSizes.sm }}>Documento (PDF o Word, opcional)</label>
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                    onChange={(e) => setPresupuestoFile(e.target.files?.[0] ?? null)}
-                    style={{ ...inputStyle, fontSize: theme.fontSizes.base, padding: '8px' }}
-                  />
-                  {presupuestoFile && (
-                    <p style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, marginTop: '4px' }}>{presupuestoFile.name}</p>
-                  )}
-                  {presupuestoFileError && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{presupuestoFileError}</p>}
+                    {presupuestoFile && (
+                      <p style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, marginTop: '4px' }}>{presupuestoFile.name}</p>
+                    )}
+                    {presupuestoFileError && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{presupuestoFileError}</p>}
+                  </FieldRow>
                 </div>
                 {genError && <ErrorBox message={genError} />}
                 <button
@@ -1382,46 +1397,50 @@ export default function OportunidadesClient({
                   </p>
                   <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
                     <div>
-                      <label style={labelStyle}>Fecha</label>
-                      <input
-                        type="date"
-                        value={iteracionFecha}
-                        onChange={(e) => setIteracionFecha(e.target.value)}
-                        style={{ ...inputStyle, backgroundColor: '#fff' }}
-                      />
+                      <FieldRow label="Fecha">
+                        <input
+                          type="date"
+                          value={iteracionFecha}
+                          onChange={(e) => setIteracionFecha(e.target.value)}
+                          style={{ ...inputStyle, backgroundColor: '#fff' }}
+                        />
+                      </FieldRow>
                     </div>
                     <div>
-                      <label style={labelStyle}>Tipo de contacto</label>
-                      <select
-                        value={iteracionTipo}
-                        onChange={(e) => setIteracionTipo(e.target.value as TipoContacto)}
-                        style={{ ...inputStyle, backgroundColor: '#fff', cursor: 'pointer' }}
-                      >
-                        {(Object.keys(TIPO_CONTACTO_LABELS) as TipoContacto[]).map((t) => (
-                          <option key={t} value={t}>{TIPO_CONTACTO_LABELS[t]}</option>
-                        ))}
-                      </select>
+                      <FieldRow label="Tipo de contacto">
+                        <select
+                          value={iteracionTipo}
+                          onChange={(e) => setIteracionTipo(e.target.value as TipoContacto)}
+                          style={{ ...inputStyle, backgroundColor: '#fff', cursor: 'pointer' }}
+                        >
+                          {(Object.keys(TIPO_CONTACTO_LABELS) as TipoContacto[]).map((t) => (
+                            <option key={t} value={t}>{TIPO_CONTACTO_LABELS[t]}</option>
+                          ))}
+                        </select>
+                      </FieldRow>
                     </div>
                   </div>
                   <div style={{ marginBottom: '10px' }}>
-                    <label style={labelStyle}>Contacto (nombre / cargo)</label>
-                    <input
-                      type="text"
-                      value={iteracionContacto}
-                      onChange={(e) => setIteracionContacto(e.target.value)}
-                      placeholder="ej: Juan Pérez — Gerente"
-                      style={{ ...inputStyle, backgroundColor: '#fff' }}
-                    />
+                    <FieldRow label="Contacto (nombre / cargo)">
+                      <input
+                        type="text"
+                        value={iteracionContacto}
+                        onChange={(e) => setIteracionContacto(e.target.value)}
+                        placeholder="ej: Juan Pérez — Gerente"
+                        style={{ ...inputStyle, backgroundColor: '#fff' }}
+                      />
+                    </FieldRow>
                   </div>
                   <div style={{ marginBottom: '12px' }}>
-                    <label style={labelStyle}>Detalle</label>
-                    <textarea
-                      value={iteracionDetalle}
-                      onChange={(e) => setIteracionDetalle(e.target.value)}
-                      rows={3}
-                      placeholder="Resultado del contacto, próximos pasos..."
-                      style={{ ...inputStyle, backgroundColor: '#fff', resize: 'vertical' }}
-                    />
+                    <FieldRow label="Detalle">
+                      <textarea
+                        value={iteracionDetalle}
+                        onChange={(e) => setIteracionDetalle(e.target.value)}
+                        rows={3}
+                        placeholder="Resultado del contacto, próximos pasos..."
+                        style={{ ...inputStyle, backgroundColor: '#fff', resize: 'vertical' }}
+                      />
+                    </FieldRow>
                   </div>
                   {iteracionError && <div style={{ marginBottom: '10px' }}><ErrorBox message={iteracionError} /></div>}
                   <button

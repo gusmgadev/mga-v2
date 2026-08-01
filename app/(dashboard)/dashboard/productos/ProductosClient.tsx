@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { Plus, Pencil, X, Loader2, AlertCircle, Package, Save } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import FieldRow from '@/components/dashboard/FieldRow'
 import CatalogoCombobox from '@/components/dashboard/CatalogoCombobox'
 import type { Producto } from '@/types/stock'
 import type { ModulePermisos } from '@/lib/permisos'
@@ -50,16 +51,6 @@ const inputStyle: React.CSSProperties = {
   outline: 'none',
   boxSizing: 'border-box',
   fontFamily: 'inherit',
-}
-
-const labelStyle: React.CSSProperties = {
-  display: 'block',
-  fontSize: theme.fontSizes.xs,
-  fontWeight: theme.fontWeights.medium,
-  color: theme.colors.textMuted,
-  marginBottom: '4px',
-  textTransform: 'uppercase',
-  letterSpacing: '0.05em',
 }
 
 const thStyle: React.CSSProperties = {
@@ -397,70 +388,78 @@ export default function ProductosClient({ initialProductos, permisos, initialMar
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
 
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={labelStyle}>Nombre *</label>
-                  <input {...register('nombre')} style={inputStyle} placeholder="Ej: Alimento Excellent cachorro 20kg" />
-                  {errors.nombre && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{errors.nombre.message}</p>}
+                  <FieldRow label="Nombre" required>
+                    <input {...register('nombre')} style={inputStyle} placeholder="Ej: Alimento Excellent cachorro 20kg" />
+                    {errors.nombre && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{errors.nombre.message}</p>}
+                  </FieldRow>
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Código</label>
-                  <input {...register('codigo')} style={{ ...inputStyle, fontFamily: 'monospace' }} placeholder="Ej: ABCD1234" />
-                  <p style={{ fontSize: '11px', color: theme.colors.textMuted, marginTop: '3px' }}>
-                    Auto-generado, editable
-                  </p>
+                  <FieldRow label="Código">
+                    <input {...register('codigo')} style={{ ...inputStyle, fontFamily: 'monospace' }} placeholder="Ej: ABCD1234" />
+                    <p style={{ fontSize: '11px', color: theme.colors.textMuted, marginTop: '3px' }}>
+                      Auto-generado, editable
+                    </p>
+                  </FieldRow>
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Unidad *</label>
-                  <select {...register('unidad')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
-                    <option value="unidad">unidad</option>
-                    <option value="kg">kg</option>
-                    <option value="bolsa">bolsa</option>
-                    <option value="caja">caja</option>
-                    <option value="litro">litro</option>
-                    <option value="metro">metro</option>
-                    <option value="par">par</option>
-                  </select>
+                  <FieldRow label="Unidad" required>
+                    <select {...register('unidad')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+                      <option value="unidad">unidad</option>
+                      <option value="kg">kg</option>
+                      <option value="bolsa">bolsa</option>
+                      <option value="caja">caja</option>
+                      <option value="litro">litro</option>
+                      <option value="metro">metro</option>
+                      <option value="par">par</option>
+                    </select>
+                  </FieldRow>
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Marca</label>
-                  <CatalogoCombobox
-                    value={marcaValue}
-                    onChange={(v) => setValue('marca', v || null, { shouldDirty: true })}
-                    opciones={localMarcas}
-                    onNewOption={handleNewMarca}
-                    placeholder="Ej: Excellent, Royal Canin..."
-                  />
+                  <FieldRow label="Marca">
+                    <CatalogoCombobox
+                      value={marcaValue}
+                      onChange={(v) => setValue('marca', v || null, { shouldDirty: true })}
+                      opciones={localMarcas}
+                      onNewOption={handleNewMarca}
+                      placeholder="Ej: Excellent, Royal Canin..."
+                    />
+                  </FieldRow>
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Rubro</label>
-                  <CatalogoCombobox
-                    value={rubroValue}
-                    onChange={(v) => setValue('rubro', v || null, { shouldDirty: true })}
-                    opciones={localRubros}
-                    onNewOption={handleNewRubro}
-                    placeholder="Ej: Alimentos, Accesorios..."
-                  />
+                  <FieldRow label="Rubro">
+                    <CatalogoCombobox
+                      value={rubroValue}
+                      onChange={(v) => setValue('rubro', v || null, { shouldDirty: true })}
+                      opciones={localRubros}
+                      onNewOption={handleNewRubro}
+                      placeholder="Ej: Alimentos, Accesorios..."
+                    />
+                  </FieldRow>
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Stock actual</label>
-                  <input type="number" {...register('stock_actual', { valueAsNumber: true })} style={inputStyle} step="any" />
-                  {errors.stock_actual && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{errors.stock_actual.message}</p>}
+                  <FieldRow label="Stock actual">
+                    <input type="number" {...register('stock_actual', { valueAsNumber: true })} style={inputStyle} step="any" />
+                    {errors.stock_actual && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{errors.stock_actual.message}</p>}
+                  </FieldRow>
                 </div>
 
                 <div />
 
                 <div>
-                  <label style={labelStyle}>Costo</label>
-                  <input type="number" {...register('costo', { valueAsNumber: true, setValueAs: (v) => (v === '' || isNaN(v) ? null : Number(v)) })} style={inputStyle} step="any" placeholder="0.00" />
+                  <FieldRow label="Costo">
+                    <input type="number" {...register('costo', { valueAsNumber: true, setValueAs: (v) => (v === '' || isNaN(v) ? null : Number(v)) })} style={inputStyle} step="any" placeholder="0.00" />
+                  </FieldRow>
                 </div>
 
                 <div>
-                  <label style={labelStyle}>Precio venta</label>
-                  <input type="number" {...register('precio_venta', { valueAsNumber: true, setValueAs: (v) => (v === '' || isNaN(v) ? null : Number(v)) })} style={inputStyle} step="any" placeholder="0.00" />
+                  <FieldRow label="Precio venta">
+                    <input type="number" {...register('precio_venta', { valueAsNumber: true, setValueAs: (v) => (v === '' || isNaN(v) ? null : Number(v)) })} style={inputStyle} step="any" placeholder="0.00" />
+                  </FieldRow>
                 </div>
 
               </div>

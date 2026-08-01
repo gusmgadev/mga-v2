@@ -10,6 +10,7 @@ import { ArrowLeft, Pencil, X, Loader2, AlertCircle, Plus, Trash2, Wrench, Exter
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import FieldRow from '@/components/dashboard/FieldRow'
 import QuickCreateActivoModal from '@/components/dashboard/QuickCreateActivoModal'
 
 type PresupuestoEstado = 'BORRADOR' | 'ENVIADO' | 'APROBADO' | 'RECHAZADO' | 'VENCIDO'
@@ -80,10 +81,6 @@ const inputStyle = {
   width: '100%', padding: '10px 14px', fontSize: theme.fontSizes.sm,
   border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm,
   outline: 'none', boxSizing: 'border-box' as const, fontFamily: 'inherit',
-}
-const labelStyle = {
-  display: 'block', fontSize: theme.fontSizes.sm,
-  fontWeight: theme.fontWeights.medium, color: theme.colors.text, marginBottom: '6px',
 }
 const quickAddBtnStyle: React.CSSProperties = {
   padding: '10px 10px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm,
@@ -507,7 +504,7 @@ export default function PresupuestoDetalleClient({
             {itemError && <div style={{ marginBottom: '10px' }}><ErrorBox message={itemError} /></div>}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 130px auto', gap: '8px', alignItems: 'end' }}>
               <div>
-                <label style={{ ...labelStyle, fontSize: theme.fontSizes.xs }}>Descripción</label>
+                <label style={{ display: 'block', fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium, color: theme.colors.text, marginBottom: '6px' }}>Descripción</label>
                 <input
                   value={newDesc}
                   onChange={(e) => setNewDesc(e.target.value)}
@@ -517,7 +514,7 @@ export default function PresupuestoDetalleClient({
                 />
               </div>
               <div>
-                <label style={{ ...labelStyle, fontSize: theme.fontSizes.xs }}>Cantidad</label>
+                <label style={{ display: 'block', fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium, color: theme.colors.text, marginBottom: '6px' }}>Cantidad</label>
                 <input
                   type="number"
                   min="0.01"
@@ -528,7 +525,7 @@ export default function PresupuestoDetalleClient({
                 />
               </div>
               <div>
-                <label style={{ ...labelStyle, fontSize: theme.fontSizes.xs }}>
+                <label style={{ display: 'block', fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium, color: theme.colors.text, marginBottom: '6px' }}>
                   Precio unit. {newSubtotal > 0 && (
                     <span style={{ color: theme.colors.textMuted, fontWeight: theme.fontWeights.regular }}>
                       → ${newSubtotal.toLocaleString('es-AR')}
@@ -620,47 +617,42 @@ export default function PresupuestoDetalleClient({
             </p>
             <form id="gen-servicio-form" onSubmit={genServicioForm.handleSubmit(onGenServicioSubmit)}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div>
-                  <label style={labelStyle}>Título <span style={{ color: theme.colors.error }}>*</span></label>
+                <FieldRow label="Título" required>
                   <input {...genServicioForm.register('titulo')} style={inputStyle} />
                   {genServicioForm.formState.errors.titulo && (
                     <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
                       {genServicioForm.formState.errors.titulo.message}
                     </p>
                   )}
-                </div>
+                </FieldRow>
 
-                <div>
-                  <label style={labelStyle}>Descripción</label>
+                <FieldRow label="Descripción">
                   <textarea
                     {...genServicioForm.register('descripcion')}
                     rows={3}
                     style={{ ...inputStyle, resize: 'vertical' }}
                   />
-                </div>
+                </FieldRow>
 
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
                   <div>
-                    <label style={labelStyle}>Estado</label>
-                    <select {...genServicioForm.register('estado')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
-                      {ESTADOS_SERVICIO.map((e) => <option key={e} value={e}>{e}</option>)}
-                    </select>
+                    <FieldRow label="Estado">
+                      <select {...genServicioForm.register('estado')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+                        {ESTADOS_SERVICIO.map((e) => <option key={e} value={e}>{e}</option>)}
+                      </select>
+                    </FieldRow>
                   </div>
 
                   <div>
-                    <label style={labelStyle}>Estado de pago</label>
-                    <select {...genServicioForm.register('estado_pago')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
-                      {ESTADOS_PAGO.map((e) => <option key={e} value={e}>{e}</option>)}
-                    </select>
+                    <FieldRow label="Estado de pago">
+                      <select {...genServicioForm.register('estado_pago')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+                        {ESTADOS_PAGO.map((e) => <option key={e} value={e}>{e}</option>)}
+                      </select>
+                    </FieldRow>
                   </div>
                 </div>
 
-                <div>
-                  <label style={labelStyle}>
-                    Valor <span style={{ color: theme.colors.textMuted, fontWeight: theme.fontWeights.regular }}>
-                      (pre-cargado desde total del presupuesto)
-                    </span>
-                  </label>
+                <FieldRow label="Valor">
                   <input
                     type="number"
                     min="0"
@@ -673,7 +665,7 @@ export default function PresupuestoDetalleClient({
                       {genServicioForm.formState.errors.valor.message}
                     </p>
                   )}
-                </div>
+                </FieldRow>
               </div>
 
               {genServicioError && <div style={{ marginTop: '14px' }}><ErrorBox message={genServicioError} /></div>}
@@ -698,66 +690,72 @@ export default function PresupuestoDetalleClient({
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
                   <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={labelStyle}>Activo (opcional)</label>
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                      <select
-                        {...editForm.register('activo_id', { setValueAs: (v) => (v === '' || v === '0' || v === 0) ? null : Number(v) })}
-                        style={{ ...inputStyle, flex: 1, backgroundColor: '#fff' }}
-                      >
-                        <option value="">Sin activo asociado</option>
-                        {activosFiltrados.map((a) => (
-                          <option key={a.id} value={a.id}>{a.nombre}</option>
-                        ))}
-                      </select>
-                      <button type="button" title="Crear nuevo activo" onClick={() => setShowQCActivo(true)} style={quickAddBtnStyle}>
-                        <Plus size={14} />
-                      </button>
-                    </div>
+                    <FieldRow label="Activo (opcional)">
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <select
+                          {...editForm.register('activo_id', { setValueAs: (v) => (v === '' || v === '0' || v === 0) ? null : Number(v) })}
+                          style={{ ...inputStyle, flex: 1, backgroundColor: '#fff' }}
+                        >
+                          <option value="">Sin activo asociado</option>
+                          {activosFiltrados.map((a) => (
+                            <option key={a.id} value={a.id}>{a.nombre}</option>
+                          ))}
+                        </select>
+                        <button type="button" title="Crear nuevo activo" onClick={() => setShowQCActivo(true)} style={quickAddBtnStyle}>
+                          <Plus size={14} />
+                        </button>
+                      </div>
+                    </FieldRow>
                   </div>
 
                   <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={labelStyle}>Título <span style={{ color: theme.colors.error }}>*</span></label>
-                    <input {...editForm.register('titulo')} style={inputStyle} />
-                    {editForm.formState.errors.titulo && (
-                      <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
-                        {editForm.formState.errors.titulo.message}
-                      </p>
-                    )}
+                    <FieldRow label="Título" required>
+                      <input {...editForm.register('titulo')} style={inputStyle} />
+                      {editForm.formState.errors.titulo && (
+                        <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+                          {editForm.formState.errors.titulo.message}
+                        </p>
+                      )}
+                    </FieldRow>
                   </div>
 
                   <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={labelStyle}>Descripción</label>
-                    <textarea
-                      {...editForm.register('descripcion')}
-                      rows={3}
-                      style={{ ...inputStyle, resize: 'vertical' }}
-                    />
+                    <FieldRow label="Descripción">
+                      <textarea
+                        {...editForm.register('descripcion')}
+                        rows={3}
+                        style={{ ...inputStyle, resize: 'vertical' }}
+                      />
+                    </FieldRow>
                   </div>
 
                   <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '12px' }}>
                     <div>
-                      <label style={labelStyle}>Estado</label>
-                      <select {...editForm.register('estado')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
-                        {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
-                      </select>
+                      <FieldRow label="Estado">
+                        <select {...editForm.register('estado')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+                          {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
+                        </select>
+                      </FieldRow>
                     </div>
 
                     <div>
-                      <label style={labelStyle}>Fecha del presupuesto <span style={{ color: theme.colors.error }}>*</span></label>
-                      <input
-                        type="date"
-                        {...editForm.register('fecha')}
-                        style={inputStyle}
-                      />
+                      <FieldRow label="Fecha del presupuesto" required>
+                        <input
+                          type="date"
+                          {...editForm.register('fecha')}
+                          style={inputStyle}
+                        />
+                      </FieldRow>
                     </div>
 
                     <div>
-                      <label style={labelStyle}>Vencimiento</label>
-                      <input
-                        type="date"
-                        {...editForm.register('fecha_vencimiento', { setValueAs: (v) => v || null })}
-                        style={inputStyle}
-                      />
+                      <FieldRow label="Vencimiento">
+                        <input
+                          type="date"
+                          {...editForm.register('fecha_vencimiento', { setValueAs: (v) => v || null })}
+                          style={inputStyle}
+                        />
+                      </FieldRow>
                     </div>
                   </div>
                 </div>

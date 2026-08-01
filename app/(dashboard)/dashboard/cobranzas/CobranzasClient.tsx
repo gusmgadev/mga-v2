@@ -9,6 +9,7 @@ import { Plus, Trash2, X, Loader2, AlertCircle, TrendingUp, TrendingDown, Wallet
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import FieldRow from '@/components/dashboard/FieldRow'
 import { ClienteFormCombobox, ClienteFilterCombobox } from '@/components/dashboard/ClienteCombobox'
 
 type CobranzaTipo = 'CARGO' | 'PAGO' | 'NOTA_CREDITO'
@@ -66,10 +67,6 @@ const inputStyle = {
   width: '100%', padding: '10px 14px', fontSize: theme.fontSizes.base,
   border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm,
   outline: 'none', boxSizing: 'border-box' as const, fontFamily: 'inherit',
-}
-const labelStyle = {
-  display: 'block', fontSize: theme.fontSizes.sm,
-  fontWeight: theme.fontWeights.medium, color: theme.colors.text, marginBottom: '6px',
 }
 const thStyle: React.CSSProperties = {
   textAlign: 'left', padding: '12px 16px', fontSize: theme.fontSizes.xs,
@@ -169,97 +166,105 @@ function CobranzaFormFields({
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
 
         <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>Cliente <span style={{ color: theme.colors.error }}>*</span></label>
-          <ClienteFormCombobox
-            clientes={clientes}
-            value={clienteId || 0}
-            onChange={(id) => form.setValue('cliente_id', id, { shouldValidate: true })}
-          />
-          {form.formState.errors.cliente_id && (
-            <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
-              {form.formState.errors.cliente_id.message}
-            </p>
-          )}
+          <FieldRow label="Cliente" required>
+            <ClienteFormCombobox
+              clientes={clientes}
+              value={clienteId || 0}
+              onChange={(id) => form.setValue('cliente_id', id, { shouldValidate: true })}
+            />
+            {form.formState.errors.cliente_id && (
+              <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+                {form.formState.errors.cliente_id.message}
+              </p>
+            )}
+          </FieldRow>
         </div>
 
         <div>
-          <label style={labelStyle}>Tipo <span style={{ color: theme.colors.error }}>*</span></label>
-          <select {...form.register('tipo')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
-            {TIPOS.map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
-            ))}
-          </select>
+          <FieldRow label="Tipo" required>
+            <select {...form.register('tipo')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+              {TIPOS.map((t) => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </select>
+          </FieldRow>
         </div>
 
         <div>
-          <label style={labelStyle}>Fecha <span style={{ color: theme.colors.error }}>*</span></label>
-          <input type="date" {...form.register('fecha')} style={inputStyle} />
-          {form.formState.errors.fecha && (
-            <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
-              {form.formState.errors.fecha.message}
-            </p>
-          )}
+          <FieldRow label="Fecha" required>
+            <input type="date" {...form.register('fecha')} style={inputStyle} />
+            {form.formState.errors.fecha && (
+              <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+                {form.formState.errors.fecha.message}
+              </p>
+            )}
+          </FieldRow>
         </div>
 
         <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>Concepto <span style={{ color: theme.colors.error }}>*</span></label>
-          <input
-            {...form.register('concepto')}
-            style={inputStyle}
-            placeholder="Ej: Servicio de mantenimiento, Pago a cuenta, Descuento..."
-          />
-          {form.formState.errors.concepto && (
-            <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
-              {form.formState.errors.concepto.message}
-            </p>
-          )}
+          <FieldRow label="Concepto" required>
+            <input
+              {...form.register('concepto')}
+              style={inputStyle}
+              placeholder="Ej: Servicio de mantenimiento, Pago a cuenta, Descuento..."
+            />
+            {form.formState.errors.concepto && (
+              <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+                {form.formState.errors.concepto.message}
+              </p>
+            )}
+          </FieldRow>
         </div>
 
         <div>
-          <label style={labelStyle}>Monto ($) <span style={{ color: theme.colors.error }}>*</span></label>
-          <input
-            type="number" min={0.01} step="0.01"
-            {...form.register('monto', { valueAsNumber: true })}
-            style={inputStyle} placeholder="0.00"
-          />
-          {form.formState.errors.monto && (
-            <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
-              {form.formState.errors.monto.message}
-            </p>
-          )}
+          <FieldRow label="Monto ($)" required>
+            <input
+              type="number" min={0.01} step="0.01"
+              {...form.register('monto', { valueAsNumber: true })}
+              style={inputStyle} placeholder="0.00"
+            />
+            {form.formState.errors.monto && (
+              <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+                {form.formState.errors.monto.message}
+              </p>
+            )}
+          </FieldRow>
         </div>
 
         {mostrarMetodo && (
           <div>
-            <label style={labelStyle}>Método de pago</label>
-            <select {...form.register('metodo_pago')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
-              <option value="">Sin especificar</option>
-              {METODOS.map((m) => <option key={m} value={m}>{m}</option>)}
-            </select>
+            <FieldRow label="Método de pago">
+              <select {...form.register('metodo_pago')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+                <option value="">Sin especificar</option>
+                {METODOS.map((m) => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </FieldRow>
           </div>
         )}
 
         {serviciosFiltrados.length > 0 && (
           <div style={{ gridColumn: '1 / -1' }}>
-            <label style={labelStyle}>Servicio vinculado (opcional)</label>
-            <select
-              {...form.register('servicio_id', { setValueAs: (v) => (v === '' || v === '0' || v === 0) ? null : Number(v) })}
-              style={{ ...inputStyle, backgroundColor: '#fff' }}
-            >
-              <option value="">Sin servicio — pago a cuenta</option>
-              {serviciosFiltrados.map((s) => <option key={s.id} value={s.id}>{s.titulo}</option>)}
-            </select>
+            <FieldRow label="Servicio vinculado (opcional)">
+              <select
+                {...form.register('servicio_id', { setValueAs: (v) => (v === '' || v === '0' || v === 0) ? null : Number(v) })}
+                style={{ ...inputStyle, backgroundColor: '#fff' }}
+              >
+                <option value="">Sin servicio — pago a cuenta</option>
+                {serviciosFiltrados.map((s) => <option key={s.id} value={s.id}>{s.titulo}</option>)}
+              </select>
+            </FieldRow>
           </div>
         )}
 
         <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>Notas (opcional)</label>
-          <textarea
-            {...form.register('notas')}
-            rows={2}
-            style={{ ...inputStyle, resize: 'vertical' }}
-            placeholder="Observaciones adicionales..."
-          />
+          <FieldRow label="Notas (opcional)">
+            <textarea
+              {...form.register('notas')}
+              rows={2}
+              style={{ ...inputStyle, resize: 'vertical' }}
+              placeholder="Observaciones adicionales..."
+            />
+          </FieldRow>
         </div>
 
       </div>
@@ -621,8 +626,7 @@ export default function CobranzasClient({
               {imputarTarget.clientes?.nombre}
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div>
-                <label style={labelStyle}>Servicio <span style={{ color: theme.colors.error }}>*</span></label>
+              <FieldRow label="Servicio" required>
                 <select
                   value={imputarServicioId}
                   onChange={(e) => setImputarServicioId(e.target.value)}
@@ -638,9 +642,8 @@ export default function CobranzasClient({
                     Este cliente no tiene servicios registrados.
                   </p>
                 )}
-              </div>
-              <div>
-                <label style={labelStyle}>Monto a imputar ($) <span style={{ color: theme.colors.error }}>*</span></label>
+              </FieldRow>
+              <FieldRow label="Monto a imputar ($)" required>
                 <input
                   type="number"
                   min={0.01}
@@ -653,7 +656,7 @@ export default function CobranzasClient({
                 <p style={{ margin: '4px 0 0', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>
                   Máx: ${Number(imputarTarget.monto).toLocaleString('es-AR')}. Si imputás menos, el resto queda como saldo a cuenta.
                 </p>
-              </div>
+              </FieldRow>
             </div>
             {imputarError && <div style={{ marginTop: '12px' }}><ErrorBox message={imputarError} /></div>}
             <div style={{ display: 'flex', gap: '8px', marginTop: '20px' }}>

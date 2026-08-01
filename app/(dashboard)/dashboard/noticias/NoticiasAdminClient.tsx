@@ -10,6 +10,7 @@ import { z } from 'zod'
 import { Plus, Trash2, X, Loader2, AlertCircle, Pencil, Eye, EyeOff, Upload, ExternalLink, CheckCircle2, Save, Video } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import FieldRow from '@/components/dashboard/FieldRow'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 import { useIsMobile } from '@/hooks/useIsMobile'
@@ -46,10 +47,6 @@ const inputStyle = {
   width: '100%', padding: '10px 14px', fontSize: theme.fontSizes.base,
   border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm,
   outline: 'none', boxSizing: 'border-box' as const, fontFamily: 'inherit',
-}
-const labelStyle = {
-  display: 'block', fontSize: theme.fontSizes.sm,
-  fontWeight: theme.fontWeights.medium, color: theme.colors.text, marginBottom: '6px',
 }
 const thStyle: React.CSSProperties = {
   textAlign: 'left', padding: '12px 16px', fontSize: theme.fontSizes.xs,
@@ -132,7 +129,7 @@ function ImageUploader({
 
   return (
     <div>
-      <label style={labelStyle}>{label}</label>
+      <label style={{ display: 'block', fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, color: theme.colors.text, marginBottom: '6px' }}>{label}</label>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {value && (
           <div style={{ position: 'relative', width: '100%', height: '120px', borderRadius: theme.radii.sm, overflow: 'hidden', border: `1px solid ${theme.colors.border}` }}>
@@ -377,20 +374,22 @@ export default function NoticiasAdminClient({
     return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       <div>
-        <label style={labelStyle}>Título <span style={{ color: theme.colors.error }}>*</span></label>
-        <input {...form.register('titulo')} style={inputStyle} placeholder="Título de la noticia" />
-        {form.formState.errors.titulo && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.titulo.message}</p>}
+        <FieldRow label="Título" required>
+          <input {...form.register('titulo')} style={inputStyle} placeholder="Título de la noticia" />
+          {form.formState.errors.titulo && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.titulo.message}</p>}
+        </FieldRow>
       </div>
 
       <div>
-        <label style={labelStyle}>Resumen <span style={{ color: theme.colors.error }}>*</span></label>
-        <textarea
-          {...form.register('resumen')}
-          rows={3}
-          style={{ ...inputStyle, resize: 'vertical' }}
-          placeholder="Texto breve que aparece en la card de la landing"
-        />
-        {form.formState.errors.resumen && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.resumen.message}</p>}
+        <FieldRow label="Resumen" required>
+          <textarea
+            {...form.register('resumen')}
+            rows={3}
+            style={{ ...inputStyle, resize: 'vertical' }}
+            placeholder="Texto breve que aparece en la card de la landing"
+          />
+          {form.formState.errors.resumen && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.resumen.message}</p>}
+        </FieldRow>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
@@ -399,41 +398,44 @@ export default function NoticiasAdminClient({
       </div>
 
       <div>
-        <label style={labelStyle}>Video (YouTube o Vimeo)</label>
-        <input
-          {...form.register('video_url')}
-          type="url"
-          style={inputStyle}
-          placeholder="https://www.youtube.com/watch?v=... o https://vimeo.com/..."
-        />
-        {form.formState.errors.video_url && (
-          <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
-            {form.formState.errors.video_url.message}
-          </p>
-        )}
-        <p style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, marginTop: '4px' }}>Opcional — se incrusta en el detalle de la noticia</p>
-        {videoUrl && <VideoPreview url={videoUrl} />}
+        <FieldRow label="Video (YouTube o Vimeo)">
+          <input
+            {...form.register('video_url')}
+            type="url"
+            style={inputStyle}
+            placeholder="https://www.youtube.com/watch?v=... o https://vimeo.com/..."
+          />
+          {form.formState.errors.video_url && (
+            <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+              {form.formState.errors.video_url.message}
+            </p>
+          )}
+          <p style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, marginTop: '4px' }}>Opcional — se incrusta en el detalle de la noticia</p>
+          {videoUrl && <VideoPreview url={videoUrl} />}
+        </FieldRow>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: '16px' }}>
         <div>
-          <label style={labelStyle}>Fecha <span style={{ color: theme.colors.error }}>*</span></label>
-          <input
-            type="date"
-            {...form.register('fecha')}
-            style={inputStyle}
-          />
-          {form.formState.errors.fecha && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.fecha.message}</p>}
+          <FieldRow label="Fecha" required>
+            <input
+              type="date"
+              {...form.register('fecha')}
+              style={inputStyle}
+            />
+            {form.formState.errors.fecha && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.fecha.message}</p>}
+          </FieldRow>
         </div>
         <div>
-          <label style={labelStyle}>Orden</label>
-          <input
-            type="number"
-            min={0}
-            {...form.register('orden', { valueAsNumber: true })}
-            style={inputStyle}
-          />
-          <p style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, marginTop: '4px' }}>Menor número = aparece primero</p>
+          <FieldRow label="Orden">
+            <input
+              type="number"
+              min={0}
+              {...form.register('orden', { valueAsNumber: true })}
+              style={inputStyle}
+            />
+            <p style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, marginTop: '4px' }}>Menor número = aparece primero</p>
+          </FieldRow>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingTop: '28px' }}>
           <input
@@ -442,7 +444,7 @@ export default function NoticiasAdminClient({
             {...form.register('publicada')}
             style={{ width: '16px', height: '16px', cursor: 'pointer' }}
           />
-          <label htmlFor="publicada-check" style={{ ...labelStyle, marginBottom: 0, cursor: 'pointer' }}>
+          <label htmlFor="publicada-check" style={{ fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, color: theme.colors.text, cursor: 'pointer' }}>
             Publicada (visible en la landing)
           </label>
         </div>
@@ -591,16 +593,17 @@ export default function NoticiasAdminClient({
                 setImagenPortada={setCreateImagenPortada}
               />
               <div style={{ marginTop: '14px' }}>
-                <label style={labelStyle}>Contenido completo <span style={{ color: theme.colors.error }}>*</span></label>
-                <RichTextEditor
-                  defaultValue=""
-                  onChange={(html) => createForm.setValue('contenido', html, { shouldValidate: true })}
-                />
-                {createForm.formState.errors.contenido && (
-                  <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
-                    {createForm.formState.errors.contenido.message}
-                  </p>
-                )}
+                <FieldRow label="Contenido completo" required>
+                  <RichTextEditor
+                    defaultValue=""
+                    onChange={(html) => createForm.setValue('contenido', html, { shouldValidate: true })}
+                  />
+                  {createForm.formState.errors.contenido && (
+                    <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+                      {createForm.formState.errors.contenido.message}
+                    </p>
+                  )}
+                </FieldRow>
               </div>
               {createError && <div style={{ marginTop: '14px' }}><ErrorBox message={createError} /></div>}
               <button
@@ -629,17 +632,18 @@ export default function NoticiasAdminClient({
                 setImagenPortada={setEditImagenPortada}
               />
               <div style={{ marginTop: '14px' }}>
-                <label style={labelStyle}>Contenido completo <span style={{ color: theme.colors.error }}>*</span></label>
-                <RichTextEditor
-                  key={editTarget?.id}
-                  defaultValue={editTarget?.contenido ?? ''}
-                  onChange={(html) => editForm.setValue('contenido', html, { shouldValidate: true })}
-                />
-                {editForm.formState.errors.contenido && (
-                  <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
-                    {editForm.formState.errors.contenido.message}
-                  </p>
-                )}
+                <FieldRow label="Contenido completo" required>
+                  <RichTextEditor
+                    key={editTarget?.id}
+                    defaultValue={editTarget?.contenido ?? ''}
+                    onChange={(html) => editForm.setValue('contenido', html, { shouldValidate: true })}
+                  />
+                  {editForm.formState.errors.contenido && (
+                    <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+                      {editForm.formState.errors.contenido.message}
+                    </p>
+                  )}
+                </FieldRow>
               </div>
               {editError && <div style={{ marginTop: '14px' }}><ErrorBox message={editError} /></div>}
               <button

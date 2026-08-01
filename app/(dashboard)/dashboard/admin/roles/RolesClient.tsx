@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Plus, Pencil, Trash2, X, Loader2, AlertCircle, CheckCircle, Save } from 'lucide-react'
+import FieldRow from '@/components/dashboard/FieldRow'
 import { theme } from '@/lib/theme'
 
 type Role = {
@@ -26,11 +27,6 @@ const inputStyle = {
   border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm,
   outline: 'none', boxSizing: 'border-box' as const, fontFamily: 'inherit',
 }
-const labelStyle = {
-  display: 'block', fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium,
-  color: theme.colors.text, marginBottom: '6px',
-}
-
 function ModalOverlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 50, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
@@ -147,13 +143,16 @@ export default function RolesClient({ initialRoles }: { initialRoles: Role[] }) 
   const RoleFormContent = () => (
     <form id="role-form" onSubmit={form.handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
-        <label style={labelStyle}>Nombre del rol</label>
-        <input {...form.register('name')} style={inputStyle} placeholder="ej: Supervisor" />
-        {form.formState.errors.name && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.name.message}</p>}
+        <FieldRow label="Nombre del rol">
+          <input {...form.register('name')} style={inputStyle} placeholder="ej: Supervisor" />
+          {form.formState.errors.name && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.name.message}</p>}
+        </FieldRow>
       </div>
       <div>
-        <label style={labelStyle}>Descripción <span style={{ color: theme.colors.textMuted, fontWeight: 400 }}>(opcional)</span></label>
-        <input {...form.register('description')} style={inputStyle} placeholder="Describe los permisos de este rol" />
+        <FieldRow label="Descripción">
+          <input {...form.register('description')} style={inputStyle} placeholder="Describe los permisos de este rol" />
+          <p style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, marginTop: '4px' }}>Opcional</p>
+        </FieldRow>
       </div>
       {formError && <ErrorBox message={formError} />}
       <button

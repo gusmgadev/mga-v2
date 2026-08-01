@@ -9,6 +9,7 @@ import { ArrowLeft, Plus, Trash2, AlertCircle, Loader2, Check, Mic, Search, X } 
 import { theme } from '@/lib/theme'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import VoiceRecorder from '@/components/dashboard/VoiceRecorder'
+import FieldRow from '@/components/dashboard/FieldRow'
 import CatalogoCombobox from '@/components/dashboard/CatalogoCombobox'
 import type { Remito, RemitoItem, OrigenDestino, Producto, ProductoConMatch } from '@/types/stock'
 import type { ModulePermisos } from '@/lib/permisos'
@@ -53,12 +54,6 @@ const inputStyle: React.CSSProperties = {
   borderRadius: theme.radii.sm, fontSize: theme.fontSizes.sm,
   color: theme.colors.text, outline: 'none', boxSizing: 'border-box',
   fontFamily: 'inherit',
-}
-
-const labelStyle: React.CSSProperties = {
-  display: 'block', fontSize: theme.fontSizes.xs,
-  fontWeight: theme.fontWeights.medium, color: theme.colors.textMuted,
-  marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.05em',
 }
 
 function ModalOverlay({ onClose, children }: { onClose: () => void; children: React.ReactNode }) {
@@ -570,84 +565,90 @@ export default function RemitoDetalleClient({
         <form onBlur={handleEnc(saveEncabezado)}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
             <div style={{ gridColumn: '1 / -1' }}>
-              <label style={labelStyle}>Tipo *</label>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                {(['entrada', 'salida'] as const).map((t) => (
-                  <label
-                    key={t}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: '8px',
-                      padding: '10px 20px', borderRadius: theme.radii.sm, cursor: canEdit ? 'pointer' : 'default',
-                      border: `2px solid ${tipoActual === t ? (t === 'entrada' ? theme.colors.success : theme.colors.error) : theme.colors.border}`,
-                      backgroundColor: tipoActual === t ? (t === 'entrada' ? `${theme.colors.success}10` : `${theme.colors.error}10`) : '#fff',
-                      fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium,
-                      color: tipoActual === t ? (t === 'entrada' ? theme.colors.success : theme.colors.error) : theme.colors.textMuted,
-                      flex: 1, justifyContent: 'center',
-                    }}
-                  >
-                    <input type="radio" {...regEnc('tipo')} value={t} disabled={!canEdit} style={{ display: 'none' }} />
-                    {t === 'entrada' ? '↓ Entrada de stock' : '↑ Salida de stock'}
-                  </label>
-                ))}
-              </div>
+              <FieldRow label="Tipo" required>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {(['entrada', 'salida'] as const).map((t) => (
+                    <label
+                      key={t}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: '8px',
+                        padding: '10px 20px', borderRadius: theme.radii.sm, cursor: canEdit ? 'pointer' : 'default',
+                        border: `2px solid ${tipoActual === t ? (t === 'entrada' ? theme.colors.success : theme.colors.error) : theme.colors.border}`,
+                        backgroundColor: tipoActual === t ? (t === 'entrada' ? `${theme.colors.success}10` : `${theme.colors.error}10`) : '#fff',
+                        fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium,
+                        color: tipoActual === t ? (t === 'entrada' ? theme.colors.success : theme.colors.error) : theme.colors.textMuted,
+                        flex: 1, justifyContent: 'center',
+                      }}
+                    >
+                      <input type="radio" {...regEnc('tipo')} value={t} disabled={!canEdit} style={{ display: 'none' }} />
+                      {t === 'entrada' ? '↓ Entrada de stock' : '↑ Salida de stock'}
+                    </label>
+                  ))}
+                </div>
+              </FieldRow>
             </div>
 
             <div>
-              <label style={labelStyle}>Tipo de número</label>
-              <select {...regEnc('numero_tipo')} disabled={!canEdit} style={inputStyle}>
-                <option value="automatico">Automático</option>
-                <option value="manual">Manual</option>
-                <option value="proveedor">Número de proveedor</option>
-              </select>
+              <FieldRow label="Tipo de número">
+                <select {...regEnc('numero_tipo')} disabled={!canEdit} style={inputStyle}>
+                  <option value="automatico">Automático</option>
+                  <option value="manual">Manual</option>
+                  <option value="proveedor">Número de proveedor</option>
+                </select>
+              </FieldRow>
             </div>
 
             {(numeroTipoActual === 'manual' || numeroTipoActual === 'proveedor') && (
               <div>
-                <label style={labelStyle}>{numeroTipoActual === 'proveedor' ? 'Nº de proveedor' : 'Número'}</label>
-                <input {...regEnc('numero')} disabled={!canEdit} style={inputStyle} />
-                {errEnc.numero && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{errEnc.numero.message}</p>}
+                <FieldRow label={numeroTipoActual === 'proveedor' ? 'Nº de proveedor' : 'Número'}>
+                  <input {...regEnc('numero')} disabled={!canEdit} style={inputStyle} />
+                  {errEnc.numero && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{errEnc.numero.message}</p>}
+                </FieldRow>
               </div>
             )}
 
             <div>
-              <label style={labelStyle}>Fecha *</label>
-              <input type="date" {...regEnc('fecha')} disabled={!canEdit} style={inputStyle} />
+              <FieldRow label="Fecha" required>
+                <input type="date" {...regEnc('fecha')} disabled={!canEdit} style={inputStyle} />
+              </FieldRow>
             </div>
 
             <div style={{ gridColumn: '1 / -1' }}>
-              <label style={labelStyle}>Origen / Destino</label>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <select {...regEnc('origen_destino_id')} disabled={!canEdit} style={{ ...inputStyle, flex: 1 }}>
-                  <option value="">Sin especificar</option>
-                  {origenes.map((o) => (
-                    <option key={o.id} value={o.id}>{o.nombre} ({o.tipo})</option>
-                  ))}
-                </select>
-                {canEdit && (
-                  <button
-                    type="button"
-                    onClick={() => setShowNuevoOrigen(true)}
-                    style={{
-                      padding: '8px 12px', border: `1px solid ${theme.colors.border}`,
-                      borderRadius: theme.radii.sm, background: '#fff', cursor: 'pointer',
-                      color: theme.colors.textMuted, fontSize: theme.fontSizes.sm, whiteSpace: 'nowrap',
-                    }}
-                  >
-                    + Nuevo
-                  </button>
-                )}
-              </div>
+              <FieldRow label="Origen / Destino">
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <select {...regEnc('origen_destino_id')} disabled={!canEdit} style={{ ...inputStyle, flex: 1 }}>
+                    <option value="">Sin especificar</option>
+                    {origenes.map((o) => (
+                      <option key={o.id} value={o.id}>{o.nombre} ({o.tipo})</option>
+                    ))}
+                  </select>
+                  {canEdit && (
+                    <button
+                      type="button"
+                      onClick={() => setShowNuevoOrigen(true)}
+                      style={{
+                        padding: '8px 12px', border: `1px solid ${theme.colors.border}`,
+                        borderRadius: theme.radii.sm, background: '#fff', cursor: 'pointer',
+                        color: theme.colors.textMuted, fontSize: theme.fontSizes.sm, whiteSpace: 'nowrap',
+                      }}
+                    >
+                      + Nuevo
+                    </button>
+                  )}
+                </div>
+              </FieldRow>
             </div>
 
             <div style={{ gridColumn: '1 / -1' }}>
-              <label style={labelStyle}>Observaciones</label>
-              <textarea
-                {...regEnc('observaciones')}
-                disabled={!canEdit}
-                rows={2}
-                style={{ ...inputStyle, resize: 'vertical' }}
-                placeholder="Notas adicionales..."
-              />
+              <FieldRow label="Observaciones">
+                <textarea
+                  {...regEnc('observaciones')}
+                  disabled={!canEdit}
+                  rows={2}
+                  style={{ ...inputStyle, resize: 'vertical' }}
+                  placeholder="Notas adicionales..."
+                />
+              </FieldRow>
             </div>
           </div>
 
@@ -1005,19 +1006,21 @@ export default function RemitoDetalleClient({
             </h2>
             <form onSubmit={handleOrigen(crearOrigen)}>
               <div style={{ marginBottom: '16px' }}>
-                <label style={labelStyle}>Tipo *</label>
-                <select {...regOrigen('tipo')} style={inputStyle}>
-                  <option value="proveedor">Proveedor</option>
-                  <option value="sucursal">Sucursal</option>
-                  <option value="deposito">Depósito</option>
-                  <option value="cliente">Cliente</option>
-                  <option value="otro">Otro</option>
-                </select>
+                <FieldRow label="Tipo" required>
+                  <select {...regOrigen('tipo')} style={inputStyle}>
+                    <option value="proveedor">Proveedor</option>
+                    <option value="sucursal">Sucursal</option>
+                    <option value="deposito">Depósito</option>
+                    <option value="cliente">Cliente</option>
+                    <option value="otro">Otro</option>
+                  </select>
+                </FieldRow>
               </div>
               <div style={{ marginBottom: '16px' }}>
-                <label style={labelStyle}>Nombre *</label>
-                <input {...regOrigen('nombre')} style={inputStyle} placeholder="Ej: Proveedor Central" />
-                {errOrigen.nombre && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{errOrigen.nombre.message}</p>}
+                <FieldRow label="Nombre" required>
+                  <input {...regOrigen('nombre')} style={inputStyle} placeholder="Ej: Proveedor Central" />
+                  {errOrigen.nombre && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{errOrigen.nombre.message}</p>}
+                </FieldRow>
               </div>
               {origenError && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', backgroundColor: `${theme.colors.error}12`, borderRadius: theme.radii.sm, marginBottom: '16px' }}>
@@ -1048,79 +1051,86 @@ export default function RemitoDetalleClient({
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
               <div style={{ gridColumn: '1 / -1' }}>
-                <label style={labelStyle}>Nombre *</label>
-                <input
-                  value={crearProductoData.nombre}
-                  onChange={(e) => setCrearProductoData((d) => ({ ...d, nombre: e.target.value }))}
-                  style={inputStyle}
-                  placeholder="Nombre del producto"
-                  autoFocus
-                />
+                <FieldRow label="Nombre" required>
+                  <input
+                    value={crearProductoData.nombre}
+                    onChange={(e) => setCrearProductoData((d) => ({ ...d, nombre: e.target.value }))}
+                    style={inputStyle}
+                    placeholder="Nombre del producto"
+                    autoFocus
+                  />
+                </FieldRow>
               </div>
               <div>
-                <label style={labelStyle}>Código</label>
-                <input
-                  value={crearProductoData.codigo}
-                  onChange={(e) => setCrearProductoData((d) => ({ ...d, codigo: e.target.value }))}
-                  style={{ ...inputStyle, fontFamily: 'monospace' }}
-                  placeholder="ABCD1234"
-                />
+                <FieldRow label="Código">
+                  <input
+                    value={crearProductoData.codigo}
+                    onChange={(e) => setCrearProductoData((d) => ({ ...d, codigo: e.target.value }))}
+                    style={{ ...inputStyle, fontFamily: 'monospace' }}
+                    placeholder="ABCD1234"
+                  />
+                </FieldRow>
               </div>
               <div>
-                <label style={labelStyle}>Unidad</label>
-                <select
-                  value={crearProductoData.unidad}
-                  onChange={(e) => setCrearProductoData((d) => ({ ...d, unidad: e.target.value }))}
-                  style={{ ...inputStyle, backgroundColor: '#fff' }}
-                >
-                  <option value="unidad">unidad</option>
-                  <option value="kg">kg</option>
-                  <option value="bolsa">bolsa</option>
-                  <option value="caja">caja</option>
-                  <option value="litro">litro</option>
-                  <option value="metro">metro</option>
-                  <option value="par">par</option>
-                </select>
+                <FieldRow label="Unidad">
+                  <select
+                    value={crearProductoData.unidad}
+                    onChange={(e) => setCrearProductoData((d) => ({ ...d, unidad: e.target.value }))}
+                    style={{ ...inputStyle, backgroundColor: '#fff' }}
+                  >
+                    <option value="unidad">unidad</option>
+                    <option value="kg">kg</option>
+                    <option value="bolsa">bolsa</option>
+                    <option value="caja">caja</option>
+                    <option value="litro">litro</option>
+                    <option value="metro">metro</option>
+                    <option value="par">par</option>
+                  </select>
+                </FieldRow>
               </div>
               <div>
-                <label style={labelStyle}>Marca</label>
-                <CatalogoCombobox
-                  value={crearProductoData.marca}
-                  onChange={(v) => setCrearProductoData((d) => ({ ...d, marca: v }))}
-                  opciones={localMarcas}
-                  onNewOption={handleNewMarca}
-                  placeholder="Ej: Kingston, Logitech..."
-                />
+                <FieldRow label="Marca">
+                  <CatalogoCombobox
+                    value={crearProductoData.marca}
+                    onChange={(v) => setCrearProductoData((d) => ({ ...d, marca: v }))}
+                    opciones={localMarcas}
+                    onNewOption={handleNewMarca}
+                    placeholder="Ej: Kingston, Logitech..."
+                  />
+                </FieldRow>
               </div>
               <div>
-                <label style={labelStyle}>Rubro</label>
-                <CatalogoCombobox
-                  value={crearProductoData.rubro}
-                  onChange={(v) => setCrearProductoData((d) => ({ ...d, rubro: v }))}
-                  opciones={localRubros}
-                  onNewOption={handleNewRubro}
-                  placeholder="Ej: Periféricos, Almacenamiento..."
-                />
+                <FieldRow label="Rubro">
+                  <CatalogoCombobox
+                    value={crearProductoData.rubro}
+                    onChange={(v) => setCrearProductoData((d) => ({ ...d, rubro: v }))}
+                    opciones={localRubros}
+                    onNewOption={handleNewRubro}
+                    placeholder="Ej: Periféricos, Almacenamiento..."
+                  />
+                </FieldRow>
               </div>
               <div>
-                <label style={labelStyle}>Costo</label>
-                <input
-                  type="number"
-                  value={crearProductoData.costo}
-                  onChange={(e) => setCrearProductoData((d) => ({ ...d, costo: e.target.value }))}
-                  style={inputStyle}
-                  step="any" min="0" placeholder="0.00"
-                />
+                <FieldRow label="Costo">
+                  <input
+                    type="number"
+                    value={crearProductoData.costo}
+                    onChange={(e) => setCrearProductoData((d) => ({ ...d, costo: e.target.value }))}
+                    style={inputStyle}
+                    step="any" min="0" placeholder="0.00"
+                  />
+                </FieldRow>
               </div>
               <div>
-                <label style={labelStyle}>Precio venta</label>
-                <input
-                  type="number"
-                  value={crearProductoData.precio_venta}
-                  onChange={(e) => setCrearProductoData((d) => ({ ...d, precio_venta: e.target.value }))}
-                  style={inputStyle}
-                  step="any" min="0" placeholder="0.00"
-                />
+                <FieldRow label="Precio venta">
+                  <input
+                    type="number"
+                    value={crearProductoData.precio_venta}
+                    onChange={(e) => setCrearProductoData((d) => ({ ...d, precio_venta: e.target.value }))}
+                    style={inputStyle}
+                    step="any" min="0" placeholder="0.00"
+                  />
+                </FieldRow>
               </div>
             </div>
 

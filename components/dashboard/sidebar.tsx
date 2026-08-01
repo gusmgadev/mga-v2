@@ -23,6 +23,8 @@ import {
   LogOut,
   ChevronDown,
   Receipt,
+  Radar,
+  Target,
   type LucideIcon,
 } from 'lucide-react'
 import { theme } from '@/lib/theme'
@@ -47,6 +49,9 @@ const navGroups: NavGroup[] = [
     label: 'Servicios',
     items: [
       { label: 'Oportunidades', href: '/dashboard/oportunidades', Icon: Mail },
+      { label: 'Radar', href: '/dashboard/radar', Icon: Radar },
+      { label: 'Radar Servicios', href: '/dashboard/radar/servicios', Icon: Target },
+      { label: 'Prospectos', href: '/dashboard/radar/prospectos', Icon: Users },
       { label: 'Servicios', href: '/dashboard/servicios', Icon: Wrench },
       { label: 'Presupuestos', href: '/dashboard/presupuestos', Icon: FileText },
       { label: 'Activos', href: '/dashboard/activos', Icon: HardDrive },

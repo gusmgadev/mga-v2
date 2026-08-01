@@ -16,7 +16,8 @@
       "Bash(python)",
       "Bash(Get-ChildItem -Path \"c:\\\\MGA\\\\PROYECTOSWEB\\\\mga-v2\\\\context\\\\\" -File | Select-Object Name, Length | Format-Table -AutoSize)",
       "PowerShell(Get-ChildItem -Path 'c:\\\\MGA\\\\PROYECTOSWEB\\\\mga-v2\\\\context\\\\' -File | Select-Object Name, @{Name='Size\\(bytes\\)';Expression={$_.Length}})",
-      "PowerShell(@\\(Get-Content 'c:\\\\MGA\\\\PROYECTOSWEB\\\\mga-v2\\\\CLAUDE.md'\\).Count)"
+      "PowerShell(@\\(Get-Content 'c:\\\\MGA\\\\PROYECTOSWEB\\\\mga-v2\\\\CLAUDE.md'\\).Count)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp"
     ],
     "additionalDirectories": [
       "C:\\MGA\\PROYECTOSWEB\\mga-v2\\app\\api\\dashboard\\presupuestos\\[id]",

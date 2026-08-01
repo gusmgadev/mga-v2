@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -9,6 +9,8 @@ import { Plus, Pencil, Trash2, X, Loader2, AlertCircle, HardDrive, Save, Upload 
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import FieldRow from '@/components/dashboard/FieldRow'
+import RubroCombobox from '@/components/dashboard/RubroCombobox'
 
 type Cliente = {
   id: number
@@ -55,10 +57,6 @@ const inputStyle = {
   width: '100%', padding: '10px 14px', fontSize: theme.fontSizes.base,
   border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm,
   outline: 'none', boxSizing: 'border-box' as const, fontFamily: 'inherit',
-}
-const labelStyle = {
-  display: 'block', fontSize: theme.fontSizes.sm,
-  fontWeight: theme.fontWeights.medium, color: theme.colors.text, marginBottom: '6px',
 }
 const thStyle: React.CSSProperties = {
   textAlign: 'left', padding: '12px 16px', fontSize: theme.fontSizes.xs,
@@ -111,107 +109,10 @@ function ErrorBox({ message }: { message: string }) {
   )
 }
 
-function RubroCombobox({
-  value,
-  onChange,
-  rubros,
-  onNewRubro,
-}: {
-  value: string
-  onChange: (v: string) => void
-  rubros: string[]
-  onNewRubro: (r: string) => void
-}) {
-  const [open, setOpen] = useState(false)
-  const [input, setInput] = useState(value)
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => { setInput(value) }, [value])
-
-  useEffect(() => {
-    function handler(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
-
-  const filtered = rubros.filter((r) => r.toLowerCase().includes(input.toLowerCase()))
-  const isNew = input.trim().length > 0 && !rubros.some((r) => r.toLowerCase() === input.trim().toLowerCase())
-  const showDropdown = open && (filtered.length > 0 || isNew)
-
-  function select(rubro: string) {
-    setInput(rubro)
-    onChange(rubro)
-    setOpen(false)
-  }
-
-  function addNew() {
-    const trimmed = input.trim()
-    if (!trimmed) return
-    onNewRubro(trimmed)
-    onChange(trimmed)
-    setOpen(false)
-  }
-
-  return (
-    <div ref={containerRef} style={{ position: 'relative' }}>
-      <input
-        value={input}
-        onChange={(e) => { setInput(e.target.value); onChange(e.target.value); setOpen(true) }}
-        onFocus={() => setOpen(true)}
-        style={inputStyle}
-        placeholder="Ej: Indumentaria, Óptica..."
-        autoComplete="off"
-      />
-      {showDropdown && (
-        <div style={{
-          position: 'absolute', top: 'calc(100% + 2px)', left: 0, right: 0,
-          backgroundColor: '#fff', border: `1px solid ${theme.colors.border}`,
-          borderRadius: theme.radii.sm, boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
-          zIndex: 200, maxHeight: '200px', overflowY: 'auto',
-        }}>
-          {filtered.map((r) => (
-            <div
-              key={r}
-              onMouseDown={() => select(r)}
-              style={{ padding: '8px 14px', cursor: 'pointer', fontSize: theme.fontSizes.sm, color: theme.colors.text }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '')}
-            >
-              {r}
-            </div>
-          ))}
-          {isNew && (
-            <div
-              onMouseDown={addNew}
-              style={{
-                padding: '8px 14px', cursor: 'pointer', fontSize: theme.fontSizes.sm,
-                color: theme.colors.primary, fontWeight: theme.fontWeights.medium,
-                borderTop: filtered.length > 0 ? `1px solid ${theme.colors.border}` : 'none',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = `${theme.colors.primary}0a`)}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '')}
-            >
-              + Agregar &quot;{input.trim()}&quot;
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
 function ClienteFormFields({
   form,
-  rubros,
-  onNewRubro,
 }: {
   form: ReturnType<typeof useForm<ClienteForm>>
-  rubros: string[]
-  onNewRubro: (r: string) => void
 }) {
   const isMobile = useIsMobile()
   const rubroValue = form.watch('rubro') ?? ''
@@ -239,109 +140,119 @@ function ClienteFormFields({
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
         <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>Nombre <span style={{ color: theme.colors.error }}>*</span></label>
-          <input {...form.register('nombre')} style={inputStyle} placeholder="Nombre completo o razón social" />
-          {form.formState.errors.nombre && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.nombre.message}</p>}
+          <FieldRow label="Nombre" required>
+            <input {...form.register('nombre')} style={inputStyle} placeholder="Nombre completo o razón social" />
+            {form.formState.errors.nombre && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.nombre.message}</p>}
+          </FieldRow>
         </div>
         <div>
-          <label style={labelStyle}>Tipo <span style={{ color: theme.colors.error }}>*</span></label>
-          <select {...form.register('tipo')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+          <FieldRow label="Tipo" required>
+            <select {...form.register('tipo')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
             <option value="PARTICULAR">Particular</option>
             <option value="EMPRESA">Empresa</option>
             <option value="COMERCIO">Comercio</option>
           </select>
+          </FieldRow>
         </div>
         <div>
-          <label style={labelStyle}>CUIT / DNI</label>
-          <input {...form.register('cuit')} style={inputStyle} placeholder="20-12345678-9" />
+          <FieldRow label="CUIT / DNI">
+            <input {...form.register('cuit')} style={inputStyle} placeholder="20-12345678-9" />
+          </FieldRow>
         </div>
         <div>
-          <label style={labelStyle}>Rubro</label>
-          <RubroCombobox
-            value={rubroValue}
-            onChange={(v) => form.setValue('rubro', v, { shouldDirty: true })}
-            rubros={rubros}
-            onNewRubro={onNewRubro}
-          />
+          <FieldRow label="Rubro">
+            <RubroCombobox
+              value={rubroValue}
+              onChange={(v) => form.setValue('rubro', v as string, { shouldDirty: true })}
+              placeholder="Ej: Indumentaria, Óptica..."
+            />
+          </FieldRow>
         </div>
         <div>
-          <label style={labelStyle}>Email</label>
-          <input {...form.register('email')} type="email" style={inputStyle} placeholder="cliente@email.com" />
-          {form.formState.errors.email && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.email.message}</p>}
+          <FieldRow label="Email">
+            <input {...form.register('email')} type="email" style={inputStyle} placeholder="cliente@email.com" />
+            {form.formState.errors.email && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.email.message}</p>}
+          </FieldRow>
         </div>
         <div>
-          <label style={labelStyle}>Teléfono</label>
-          <input {...form.register('telefono')} style={inputStyle} placeholder="2664-123456" />
+          <FieldRow label="Teléfono">
+            <input {...form.register('telefono')} style={inputStyle} placeholder="2664-123456" />
+          </FieldRow>
         </div>
         <div>
-          <label style={labelStyle}>Localidad</label>
-          <input {...form.register('localidad')} style={inputStyle} placeholder="San Luis, Villa Mercedes..." />
+          <FieldRow label="Localidad">
+            <input {...form.register('localidad')} style={inputStyle} placeholder="San Luis, Villa Mercedes..." />
+          </FieldRow>
         </div>
         <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>Dirección</label>
-          <input {...form.register('direccion')} style={inputStyle} placeholder="Calle y número" />
+          <FieldRow label="Dirección">
+            <input {...form.register('direccion')} style={inputStyle} placeholder="Calle y número" />
+          </FieldRow>
         </div>
         <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>Notas internas</label>
-          <textarea
-            {...form.register('notas')}
-            rows={3}
-            style={{ ...inputStyle, resize: 'vertical' }}
-            placeholder="Observaciones, condiciones especiales..."
-          />
+          <FieldRow label="Notas internas">
+            <textarea
+              {...form.register('notas')}
+              rows={3}
+              style={{ ...inputStyle, resize: 'vertical' }}
+              placeholder="Observaciones, condiciones especiales..."
+            />
+          </FieldRow>
         </div>
 
         <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>Logo / Foto</label>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-            {logoPreview && (
-              <div style={{ position: 'relative', flexShrink: 0 }}>
-                <img
-                  src={logoPreview}
-                  alt="logo"
-                  style={{ width: 64, height: 64, objectFit: 'contain', borderRadius: theme.radii.sm, border: `1px solid ${theme.colors.border}`, backgroundColor: '#f8f9fb' }}
-                />
-                <button
-                  type="button"
-                  onClick={() => { form.setValue('imagen', '', { shouldDirty: true }); setLogoPreview('') }}
-                  style={{ position: 'absolute', top: -6, right: -6, background: theme.colors.error, border: 'none', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff', padding: 0 }}
+          <FieldRow label="Logo / Foto">
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+              {logoPreview && (
+                <div style={{ position: 'relative', flexShrink: 0 }}>
+                  <img
+                    src={logoPreview}
+                    alt="logo"
+                    style={{ width: 64, height: 64, objectFit: 'contain', borderRadius: theme.radii.sm, border: `1px solid ${theme.colors.border}`, backgroundColor: '#f8f9fb' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { form.setValue('imagen', '', { shouldDirty: true }); setLogoPreview('') }}
+                    style={{ position: 'absolute', top: -6, right: -6, background: theme.colors.error, border: 'none', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff', padding: 0 }}
+                  >
+                    <X size={10} />
+                  </button>
+                </div>
+              )}
+              <div>
+                <label
+                  htmlFor="logo-upload"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: uploadingLogo ? 'not-allowed' : 'pointer', fontSize: theme.fontSizes.sm, color: theme.colors.textMuted, backgroundColor: '#fff' }}
                 >
-                  <X size={10} />
-                </button>
+                  {uploadingLogo ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                  {uploadingLogo ? 'Subiendo...' : logoPreview ? 'Cambiar imagen' : 'Seleccionar imagen'}
+                </label>
+                <input
+                  id="logo-upload"
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  disabled={uploadingLogo}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (file) await handleLogoFile(file)
+                    e.target.value = ''
+                  }}
+                />
+                <p style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, marginTop: '4px' }}>
+                  PNG, JPG, SVG, WEBP
+                </p>
+                {logoError && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{logoError}</p>}
               </div>
-            )}
-            <div>
-              <label
-                htmlFor="logo-upload"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 14px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, cursor: uploadingLogo ? 'not-allowed' : 'pointer', fontSize: theme.fontSizes.sm, color: theme.colors.textMuted, backgroundColor: '#fff' }}
-              >
-                {uploadingLogo ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-                {uploadingLogo ? 'Subiendo...' : logoPreview ? 'Cambiar imagen' : 'Seleccionar imagen'}
-              </label>
-              <input
-                id="logo-upload"
-                type="file"
-                accept="image/*"
-                style={{ display: 'none' }}
-                disabled={uploadingLogo}
-                onChange={async (e) => {
-                  const file = e.target.files?.[0]
-                  if (file) await handleLogoFile(file)
-                  e.target.value = ''
-                }}
-              />
-              <p style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, marginTop: '4px' }}>
-                PNG, JPG, SVG, WEBP
-              </p>
-              {logoError && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.xs, marginTop: '4px' }}>{logoError}</p>}
             </div>
-          </div>
+          </FieldRow>
         </div>
 
         <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>Página web</label>
-          <input {...form.register('pagina_web')} type="url" style={inputStyle} placeholder="https://www.ejemplo.com" />
-          {form.formState.errors.pagina_web && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.pagina_web.message}</p>}
+          <FieldRow label="Página web">
+            <input {...form.register('pagina_web')} type="url" style={inputStyle} placeholder="https://www.ejemplo.com" />
+            {form.formState.errors.pagina_web && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{form.formState.errors.pagina_web.message}</p>}
+          </FieldRow>
         </div>
         <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -351,7 +262,7 @@ function ClienteFormFields({
               {...form.register('activo')}
               style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: theme.colors.primary }}
             />
-            <label htmlFor="active-check" style={{ ...labelStyle, marginBottom: 0, cursor: 'pointer' }}>
+            <label htmlFor="active-check" style={{ display: 'block', fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, color: theme.colors.text, marginBottom: 0, cursor: 'pointer' }}>
               Cliente activo
             </label>
           </div>
@@ -362,7 +273,7 @@ function ClienteFormFields({
               {...form.register('mostrar_en_landing')}
               style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: theme.colors.primary }}
             />
-            <label htmlFor="landing-check" style={{ ...labelStyle, marginBottom: 0, cursor: 'pointer' }}>
+            <label htmlFor="landing-check" style={{ fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, color: theme.colors.text, cursor: 'pointer' }}>
               Mostrar en landing
             </label>
           </div>
@@ -375,23 +286,16 @@ function ClienteFormFields({
 export default function ClientesClient({
   initialClientes,
   permisos,
-  initialRubros,
 }: {
   initialClientes: Cliente[]
   permisos: ModulePermisos
-  initialRubros: string[]
 }) {
   const [clientes, setClientes] = useState(initialClientes)
-  const [rubros, setRubros] = useState(initialRubros)
   const [showCreate, setShowCreate] = useState(false)
   const [editTarget, setEditTarget] = useState<Cliente | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Cliente | null>(null)
   const [globalError, setGlobalError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
-
-  function handleNewRubro(rubro: string) {
-    setRubros((prev) => prev.includes(rubro) ? prev : [...prev, rubro].sort())
-  }
 
   const createForm = useForm<ClienteForm>({
     resolver: zodResolver(clienteSchema),
@@ -443,7 +347,6 @@ export default function ClientesClient({
     setCreateLoading(false)
     if (!res.ok) { setCreateError(json.error); return }
     setClientes((prev) => [json, ...prev].sort((a, b) => a.nombre.localeCompare(b.nombre)))
-    if (data.rubro) handleNewRubro(data.rubro)
     setShowCreate(false)
   }
 
@@ -458,7 +361,6 @@ export default function ClientesClient({
     setEditLoading(false)
     if (!res.ok) { setEditError(json.error); return }
     setClientes((prev) => prev.map((c) => (c.id === editTarget.id ? json : c)))
-    if (data.rubro) handleNewRubro(data.rubro)
     setEditTarget(null)
   }
 
@@ -577,7 +479,7 @@ export default function ClientesClient({
         <ModalOverlay onClose={() => setShowCreate(false)}>
           <ModalCard title="Nuevo cliente" onClose={() => setShowCreate(false)} formId="create-form">
             <form id="create-form" onSubmit={createForm.handleSubmit(onCreateSubmit)}>
-              <ClienteFormFields form={createForm} rubros={rubros} onNewRubro={handleNewRubro} />
+              <ClienteFormFields form={createForm} />
               {createError && <div style={{ marginTop: '14px' }}><ErrorBox message={createError} /></div>}
               <button
                 type="submit"
@@ -597,7 +499,7 @@ export default function ClientesClient({
         <ModalOverlay onClose={() => setEditTarget(null)}>
           <ModalCard title="Editar cliente" onClose={() => setEditTarget(null)} formId="edit-form">
             <form id="edit-form" onSubmit={editForm.handleSubmit(onEditSubmit)}>
-              <ClienteFormFields form={editForm} rubros={rubros} onNewRubro={handleNewRubro} />
+              <ClienteFormFields form={editForm} />
               {editError && <div style={{ marginTop: '14px' }}><ErrorBox message={editError} /></div>}
               <button
                 type="submit"

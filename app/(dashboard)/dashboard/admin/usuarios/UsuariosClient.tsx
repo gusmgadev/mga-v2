@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Plus, Pencil, Trash2, X, Loader2, AlertCircle, Save } from 'lucide-react'
+import FieldRow from '@/components/dashboard/FieldRow'
 import { theme } from '@/lib/theme'
 
 type Role = { id: number; name: string }
@@ -43,14 +44,6 @@ const inputStyle = {
   outline: 'none',
   boxSizing: 'border-box' as const,
   fontFamily: 'inherit',
-}
-
-const labelStyle = {
-  display: 'block',
-  fontSize: theme.fontSizes.sm,
-  fontWeight: theme.fontWeights.medium,
-  color: theme.colors.text,
-  marginBottom: '6px',
 }
 
 function ModalOverlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
@@ -293,27 +286,31 @@ export default function UsuariosClient({
           <ModalCard title="Nuevo usuario" onClose={() => setShowCreate(false)} formId="create-form">
             <form id="create-form" onSubmit={createForm.handleSubmit(onCreateSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
-                <label style={labelStyle}>Nombre completo</label>
-                <input {...createForm.register('name')} style={inputStyle} placeholder="Juan García" />
-                {createForm.formState.errors.name && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{createForm.formState.errors.name.message}</p>}
+                <FieldRow label="Nombre completo">
+                  <input {...createForm.register('name')} style={inputStyle} placeholder="Juan García" />
+                  {createForm.formState.errors.name && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{createForm.formState.errors.name.message}</p>}
+                </FieldRow>
               </div>
               <div>
-                <label style={labelStyle}>Email</label>
-                <input {...createForm.register('email')} type="email" style={inputStyle} placeholder="tu@email.com" />
-                {createForm.formState.errors.email && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{createForm.formState.errors.email.message}</p>}
+                <FieldRow label="Email">
+                  <input {...createForm.register('email')} type="email" style={inputStyle} placeholder="tu@email.com" />
+                  {createForm.formState.errors.email && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{createForm.formState.errors.email.message}</p>}
+                </FieldRow>
               </div>
               <div>
-                <label style={labelStyle}>Contraseña</label>
-                <input {...createForm.register('password')} type="password" style={inputStyle} placeholder="Mínimo 8 caracteres" />
-                {createForm.formState.errors.password && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{createForm.formState.errors.password.message}</p>}
+                <FieldRow label="Contraseña">
+                  <input {...createForm.register('password')} type="password" style={inputStyle} placeholder="Mínimo 8 caracteres" />
+                  {createForm.formState.errors.password && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{createForm.formState.errors.password.message}</p>}
+                </FieldRow>
               </div>
               <div>
-                <label style={labelStyle}>Rol</label>
-                <select {...createForm.register('role_id', { valueAsNumber: true })} style={{ ...inputStyle, backgroundColor: '#fff' }}>
-                  <option value="">Seleccioná un rol</option>
-                  {roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
-                </select>
-                {createForm.formState.errors.role_id && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{createForm.formState.errors.role_id.message}</p>}
+                <FieldRow label="Rol">
+                  <select {...createForm.register('role_id', { valueAsNumber: true })} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+                    <option value="">Seleccioná un rol</option>
+                    {roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+                  </select>
+                  {createForm.formState.errors.role_id && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{createForm.formState.errors.role_id.message}</p>}
+                </FieldRow>
               </div>
               {createError && <ErrorBox message={createError} />}
               <SubmitBtn loading={createLoading} label="Crear usuario" />
@@ -328,25 +325,30 @@ export default function UsuariosClient({
           <ModalCard title="Editar usuario" onClose={() => setEditTarget(null)} formId="edit-form">
             <form id="edit-form" onSubmit={editForm.handleSubmit(onEditSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
-                <label style={labelStyle}>Nombre completo</label>
-                <input {...editForm.register('name')} style={inputStyle} />
-                {editForm.formState.errors.name && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{editForm.formState.errors.name.message}</p>}
+                <FieldRow label="Nombre completo">
+                  <input {...editForm.register('name')} style={inputStyle} />
+                  {editForm.formState.errors.name && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{editForm.formState.errors.name.message}</p>}
+                </FieldRow>
               </div>
               <div>
-                <label style={labelStyle}>Email</label>
-                <input {...editForm.register('email')} type="email" style={inputStyle} />
-                {editForm.formState.errors.email && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{editForm.formState.errors.email.message}</p>}
+                <FieldRow label="Email">
+                  <input {...editForm.register('email')} type="email" style={inputStyle} />
+                  {editForm.formState.errors.email && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{editForm.formState.errors.email.message}</p>}
+                </FieldRow>
               </div>
               <div>
-                <label style={labelStyle}>Nueva contraseña <span style={{ color: theme.colors.textMuted, fontWeight: 400 }}>(dejar vacío para no cambiar)</span></label>
-                <input {...editForm.register('password')} type="password" style={inputStyle} placeholder="Mínimo 8 caracteres" />
-                {editForm.formState.errors.password && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{editForm.formState.errors.password.message}</p>}
+                <FieldRow label="Nueva contraseña">
+                  <input {...editForm.register('password')} type="password" style={inputStyle} placeholder="Mínimo 8 caracteres" />
+                  {editForm.formState.errors.password && <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>{editForm.formState.errors.password.message}</p>}
+                </FieldRow>
+                <p style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, marginTop: '4px' }}>Dejar vacío para no cambiar</p>
               </div>
               <div>
-                <label style={labelStyle}>Rol</label>
-                <select {...editForm.register('role_id', { valueAsNumber: true })} style={{ ...inputStyle, backgroundColor: '#fff' }}>
-                  {roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
-                </select>
+                <FieldRow label="Rol">
+                  <select {...editForm.register('role_id', { valueAsNumber: true })} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+                    {roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+                  </select>
+                </FieldRow>
               </div>
               {editError && <ErrorBox message={editError} />}
               <SubmitBtn loading={editLoading} label="Guardar cambios" />

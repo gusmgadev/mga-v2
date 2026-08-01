@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { Plus, Pencil, Trash2, X, Loader2, AlertCircle, Save } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
+import FieldRow from '@/components/dashboard/FieldRow'
 import QuickCreateClienteModal from '@/components/dashboard/QuickCreateClienteModal'
 import { ClienteFormCombobox, ClienteFilterCombobox } from '@/components/dashboard/ClienteCombobox'
 import { useIsMobile } from '@/hooks/useIsMobile'
@@ -41,10 +42,6 @@ const inputStyle = {
   width: '100%', padding: '10px 14px', fontSize: theme.fontSizes.base,
   border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm,
   outline: 'none', boxSizing: 'border-box' as const, fontFamily: 'inherit',
-}
-const labelStyle = {
-  display: 'block', fontSize: theme.fontSizes.sm,
-  fontWeight: theme.fontWeights.medium, color: theme.colors.text, marginBottom: '6px',
 }
 const quickAddBtnStyle: React.CSSProperties = {
   padding: '10px 10px', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm,
@@ -125,50 +122,55 @@ function ActivoFormFields({
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
         <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>Cliente <span style={{ color: theme.colors.error }}>*</span></label>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            <ClienteFormCombobox
-              clientes={clientes}
-              value={form.watch('cliente_id') || 0}
-              onChange={(id) => form.setValue('cliente_id', id, { shouldValidate: true })}
+          <FieldRow label="Cliente" required>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <ClienteFormCombobox
+                clientes={clientes}
+                value={form.watch('cliente_id') || 0}
+                onChange={(id) => form.setValue('cliente_id', id, { shouldValidate: true })}
+              />
+              <button type="button" title="Crear nuevo cliente" onClick={() => setShowQCCliente(true)} style={quickAddBtnStyle}>
+                <Plus size={14} />
+              </button>
+            </div>
+            {form.formState.errors.cliente_id && (
+              <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+                {form.formState.errors.cliente_id.message}
+              </p>
+            )}
+          </FieldRow>
+        </div>
+        <div style={{ gridColumn: '1 / -1' }}>
+          <FieldRow label="Nombre" required>
+            <input {...form.register('nombre')} style={inputStyle} placeholder="Ej: PC Recepción, Sistema de facturación..." />
+            {form.formState.errors.nombre && (
+              <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+                {form.formState.errors.nombre.message}
+              </p>
+            )}
+          </FieldRow>
+        </div>
+        <div>
+          <FieldRow label="Tipo" required>
+            <select {...form.register('tipo')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
+              {TIPOS.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </FieldRow>
+        </div>
+        <div>
+          <FieldRow label="N° Serie / ID">
+            <input {...form.register('numero_serie')} style={inputStyle} placeholder="SN-12345..." />
+          </FieldRow>
+        </div>
+        <div style={{ gridColumn: '1 / -1' }}>
+          <FieldRow label="Notas">
+            <textarea
+              {...form.register('notas')}
+              rows={3}
+              style={{ ...inputStyle, resize: 'vertical' }}
+              placeholder="Observaciones, configuración, historial..."
             />
-            <button type="button" title="Crear nuevo cliente" onClick={() => setShowQCCliente(true)} style={quickAddBtnStyle}>
-              <Plus size={14} />
-            </button>
-          </div>
-          {form.formState.errors.cliente_id && (
-            <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
-              {form.formState.errors.cliente_id.message}
-            </p>
-          )}
-        </div>
-        <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>Nombre <span style={{ color: theme.colors.error }}>*</span></label>
-          <input {...form.register('nombre')} style={inputStyle} placeholder="Ej: PC Recepción, Sistema de facturación..." />
-          {form.formState.errors.nombre && (
-            <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
-              {form.formState.errors.nombre.message}
-            </p>
-          )}
-        </div>
-        <div>
-          <label style={labelStyle}>Tipo <span style={{ color: theme.colors.error }}>*</span></label>
-          <select {...form.register('tipo')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
-            {TIPOS.map((t) => <option key={t} value={t}>{t}</option>)}
-          </select>
-        </div>
-        <div>
-          <label style={labelStyle}>N° Serie / ID</label>
-          <input {...form.register('numero_serie')} style={inputStyle} placeholder="SN-12345..." />
-        </div>
-        <div style={{ gridColumn: '1 / -1' }}>
-          <label style={labelStyle}>Notas</label>
-          <textarea
-            {...form.register('notas')}
-            rows={3}
-            style={{ ...inputStyle, resize: 'vertical' }}
-            placeholder="Observaciones, configuración, historial..."
-          />
+          </FieldRow>
         </div>
         <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <input
@@ -177,7 +179,7 @@ function ActivoFormFields({
             {...form.register('activo')}
             style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: theme.colors.primary }}
           />
-          <label htmlFor="activo-check" style={{ ...labelStyle, marginBottom: 0, cursor: 'pointer' }}>
+          <label htmlFor="activo-check" style={{ fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, color: theme.colors.text, cursor: 'pointer' }}>
             Activo (desmarcar = De baja)
           </label>
         </div>
