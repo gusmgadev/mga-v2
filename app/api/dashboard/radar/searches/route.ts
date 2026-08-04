@@ -7,6 +7,7 @@ import { normalizePhone, extractDomain, normalizeName, getDominantCategory } fro
 import { findDuplicate } from '@/lib/radar/deduplication'
 import { calculateAllScores } from '@/lib/radar/scoring'
 import { fetchWebsiteEmails } from '@/lib/radar/website'
+import { passesCategoryFilter } from '@/lib/radar/categoryFilter'
 
 export async function GET(req: Request) {
   const session = await auth()
@@ -124,6 +125,11 @@ export async function POST(req: Request) {
       const phone = details.formatted_phone_number ?? details.international_phone_number ?? null
       const website = details.website ?? null
       const categories = details.types ?? []
+
+      if (!passesCategoryFilter(filters.category, { name: details.name, types: categories }, filters.keywords ?? [])) {
+        processedPlaceIds.add(r.place_id)
+        return
+      }
 
       let email: string | null = null
       const requiresPhone = !!filters.phoneRequired
