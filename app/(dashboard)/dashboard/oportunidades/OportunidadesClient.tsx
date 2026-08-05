@@ -258,7 +258,7 @@ export default function OportunidadesClient({
   const [tipoBusqueda, setTipoBusqueda] = useState<TipoOp>('OP_NUEVA')
   const [desde, setDesde] = useState('')
   const [hasta, setHasta] = useState('')
-  const [remitente, setRemitente] = useState('zlavisos@zoologic.com.ar')
+  const [remitente, setRemitente] = useState('zlavisos@zoologic.com.ar, comercial@zoologic.com.ar')
   const [asunto, setAsunto] = useState('Avisos ZL')
   const [palabrasClave, setPalabrasClave] = useState(TIPO_OP_KEYWORDS['OP_NUEVA'])
   const [searching, setSearching] = useState(false)
@@ -741,7 +741,7 @@ export default function OportunidadesClient({
               </div>
               <div>
                 <FieldRow label="Remitente">
-                  <input type="text" value={remitente} onChange={(e) => setRemitente(e.target.value)} placeholder="email o dominio" style={inputStyle} />
+                  <input type="text" value={remitente} onChange={(e) => setRemitente(e.target.value)} placeholder="emails separados por coma" style={inputStyle} />
                 </FieldRow>
               </div>
               <div>

@@ -21,7 +21,12 @@ export async function POST(req: Request) {
   const criteria: Record<string, unknown> = {}
   if (desde) criteria.since = new Date(desde)
   if (hasta) criteria.before = new Date(new Date(hasta).getTime() + 86400000)
-  if (remitente) criteria.from = remitente
+  const remitentes = String(remitente ?? '')
+    .split(/[;,]/)
+    .map((r) => r.trim())
+    .filter(Boolean)
+  if (remitentes.length === 1) criteria.from = remitentes[0]
+  else if (remitentes.length > 1) criteria.or = remitentes.map((r) => ({ from: r }))
   if (asunto) criteria.subject = asunto
   if (palabrasClave) criteria.body = palabrasClave
 
