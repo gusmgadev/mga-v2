@@ -137,6 +137,11 @@ const inputStyle = {
   backgroundColor: '#fff',
 }
 
+const searchLabelStyle: React.CSSProperties = {
+  display: 'block', marginBottom: '5px', fontSize: theme.fontSizes.sm,
+  fontWeight: theme.fontWeights.medium, color: theme.colors.text,
+}
+
 const thStyle: React.CSSProperties = {
   textAlign: 'left', padding: '10px 14px', fontSize: theme.fontSizes.xs,
   fontWeight: theme.fontWeights.medium, color: theme.colors.textMuted,
@@ -711,48 +716,42 @@ export default function OportunidadesClient({
 
         {searchOpen && (
           <div style={{ padding: '0 20px 20px', borderTop: `1px solid ${theme.colors.border}` }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px', marginTop: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '14px', marginTop: '16px' }}>
               <div>
-                <FieldRow label="Tipo de OP">
-                  <select
-                    value={tipoBusqueda}
-                    onChange={(e) => {
-                      const t = e.target.value as TipoOp
-                      setTipoBusqueda(t)
-                      setPalabrasClave(TIPO_OP_KEYWORDS[t])
-                    }}
-                    style={{ ...inputStyle, cursor: 'pointer' }}
-                  >
-                    <option value="OP_NUEVA">OP Nueva</option>
-                    <option value="SEGUIMIENTO">Seguimiento</option>
-                    <option value="CROSS_SELLING">Cross Selling</option>
-                  </select>
-                </FieldRow>
+                <label style={searchLabelStyle}>Tipo de OP</label>
+                <select
+                  value={tipoBusqueda}
+                  onChange={(e) => {
+                    const t = e.target.value as TipoOp
+                    setTipoBusqueda(t)
+                    setPalabrasClave(TIPO_OP_KEYWORDS[t])
+                  }}
+                  style={{ ...inputStyle, cursor: 'pointer' }}
+                >
+                  <option value="OP_NUEVA">OP Nueva</option>
+                  <option value="SEGUIMIENTO">Seguimiento</option>
+                  <option value="CROSS_SELLING">Cross Selling</option>
+                </select>
               </div>
               <div>
-                <FieldRow label="Desde">
-                  <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} style={inputStyle} />
-                </FieldRow>
+                <label style={searchLabelStyle}>Desde</label>
+                <input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} style={inputStyle} />
               </div>
               <div>
-                <FieldRow label="Hasta">
-                  <input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} style={inputStyle} />
-                </FieldRow>
+                <label style={searchLabelStyle}>Hasta</label>
+                <input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} style={inputStyle} />
               </div>
               <div>
-                <FieldRow label="Remitente">
-                  <input type="text" value={remitente} onChange={(e) => setRemitente(e.target.value)} placeholder="emails separados por coma" style={inputStyle} />
-                </FieldRow>
+                <label style={searchLabelStyle}>Remitente</label>
+                <input type="text" value={remitente} onChange={(e) => setRemitente(e.target.value)} placeholder="emails separados por coma" style={inputStyle} />
               </div>
               <div>
-                <FieldRow label="Asunto">
-                  <input type="text" value={asunto} onChange={(e) => setAsunto(e.target.value)} placeholder="palabras del asunto" style={inputStyle} />
-                </FieldRow>
+                <label style={searchLabelStyle}>Asunto</label>
+                <input type="text" value={asunto} onChange={(e) => setAsunto(e.target.value)} placeholder="palabras del asunto" style={inputStyle} />
               </div>
               <div>
-                <FieldRow label="Palabras clave en texto">
-                  <input type="text" value={palabrasClave} onChange={(e) => setPalabrasClave(e.target.value)} placeholder="ej: oportunidad tarea" style={inputStyle} />
-                </FieldRow>
+                <label style={searchLabelStyle}>Palabras clave en texto</label>
+                <input type="text" value={palabrasClave} onChange={(e) => setPalabrasClave(e.target.value)} placeholder="ej: oportunidad tarea" style={inputStyle} />
               </div>
             </div>
 
