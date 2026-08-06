@@ -264,8 +264,8 @@ export default function OportunidadesClient({
   const [desde, setDesde] = useState('')
   const [hasta, setHasta] = useState('')
   const [remitente, setRemitente] = useState('zlavisos@zoologic.com.ar, comercial@zoologic.com.ar')
-  const [asunto, setAsunto] = useState('Avisos ZL')
-  const [palabrasClave, setPalabrasClave] = useState(TIPO_OP_KEYWORDS['OP_NUEVA'])
+  const [asunto, setAsunto] = useState('Te han asignado la oportunidad número / avisos zl')
+  const [palabrasClave, setPalabrasClave] = useState('Te han asignado la oportunidad / Contactar con el cliente')
   const [searching, setSearching] = useState(false)
   const [searchError, setSearchError] = useState<string | null>(null)
   const [emailResults, setEmailResults] = useState<EmailResult[]>([])
@@ -747,11 +747,11 @@ export default function OportunidadesClient({
               </div>
               <div>
                 <label style={searchLabelStyle}>Asunto</label>
-                <input type="text" value={asunto} onChange={(e) => setAsunto(e.target.value)} placeholder="ej: Avisos ZL / asignado (mails comerciales)" style={inputStyle} />
+                <input type="text" value={asunto} onChange={(e) => setAsunto(e.target.value)} placeholder="opciones separadas por / (se aplican con OR)" style={inputStyle} />
               </div>
               <div>
                 <label style={searchLabelStyle}>Palabras clave en texto</label>
-                <input type="text" value={palabrasClave} onChange={(e) => setPalabrasClave(e.target.value)} placeholder="ej: oportunidad tarea" style={inputStyle} />
+                <input type="text" value={palabrasClave} onChange={(e) => setPalabrasClave(e.target.value)} placeholder="opciones separadas por / (se aplican con OR)" style={inputStyle} />
               </div>
             </div>
 

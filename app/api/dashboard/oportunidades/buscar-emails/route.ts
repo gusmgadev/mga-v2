@@ -35,8 +35,22 @@ export async function POST(req: Request) {
         : `from:(${remitentes.map((r) => `"${r}"`).join(' OR ')})`
     )
   }
-  if (asunto) parts.push(`subject:"${asunto}"`)
-  if (palabrasClave) parts.push(`"${palabrasClave}"`)
+  // Asunto y palabras clave admiten opciones separadas por "/". Cuando ambos campos
+  // tienen la misma cantidad de opciones, se combinan por posición con OR lógico:
+  //   asunto "A / B" + claves "K1 / K2" → (subject:"A" "K1") OR (subject:"B" "K2")
+  // Si las cantidades difieren, cada campo se ORea por separado.
+  const asuntoParts = String(asunto ?? '').split('/').map((s) => s.trim()).filter(Boolean)
+  const keywordParts = String(palabrasClave ?? '').split('/').map((s) => s.trim()).filter(Boolean)
+
+  if (asuntoParts.length > 0 && keywordParts.length > 0 && asuntoParts.length === keywordParts.length) {
+    const groups = asuntoParts.map((a, i) => `(subject:"${a}" "${keywordParts[i]}")`)
+    parts.push(groups.length > 1 ? `(${groups.join(' OR ')})` : groups[0])
+  } else {
+    if (asuntoParts.length === 1) parts.push(`subject:"${asuntoParts[0]}"`)
+    else if (asuntoParts.length > 1) parts.push(`subject:(${asuntoParts.map((a) => `"${a}"`).join(' OR ')})`)
+    if (keywordParts.length === 1) parts.push(`"${keywordParts[0]}"`)
+    else if (keywordParts.length > 1) parts.push(`(${keywordParts.map((k) => `"${k}"`).join(' OR ')})`)
+  }
   if (desde) parts.push(`after:${desde.replace(/-/g, '/')}`)
   if (hasta) {
     const end = new Date(hasta)
