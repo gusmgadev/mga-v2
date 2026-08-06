@@ -18,21 +18,37 @@ export async function POST(req: Request) {
 
   const { desde, hasta, remitente, asunto, palabrasClave } = await req.json()
 
-  const criteria: Record<string, unknown> = {}
-  if (desde) criteria.since = new Date(desde)
-  if (hasta) criteria.before = new Date(new Date(hasta).getTime() + 86400000)
+  // Gmail's IMAP SEARCH doesn't support OR nor full-text BODY search, so we build
+  // a native Gmail query (X-GM-RAW) using its web search syntax. This keeps the
+  // exact same filters (remitente, asunto, palabras clave, fechas) but makes them
+  // work against Gmail (multiple senders via from:(a OR b), phrase/body matching).
+  const parts: string[] = []
+
   const remitentes = String(remitente ?? '')
     .split(/[;,]/)
     .map((r) => r.trim())
     .filter(Boolean)
-  if (remitentes.length === 1) criteria.from = remitentes[0]
-  else if (remitentes.length > 1) criteria.or = remitentes.map((r) => ({ from: r }))
-  if (asunto) criteria.subject = asunto
-  if (palabrasClave) criteria.body = palabrasClave
+  if (remitentes.length > 0) {
+    parts.push(
+      remitentes.length === 1
+        ? `from:"${remitentes[0]}"`
+        : `from:(${remitentes.map((r) => `"${r}"`).join(' OR ')})`
+    )
+  }
+  if (asunto) parts.push(`subject:"${asunto}"`)
+  if (palabrasClave) parts.push(`"${palabrasClave}"`)
+  if (desde) parts.push(`after:${desde.replace(/-/g, '/')}`)
+  if (hasta) {
+    const end = new Date(hasta)
+    end.setDate(end.getDate() + 1)
+    parts.push(`before:${end.toISOString().slice(0, 10).replace(/-/g, '/')}`)
+  }
 
-  if (Object.keys(criteria).length === 0) {
+  if (parts.length === 0) {
     return NextResponse.json({ error: 'Ingresá al menos un criterio de búsqueda' }, { status: 400 })
   }
+
+  const criteria = { gmraw: parts.join(' ') }
 
   const client = new ImapFlow({
     host: 'imap.gmail.com',
@@ -122,7 +138,9 @@ export async function POST(req: Request) {
     // emails in Gmail. Both have the same task number in the body — keep the one with more content.
     const deduped = new Map<string, typeof emails[0]>()
     for (const email of emails) {
-      const taskMatch = email.body.match(/tarea\s+n[uú]mero\s+(\d+)/i)
+      const taskMatch =
+        email.body.match(/tarea\s+n[uú]mero\s+(\d+)/i) ??
+        email.body.match(/oportunidad\s+n[uú]mero\s+(\d+)/i)
       const key = taskMatch ? `task-${taskMatch[1]}` : `uid-${email.uid}`
       const existing = deduped.get(key)
       if (!existing || email.body.length > existing.body.length) {

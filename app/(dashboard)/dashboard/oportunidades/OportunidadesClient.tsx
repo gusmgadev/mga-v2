@@ -747,7 +747,7 @@ export default function OportunidadesClient({
               </div>
               <div>
                 <label style={searchLabelStyle}>Asunto</label>
-                <input type="text" value={asunto} onChange={(e) => setAsunto(e.target.value)} placeholder="palabras del asunto" style={inputStyle} />
+                <input type="text" value={asunto} onChange={(e) => setAsunto(e.target.value)} placeholder="ej: Avisos ZL / asignado (mails comerciales)" style={inputStyle} />
               </div>
               <div>
                 <label style={searchLabelStyle}>Palabras clave en texto</label>

@@ -56,6 +56,23 @@ Patrones a detectar:
   "Contacto: Nombre Apellido | Email: email@ejemplo.com | Tel.: 2974113042"
   → extraer primer_nombre y apellido de "Contacto:", email_contacto de "Email:", telefono de "Tel.:"
 
+Formato de mails de "Carga Automática de Oportunidades Comerciales" (remitente comercial@zoologic.com.ar):
+- "Te han asignado la oportunidad número 59305" → nro_oportunidad: 59305
+- "Fecha Apertura: 04/08/2026" → fecha_inicio: "2026-08-04"
+- "Asunto: Generado desde Carga Automática de Oportunidades Comerciales" → titulo: el texto completo después de "Asunto:"
+- "Cliente: 51952 - Alba Indumentaria" → cliente_codigo: "51952", cliente_nombre: "Alba Indumentaria"
+- "Origen: Web: Productos" → origen: "Web: Productos"
+- "Tipo de Oportunidad: No informa" → tipo_oportunidad: "No informa"
+- "Nombre : Florencia Perdomo" → primer_nombre: "Florencia", apellido: "Perdomo"
+- "Teléfonos: 280 4667318" → telefono: "280 4667318"
+- "e-Mail: florguille91@gmail.com" → email_contacto: "florguille91@gmail.com"
+- "Dirección:", "Area:", "Rol:" si están vacíos → null
+- "Observaciones: ..." → comentarios: el texto completo
+- Los datos de contacto también pueden repetirse dentro de "Observaciones:" con formato:
+  "Primer Nombre: X Apellido: Y Cliente: Z Provincia / Ciudad: W Teléfono: T Mail: M Comentarios: C"
+  → extraer esos campos si no están en la sección Contacto
+- "Producto: ..." y "Rubro: ..." no tienen campo asignado → ignorarlos
+
 Devolvé SOLO el JSON, sin ningún texto adicional, sin markdown.`
 
 // Groq free tier: 100k tokens/day. Truncate body to ~3000 chars (~750 tokens) so structured
