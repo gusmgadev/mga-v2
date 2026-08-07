@@ -264,7 +264,7 @@ export default function OportunidadesClient({
   const [desde, setDesde] = useState('')
   const [hasta, setHasta] = useState('')
   const [remitente, setRemitente] = useState('zlavisos@zoologic.com.ar, comercial@zoologic.com.ar')
-  const [asunto, setAsunto] = useState('Te han asignado la oportunidad número / avisos zl')
+  const [asunto, setAsunto] = useState('Se te ha asignado / avisos zl')
   const [palabrasClave, setPalabrasClave] = useState('Te han asignado la oportunidad / Contactar con el cliente')
   const [searching, setSearching] = useState(false)
   const [searchError, setSearchError] = useState<string | null>(null)

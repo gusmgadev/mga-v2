@@ -39,8 +39,11 @@ export async function POST(req: Request) {
   // tienen la misma cantidad de opciones, se combinan por posición con OR lógico:
   //   asunto "A / B" + claves "K1 / K2" → (subject:"A" "K1") OR (subject:"B" "K2")
   // Si las cantidades difieren, cada campo se ORea por separado.
-  const asuntoParts = String(asunto ?? '').split('/').map((s) => s.trim()).filter(Boolean)
-  const keywordParts = String(palabrasClave ?? '').split('/').map((s) => s.trim()).filter(Boolean)
+  // Los acentos se normalizan a ASCII para que el X-GM-RAW no requiera CHARSET UTF-8
+  // (Gmail lo rechaza en ese caso). La búsqueda de Gmail es insensible a acentos.
+  const stripAccents = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  const asuntoParts = String(asunto ?? '').split('/').map((s) => stripAccents(s.trim())).filter(Boolean)
+  const keywordParts = String(palabrasClave ?? '').split('/').map((s) => stripAccents(s.trim())).filter(Boolean)
 
   if (asuntoParts.length > 0 && keywordParts.length > 0 && asuntoParts.length === keywordParts.length) {
     const groups = asuntoParts.map((a, i) => `(subject:"${a}" "${keywordParts[i]}")`)
