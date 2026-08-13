@@ -93,7 +93,7 @@ const PAGO_COLORS: Record<EstadoPago, { bg: string; text: string }> = {
 }
 
 const inputStyle = {
-  width: '100%', padding: '10px 14px', fontSize: theme.fontSizes.base,
+  width: '100%', padding: '8px 10px', fontSize: theme.fontSizes.xs,
   border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm,
   outline: 'none', boxSizing: 'border-box' as const, fontFamily: 'inherit',
 }
@@ -273,7 +273,7 @@ function ServicioFormFields({
           </FieldRow>
         </div>
 
-        <div>
+        <div style={{ gridColumn: '1 / -1' }}>
           <FieldRow label="Estado">
             <select {...form.register('estado')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
               {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
@@ -289,7 +289,7 @@ function ServicioFormFields({
           </FieldRow>
         </div>
 
-        <div>
+        <div style={{ gridColumn: '1 / -1' }}>
           <FieldRow label="Valor ($)">
             <input
               type="number"
@@ -776,7 +776,7 @@ export default function ServiciosClient({
                     </FieldRow>
                   </div>
 
-                  <div>
+                  <div style={{ gridColumn: '1 / -1' }}>
                     <FieldRow label="Estado">
                       <select {...editForm.register('estado')} style={{ ...inputStyle, backgroundColor: '#fff' }}>
                         {ESTADOS.map((e) => <option key={e} value={e}>{e}</option>)}
@@ -792,7 +792,7 @@ export default function ServiciosClient({
                     </FieldRow>
                   </div>
 
-                  <div>
+                  <div style={{ gridColumn: '1 / -1' }}>
                     <FieldRow label="Valor ($)">
                       <input
                         type="number"
