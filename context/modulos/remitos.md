@@ -46,7 +46,7 @@ public.movimientos_stock {
 2. `POST /api/dashboard/voz/transcribir` recibe el audio + `remito_id`
 3. Audio → Supabase Storage bucket `remitos-audio` (path: `{remitoId}/{timestamp}.webm`)
 4. Groq Whisper (`whisper-large-v3`) transcribe a texto en español
-5. Llama 3.3 (`llama-3.3-70b-versatile`) extrae productos del texto como JSON
+5. GPT-OSS 20B (`openai/gpt-oss-20b`) extrae productos del texto como JSON
 6. Por cada producto detectado, se busca coincidencia en 4 intentos:
    - **Intento 0:** `ilike('codigo', codigoQuery)` exacto → confianza 1.0
    - **Intento 0b:** mismo con código normalizado (sin espacios/guiones) → confianza 1.0
@@ -78,7 +78,7 @@ public.movimientos_stock {
 | `/api/dashboard/remitos/[id]/confirmar` | POST | Confirma el remito y actualiza `movimientos_stock` |
 | `/api/dashboard/remitos/[id]/items` | GET + POST | Ítems del remito |
 | `/api/dashboard/remitos/[id]/items/[itemId]` | PUT + DELETE | Editar/eliminar ítem |
-| `/api/dashboard/voz/transcribir` | POST | Transcribe audio (Whisper) + extrae productos (Llama 3.3) |
+| `/api/dashboard/voz/transcribir` | POST | Transcribe audio (Whisper) + extrae productos (GPT-OSS 20B) |
 
 ---
 

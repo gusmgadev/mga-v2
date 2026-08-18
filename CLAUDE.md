@@ -43,7 +43,7 @@ Dos productos en un mismo repo Next.js:
 | Lucide React | 1.14.0 | Íconos |
 | Framer Motion | 12.x | Solo en landing |
 | Resend | 6.x | Email desde `/api/contact` |
-| Groq API | — | Whisper (STT) + Llama 3.3 (voz/remitos) + Llama 3.3 (extracción oportunidades) |
+| Groq API | — | Whisper (STT) + GPT-OSS 20B (voz/remitos + extracción oportunidades) |
 | TipTap | — | Editor rich text (Bold/Italic/Highlight) — solo en dashboard noticias |
 
 **IMPORTANTE — Next.js 16 breaking changes:**
@@ -145,7 +145,7 @@ mga-v2/
 │   │       ├── remitos/[id]/confirmar/route.ts
 │   │       ├── remitos/[id]/items/route.ts
 │   │       ├── remitos/[id]/items/[itemId]/route.ts
-│   │       ├── voz/transcribir/route.ts # Groq Whisper + Llama 3.3 + matching
+│   │       ├── voz/transcribir/route.ts # Groq Whisper + GPT-OSS 20B + matching
 │   │       ├── cobranzas/route.ts
 │   │       ├── cobranzas/[id]/route.ts
 │   │       ├── cobranzas/[id]/imputar/route.ts
@@ -161,7 +161,7 @@ mga-v2/
 │   │       ├── oportunidades/[id]/iteraciones/route.ts          # GET+POST
 │   │       ├── oportunidades/[id]/iteraciones/[iteracionId]/route.ts # PUT+DELETE
 │   │       ├── oportunidades/buscar-emails/route.ts # POST — búsqueda IMAP Gmail
-│   │       ├── oportunidades/extraer/route.ts      # POST — extracción Groq Llama 3.3
+│   │       ├── oportunidades/extraer/route.ts      # POST — extracción Groq GPT-OSS 20B
 │   │       ├── noticias/route.ts        # GET+POST
 │   │       ├── noticias/[id]/route.ts  # PUT+DELETE + auto-post Instagram
 │   │       ├── upload/imagen/route.ts          # POST — sube imagen noticias a Supabase Storage
@@ -344,7 +344,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 RESEND_API_KEY=
 RESEND_FROM_EMAIL=
-GROQ_API_KEY=           # Whisper (STT) + Llama 3.3 (voz remitos + extracción oportunidades — 100k tokens/día gratis)
+GROQ_API_KEY=           # Whisper (STT) + GPT-OSS 20B (voz remitos + extracción oportunidades — 200k tokens/día gratis)
 GMAIL_IMAP_USER=        # Oportunidades: dirección Gmail
 GMAIL_IMAP_PASSWORD=    # Oportunidades: App Password de Google (no la contraseña real)
 INSTAGRAM_USER_ID=      # ID numérico del usuario IG Business (no el @handle)

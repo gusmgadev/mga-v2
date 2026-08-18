@@ -27,7 +27,7 @@
 | Auth | NextAuth.js v5 beta — CredentialsProvider + JWT |
 | Base de datos | Supabase PostgreSQL |
 | Formularios | React Hook Form + Zod |
-| IA / voz | Groq Whisper (STT) + Llama 3.3 |
+| IA / voz | Groq Whisper (STT) + GPT-OSS 20B |
 | Rich text | TipTap (solo dashboard noticias) |
 | Email | Resend |
 | Instagram | Graph API v21.0 |

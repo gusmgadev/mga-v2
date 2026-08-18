@@ -1,6 +1,6 @@
 # Módulo Oportunidades — Contexto
 
-> Módulo del grupo **Servicios** en el dashboard. Gestión de oportunidades comerciales extraídas desde email con Groq Llama 3.3.
+> Módulo del grupo **Servicios** en el dashboard. Gestión de oportunidades comerciales extraídas desde email con Groq GPT-OSS 20B.
 
 ---
 
@@ -43,7 +43,7 @@ ALTER TABLE oportunidades ADD CONSTRAINT oportunidades_estado_check
 **Flujo completo:**
 1. `OportunidadesClient` busca emails via `POST /api/dashboard/oportunidades/buscar-emails` (ImapFlow + Gmail IMAP)
 2. El usuario selecciona emails y elige tipo: OP_NUEVA / SEGUIMIENTO / CROSS_SELLING
-3. `POST /api/dashboard/oportunidades/extraer` procesa cada email con Groq Llama 3.3 (json_object mode)
+3. `POST /api/dashboard/oportunidades/extraer` procesa cada email con Groq GPT-OSS 20B (json_object mode)
 4. Deduplicación por `email_message_id` — si ya existe se cuenta como duplicado y se salta
 5. Los campos extraídos se insertan en `oportunidades` junto con metadata del email
 
@@ -141,7 +141,7 @@ function whatsappUrl(phone: string, withMessage = false): string {
 | `/api/dashboard/oportunidades/[id]/iteraciones` | GET + POST | Historial de contacto |
 | `/api/dashboard/oportunidades/[id]/iteraciones/[iteracionId]` | PUT + DELETE | Editar/eliminar iteración |
 | `/api/dashboard/oportunidades/buscar-emails` | POST | Busca emails en Gmail IMAP |
-| `/api/dashboard/oportunidades/extraer` | POST | Extrae oportunidades con Groq Llama 3.3 |
+| `/api/dashboard/oportunidades/extraer` | POST | Extrae oportunidades con Groq GPT-OSS 20B |
 
 ---
 

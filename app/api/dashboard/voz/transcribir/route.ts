@@ -105,7 +105,7 @@ export async function POST(req: Request) {
 
   const { text: transcripcion } = await whisperRes.json()
 
-  // 3. Extraer productos con Llama 3.3
+  // 3. Extraer productos con GPT-OSS 20B
   const llmRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -113,7 +113,7 @@ export async function POST(req: Request) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
+      model: 'openai/gpt-oss-20b',
       messages: [{ role: 'user', content: EXTRACCION_PROMPT.replace('{transcripcion}', transcripcion) }],
       response_format: { type: 'json_object' },
     }),
