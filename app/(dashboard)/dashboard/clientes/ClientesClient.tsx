@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Link from 'next/link'
-import { Plus, Pencil, Trash2, X, Loader2, AlertCircle, HardDrive, Save, Upload } from 'lucide-react'
+import { Plus, Pencil, Trash2, X, Loader2, AlertCircle, HardDrive, Save, Upload, Search } from 'lucide-react'
 import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 import { useIsMobile } from '@/hooks/useIsMobile'
@@ -291,11 +291,16 @@ export default function ClientesClient({
   permisos: ModulePermisos
 }) {
   const [clientes, setClientes] = useState(initialClientes)
+  const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const [editTarget, setEditTarget] = useState<Cliente | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Cliente | null>(null)
   const [globalError, setGlobalError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
+
+  const filteredClientes = clientes.filter((c) =>
+    c.nombre.toLowerCase().includes(search.toLowerCase())
+  )
 
   const createForm = useForm<ClienteForm>({
     resolver: zodResolver(clienteSchema),
@@ -378,10 +383,22 @@ export default function ClientesClient({
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
-          {clientes.length} cliente{clientes.length !== 1 ? 's' : ''}
-        </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textMuted, margin: 0 }}>
+            {filteredClientes.length} cliente{filteredClientes.length !== 1 ? 's' : ''}
+          </p>
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <Search size={14} style={{ position: 'absolute', left: '10px', color: theme.colors.textMuted, pointerEvents: 'none' }} />
+            <input
+              type="text"
+              placeholder="Buscar por nombre..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ padding: '7px 12px 7px 30px', fontSize: theme.fontSizes.sm, border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, outline: 'none', width: '220px', fontFamily: 'inherit' }}
+            />
+          </div>
+        </div>
         {permisos.can_create && (
           <button
             onClick={openCreate}
@@ -409,14 +426,14 @@ export default function ClientesClient({
             </tr>
           </thead>
           <tbody>
-            {clientes.length === 0 && (
+            {filteredClientes.length === 0 && (
               <tr>
                 <td colSpan={7} style={{ ...tdStyle, textAlign: 'center', color: theme.colors.textMuted }}>
-                  No hay clientes registrados
+                  {clientes.length === 0 ? 'No hay clientes registrados' : 'No se encontraron clientes'}
                 </td>
               </tr>
             )}
-            {clientes.map((c) => (
+            {filteredClientes.map((c) => (
               <tr key={c.id}>
                 <td style={{ ...tdStyle, fontWeight: theme.fontWeights.medium }}>
                   <span style={{ display: 'block' }}>{c.nombre}</span>
