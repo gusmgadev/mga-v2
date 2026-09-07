@@ -15,6 +15,7 @@ export default async function ClientesPage() {
     .from('clientes')
     .select('*')
     .order('nombre')
+    .range(0, 9999)
 
   return <ClientesClient initialClientes={clientes ?? []} permisos={permisos} />
 }
