@@ -29,6 +29,28 @@ export function fetchAllClientes() {
   )
 }
 
+export function fetchAllClientesCompletos() {
+  return fetchAll<Record<string, unknown>>('clientes', '*', []) as Promise<
+    {
+      id: number
+      nombre: string
+      tipo: 'PARTICULAR' | 'EMPRESA' | 'COMERCIO'
+      email: string | null
+      telefono: string | null
+      direccion: string | null
+      localidad: string | null
+      cuit: string | null
+      rubro: string | null
+      notas: string | null
+      activo: boolean
+      imagen: string | null
+      pagina_web: string | null
+      mostrar_en_landing: boolean
+      created_at: string
+    }[]
+  >
+}
+
 export function fetchAllActivos() {
   return fetchAll<{ id: number; nombre: string; cliente_id: number }>(
     'activos', 'id, nombre, cliente_id', [{ column: 'activo', value: true }],

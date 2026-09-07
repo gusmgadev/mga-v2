@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { supabaseAdmin } from '@/services/supabase-admin'
+import { fetchAllClientesCompletos } from '@/lib/fetchAllClientes'
 import { z } from 'zod'
 
 const createSchema = z.object({
@@ -30,12 +31,7 @@ export async function GET() {
   if (!(await requireSession())) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
   }
-  const { data, error } = await supabaseAdmin
-    .from('clientes')
-    .select('*')
-    .order('nombre')
-    .range(0, 9999)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  const data = await fetchAllClientesCompletos()
   return NextResponse.json(data)
 }
 
