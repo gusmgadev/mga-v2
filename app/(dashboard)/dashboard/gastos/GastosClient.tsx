@@ -953,7 +953,8 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
             <thead>
               <tr style={{ borderBottom: `2px solid ${theme.colors.border}`, background: '#f9fafb' }}>
                 <th style={{ padding: '10px 14px', textAlign: 'left', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, fontWeight: theme.fontWeights.medium, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Descripción</th>
-                <th style={{ padding: '10px 14px', textAlign: 'right', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, fontWeight: theme.fontWeights.medium, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Valor</th>
+                <th style={{ padding: '10px 14px', textAlign: 'right', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, fontWeight: theme.fontWeights.medium, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Est.</th>
+                <th style={{ padding: '10px 14px', textAlign: 'right', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, fontWeight: theme.fontWeights.medium, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Real</th>
                 <th style={{ padding: '10px 14px', textAlign: 'right', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, fontWeight: theme.fontWeights.medium, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Pagado</th>
                 <th style={{ padding: '10px 14px', textAlign: 'right', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, fontWeight: theme.fontWeights.medium, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Saldo</th>
                 <th style={{ padding: '10px 14px', textAlign: 'center', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, fontWeight: theme.fontWeights.medium, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Estado</th>
@@ -966,7 +967,7 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
                 <>
                   {/* Fila de categoría */}
                   <tr key={`cat-${cat}`} style={{ background: '#f3f4f6' }}>
-                    <td colSpan={7} style={{ padding: '6px 14px', fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.bold, color: theme.colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                    <td colSpan={8} style={{ padding: '6px 14px', fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.bold, color: theme.colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                       {cat}
                     </td>
                   </tr>
@@ -980,8 +981,11 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
                         {g.descripcion}
                         {g.notas && <div style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>{g.notas}</div>}
                       </td>
-                      <td style={{ padding: '11px 14px', textAlign: 'right', fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, color: theme.colors.text }}>
-                        {(g.monto_real ?? g.monto_estimado) != null ? `$${fmt(g.monto_real ?? g.monto_estimado)}` : '—'}
+                      <td style={{ padding: '11px 14px', textAlign: 'right', fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
+                        {g.monto_estimado != null ? `$${fmt(g.monto_estimado)}` : '—'}
+                      </td>
+                      <td style={{ padding: '11px 14px', textAlign: 'right', fontSize: theme.fontSizes.sm, fontWeight: g.monto_real != null ? theme.fontWeights.medium : theme.fontWeights.regular, color: g.monto_real != null ? theme.colors.text : theme.colors.textMuted }}>
+                        {g.monto_real != null ? `$${fmt(g.monto_real)}` : '—'}
                       </td>
                       <td style={{ padding: '11px 14px', textAlign: 'right', fontSize: theme.fontSizes.sm, color: (g.monto_pagado ?? 0) > 0 ? '#15803d' : theme.colors.textMuted }}>
                         ${fmt(g.monto_pagado ?? 0)}
