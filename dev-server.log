@@ -1,0 +1,13 @@
+
+> mga-v2@0.1.0 dev
+> next dev --webpack
+
+▲ Next.js 16.2.4 (webpack)
+- Local:         http://localhost:3000
+- Network:       http://100.95.133.48:3000
+- Environments: .env.local
+✓ Ready in 22.2s
+
+○ Compiling proxy ...
+○ Compiling /auth/signin ...
+ GET /auth/signin 200 in 1465ms (next.js: 107ms, proxy.ts: 117ms, application-code: 1241ms)

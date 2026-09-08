@@ -24,6 +24,7 @@ type Gasto = {
   descripcion: string
   monto_estimado: number | null
   monto_real: number | null
+  monto_pagado: number | null
   pagado: boolean
   fecha_pago: string | null
   metodo_pago: string | null
@@ -74,6 +75,24 @@ function fmtFecha(d: string | null) {
 function today() {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+}
+
+function saldoDe(g: Gasto): number {
+  const total = g.monto_real ?? g.monto_estimado ?? 0
+  const pagado = g.monto_pagado ?? 0
+  return Math.max(0, total - pagado)
+}
+
+function estaPagado(g: Gasto): boolean {
+  const total = g.monto_real ?? g.monto_estimado ?? 0
+  const pagado = g.monto_pagado ?? 0
+  return total > 0 && pagado >= total
+}
+
+function estadoDe(g: Gasto): 'PAGADO' | 'PAGO PARCIAL' | 'PENDIENTE' {
+  if (estaPagado(g)) return 'PAGADO'
+  if ((g.monto_pagado ?? 0) > 0) return 'PAGO PARCIAL'
+  return 'PENDIENTE'
 }
 
 // ─── Shared style constants ───────────────────────────────────────────────────
@@ -172,9 +191,9 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
   // ── KPIs ──────────────────────────────────────────────────────────────────
 
   const totalEst = gastos.reduce((s, g) => s + (g.monto_estimado ?? 0), 0)
-  const totalPagado = gastos.filter(g => g.pagado).reduce((s, g) => s + (g.monto_real ?? g.monto_estimado ?? 0), 0)
-  const totalPendiente = gastos.filter(g => !g.pagado).reduce((s, g) => s + (g.monto_estimado ?? 0), 0)
-  const nPendientes = gastos.filter(g => !g.pagado).length
+  const totalPagado = gastos.reduce((s, g) => s + (g.monto_pagado ?? 0), 0)
+  const totalPendiente = gastos.reduce((s, g) => s + saldoDe(g), 0)
+  const nPendientes = gastos.filter(g => !estaPagado(g)).length
 
   // ── Categorías únicas ─────────────────────────────────────────────────────
 
@@ -202,7 +221,8 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
 
   function ModalPagar() {
     const g = modalPagar!
-    const [montoReal, setMontoReal] = useState(String(g.monto_estimado ?? ''))
+    const [montoTotal, setMontoTotal] = useState(String(g.monto_real ?? g.monto_estimado ?? ''))
+    const [montoPagar, setMontoPagar] = useState(String(saldoDe(g) || ''))
     const [fechaPago, setFechaPago] = useState(g.fecha_pago ?? today())
     const [metodo, setMetodo] = useState(g.metodo_pago ?? 'TRANSFERENCIA')
     const [tarjetaId, setTarjetaId] = useState<number | null>(g.tarjeta_id ?? null)
@@ -241,12 +261,20 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
 
     async function save() {
       setSaving(true); setErr('')
+      const total = montoTotal ? Number(montoTotal) : 0
+      const pago = montoPagar ? Number(montoPagar) : 0
+      if (total <= 0) { setErr('El monto total debe ser mayor a 0'); setSaving(false); return }
+      if (pago <= 0) { setErr('El monto a pagar debe ser mayor a 0'); setSaving(false); return }
+      const saldoActual = total - (g.monto_pagado ?? 0)
+      if (pago > saldoActual) { setErr(`No puede pagar más que el saldo pendiente (${fmt(saldoActual)})`); setSaving(false); return }
+      const nuevoPagado = (g.monto_pagado ?? 0) + pago
       const r = await fetch(`/api/dashboard/gastos/${g.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          pagado: true,
-          monto_real: montoReal ? Number(montoReal) : null,
+          pagado: nuevoPagado >= total,
+          monto_real: total,
+          monto_pagado: nuevoPagado,
           fecha_pago: fechaPago || null,
           metodo_pago: metodo,
           tarjeta_id: metodo === 'TARJETA' ? tarjetaId : null,
@@ -265,8 +293,25 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
       <Modal title={`Pagar — ${g.descripcion}`} onClose={() => setModalPagar(null)}>
         {err && <ErrorBox msg={err} />}
         <div style={{ display: 'grid', gap: 14 }}>
-          <FieldRow label="Monto pagado">
-            <input style={inputStyle} type="number" value={montoReal} onChange={e => setMontoReal(e.target.value)} />
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)', gap: 10, background: '#f9fafb', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, padding: '12px 14px' }}>
+            <div>
+              <div style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>Total real</div>
+              <div style={{ fontSize: theme.fontSizes.base, fontWeight: theme.fontWeights.bold, color: theme.colors.text }}>${fmt(g.monto_real ?? g.monto_estimado)}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>Ya pagado</div>
+              <div style={{ fontSize: theme.fontSizes.base, fontWeight: theme.fontWeights.bold, color: '#15803d' }}>${fmt(g.monto_pagado ?? 0)}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>Saldo pendiente</div>
+              <div style={{ fontSize: theme.fontSizes.base, fontWeight: theme.fontWeights.bold, color: '#d97706' }}>${fmt(saldoDe(g))}</div>
+            </div>
+          </div>
+          <FieldRow label="Monto total del gasto">
+            <input style={inputStyle} type="number" value={montoTotal} onChange={e => setMontoTotal(e.target.value)} />
+          </FieldRow>
+          <FieldRow label="Monto a pagar ahora">
+            <input style={inputStyle} type="number" value={montoPagar} onChange={e => setMontoPagar(e.target.value)} />
           </FieldRow>
           <FieldRow label="Fecha de pago">
             <input style={inputStyle} type="date" value={fechaPago} onChange={e => setFechaPago(e.target.value)} />
@@ -333,7 +378,7 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
           <button style={btnSecondary} onClick={() => setModalPagar(null)}>Cancelar</button>
-          <button style={btnPrimary} onClick={save} disabled={saving}>{saving ? 'Guardando...' : 'Marcar pagado'}</button>
+          <button style={btnPrimary} onClick={save} disabled={saving}>{saving ? 'Guardando...' : 'Registrar pago'}</button>
         </div>
       </Modal>
     )
@@ -802,7 +847,10 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
                     </td>
                   </tr>
                   {/* Filas de gastos */}
-                  {items.map(g => (
+                  {items.map(g => {
+                    const estado = estadoDe(g)
+                    const saldo = saldoDe(g)
+                    return (
                     <tr key={g.id} style={{ borderBottom: `1px solid ${theme.colors.border}` }}>
                       <td style={{ padding: '11px 14px', fontSize: theme.fontSizes.sm, color: theme.colors.text }}>
                         {g.descripcion}
@@ -813,19 +861,29 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
                       </td>
                       <td style={{ padding: '11px 14px', textAlign: 'right', fontSize: theme.fontSizes.sm, fontWeight: g.monto_real != null ? theme.fontWeights.medium : theme.fontWeights.regular, color: g.monto_real != null ? theme.colors.text : theme.colors.textMuted }}>
                         {g.monto_real != null ? `$${fmt(g.monto_real)}` : '—'}
+                        {estado === 'PAGO PARCIAL' && (
+                          <div style={{ fontSize: theme.fontSizes.xs, color: '#d97706', fontWeight: theme.fontWeights.regular }}>
+                            saldo ${fmt(saldo)}
+                          </div>
+                        )}
                       </td>
                       <td style={{ padding: '11px 14px', textAlign: 'center' }}>
                         <span style={{
                           display: 'inline-block', borderRadius: 20, padding: '3px 10px',
                           fontSize: theme.fontSizes.xs, fontWeight: theme.fontWeights.medium,
-                          background: g.pagado ? '#dcfce7' : '#fef9c3',
-                          color: g.pagado ? '#15803d' : '#92400e',
+                          background: estado === 'PAGADO' ? '#dcfce7' : estado === 'PAGO PARCIAL' ? '#fef3c7' : '#fef9c3',
+                          color: estado === 'PAGADO' ? '#15803d' : estado === 'PAGO PARCIAL' ? '#b45309' : '#92400e',
                         }}>
-                          {g.pagado ? 'PAGADO' : 'PENDIENTE'}
+                          {estado}
                         </span>
+                        {estado === 'PAGO PARCIAL' && (
+                          <div style={{ fontSize: theme.fontSizes.xs, color: '#d97706', marginTop: 2 }}>
+                            pagado ${fmt(g.monto_pagado ?? 0)} / ${fmt((g.monto_real ?? g.monto_estimado) ?? 0)}
+                          </div>
+                        )}
                       </td>
                       <td style={{ padding: '11px 14px', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>
-                        {g.pagado ? (
+                        {g.fecha_pago ? (
                           <>
                             {fmtFecha(g.fecha_pago)}
                             {g.metodo_pago && (
@@ -838,7 +896,7 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
                       </td>
                       <td style={{ padding: '11px 14px' }}>
                         <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
-                          {!g.pagado && permisos.can_edit && (
+                          {!estaPagado(g) && permisos.can_edit && (
                             <button title="Registrar pago" onClick={() => setModalPagar(g)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#15803d', display: 'flex', padding: 4 }}>
                               <CheckCircle size={16} />
                             </button>
@@ -856,7 +914,8 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    )
+                  })}
                 </>
               ))}
             </tbody>
