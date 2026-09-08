@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
   let query = supabaseAdmin
     .from('gastos')
-    .select('*, tarjetas(id, nombre, tipo, banco)')
+    .select('*, tarjetas(id, nombre, tipo, banco), gastos_pagos(*, tarjetas(id, nombre, tipo, banco))')
     .order('categoria')
     .order('created_at')
 

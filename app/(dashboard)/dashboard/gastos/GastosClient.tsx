@@ -1,9 +1,9 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { theme } from '@/lib/theme'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import FieldRow from '@/components/dashboard/FieldRow'
-import { Plus, ChevronLeft, ChevronRight, CheckCircle, Pencil, Trash2, Settings, X, CreditCard } from 'lucide-react'
+import { Plus, ChevronLeft, ChevronRight, CheckCircle, Pencil, Trash2, Settings, X, CreditCard, ReceiptText } from 'lucide-react'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -26,6 +26,19 @@ type Gasto = {
   monto_real: number | null
   monto_pagado: number | null
   pagado: boolean
+  fecha_pago: string | null
+  metodo_pago: string | null
+  tarjeta_id: number | null
+  tarjetas: { id: number; nombre: string; tipo: string; banco: string | null } | null
+  notas: string | null
+  created_at: string
+  gastos_pagos?: GastoPago[] | null
+}
+
+type GastoPago = {
+  id: number
+  gasto_id: number
+  monto: number | null
   fecha_pago: string | null
   metodo_pago: string | null
   tarjeta_id: number | null
@@ -151,7 +164,9 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
   const [inicializando, setInicializando] = useState(false)
 
   // Modals
-  const [modalPagar, setModalPagar] = useState<Gasto | null>(null)
+  const [modalPagar, setModalPagar] = useState<{ gasto: Gasto; pago: GastoPago | null } | null>(null)
+  const [modalPagos, setModalPagos] = useState<Gasto | null>(null)
+  const fromPagos = useRef(false)
   const [modalGasto, setModalGasto] = useState<Gasto | 'nueva' | null>(null)
   const [modalPlantilla, setModalPlantilla] = useState(false)
   const [modalTarjetas, setModalTarjetas] = useState(false)
@@ -220,12 +235,21 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
   // ─────────────────────────────────────────────────────────────────────────
 
   function ModalPagar() {
-    const g = modalPagar!
+    const { gasto: g, pago } = modalPagar!
+    const editing = pago != null
     const [montoTotal, setMontoTotal] = useState(String(g.monto_real ?? g.monto_estimado ?? ''))
-    const [montoPagar, setMontoPagar] = useState(String(saldoDe(g) || ''))
-    const [fechaPago, setFechaPago] = useState(g.fecha_pago ?? today())
-    const [metodo, setMetodo] = useState(g.metodo_pago ?? 'TRANSFERENCIA')
-    const [tarjetaId, setTarjetaId] = useState<number | null>(g.tarjeta_id ?? null)
+    const [montoPagar, setMontoPagar] = useState(
+      editing ? String(pago.monto ?? '') : String(saldoDe(g) || '')
+    )
+    const [fechaPago, setFechaPago] = useState(
+      editing ? (pago.fecha_pago ?? today()) : (g.fecha_pago ?? today())
+    )
+    const [metodo, setMetodo] = useState(
+      editing ? (pago.metodo_pago ?? 'TRANSFERENCIA') : (g.metodo_pago ?? 'TRANSFERENCIA')
+    )
+    const [tarjetaId, setTarjetaId] = useState<number | null>(
+      editing ? pago.tarjeta_id : (g.tarjeta_id ?? null)
+    )
     const [showNueva, setShowNueva] = useState(false)
     const [ntNombre, setNtNombre] = useState('')
     const [ntTipo, setNtTipo] = useState('')
@@ -261,36 +285,43 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
 
     async function save() {
       setSaving(true); setErr('')
-      const total = montoTotal ? Number(montoTotal) : 0
-      const pago = montoPagar ? Number(montoPagar) : 0
-      if (total <= 0) { setErr('El monto total debe ser mayor a 0'); setSaving(false); return }
-      if (pago <= 0) { setErr('El monto a pagar debe ser mayor a 0'); setSaving(false); return }
-      const saldoActual = total - (g.monto_pagado ?? 0)
-      if (pago > saldoActual) { setErr(`No puede pagar más que el saldo pendiente (${fmt(saldoActual)})`); setSaving(false); return }
-      const nuevoPagado = (g.monto_pagado ?? 0) + pago
-      const r = await fetch(`/api/dashboard/gastos/${g.id}`, {
-        method: 'PUT',
+      const total = editing ? (g.monto_real ?? g.monto_estimado ?? 0) : (montoTotal ? Number(montoTotal) : 0)
+      const montoNuevo = montoPagar ? Number(montoPagar) : 0
+      if ((!editing && total <= 0)) { setErr('El monto total debe ser mayor a 0'); setSaving(false); return }
+      if (montoNuevo <= 0) { setErr('El monto a pagar debe ser mayor a 0'); setSaving(false); return }
+      if (!editing) {
+        const saldoActual = total - (g.monto_pagado ?? 0)
+        if (montoNuevo > saldoActual) { setErr(`No puede pagar más que el saldo pendiente (${fmt(saldoActual)})`); setSaving(false); return }
+      }
+      const payload = {
+        monto: montoNuevo,
+        fecha_pago: fechaPago || null,
+        metodo_pago: metodo,
+        tarjeta_id: metodo === 'TARJETA' ? tarjetaId : null,
+      }
+      const url = editing && pago
+        ? `/api/dashboard/gastos/pagos/${pago.id}`
+        : '/api/dashboard/gastos/pagos'
+      const body = editing && pago
+        ? payload
+        : { ...payload, gasto_id: g.id, monto_total: total }
+      const r = await fetch(url, {
+        method: editing ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          pagado: nuevoPagado >= total,
-          monto_real: total,
-          monto_pagado: nuevoPagado,
-          fecha_pago: fechaPago || null,
-          metodo_pago: metodo,
-          tarjeta_id: metodo === 'TARJETA' ? tarjetaId : null,
-        }),
+        body: JSON.stringify(body),
       })
       if (r.ok) {
         const updated: Gasto = await r.json()
         setGastos(prev => prev.map(x => x.id === updated.id ? updated : x))
         setModalPagar(null)
+        if (fromPagos.current) { fromPagos.current = false; setModalPagos(updated) }
       } else {
         const d = await r.json(); setErr(d.error ?? 'Error al guardar'); setSaving(false)
       }
     }
 
     return (
-      <Modal title={`Pagar — ${g.descripcion}`} onClose={() => setModalPagar(null)}>
+      <Modal title={editing ? 'Editar pago' : `Pagar — ${g.descripcion}`} onClose={() => setModalPagar(null)}>
         {err && <ErrorBox msg={err} />}
         <div style={{ display: 'grid', gap: 14 }}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(3, 1fr)', gap: 10, background: '#f9fafb', border: `1px solid ${theme.colors.border}`, borderRadius: theme.radii.sm, padding: '12px 14px' }}>
@@ -307,10 +338,12 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
               <div style={{ fontSize: theme.fontSizes.base, fontWeight: theme.fontWeights.bold, color: '#d97706' }}>${fmt(saldoDe(g))}</div>
             </div>
           </div>
-          <FieldRow label="Monto total del gasto">
-            <input style={inputStyle} type="number" value={montoTotal} onChange={e => setMontoTotal(e.target.value)} />
-          </FieldRow>
-          <FieldRow label="Monto a pagar ahora">
+          {!editing && (
+            <FieldRow label="Monto total del gasto">
+              <input style={inputStyle} type="number" value={montoTotal} onChange={e => setMontoTotal(e.target.value)} />
+            </FieldRow>
+          )}
+          <FieldRow label={editing ? 'Monto del pago' : 'Monto a pagar ahora'}>
             <input style={inputStyle} type="number" value={montoPagar} onChange={e => setMontoPagar(e.target.value)} />
           </FieldRow>
           <FieldRow label="Fecha de pago">
@@ -378,8 +411,98 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20 }}>
           <button style={btnSecondary} onClick={() => setModalPagar(null)}>Cancelar</button>
-          <button style={btnPrimary} onClick={save} disabled={saving}>{saving ? 'Guardando...' : 'Registrar pago'}</button>
+          <button style={btnPrimary} onClick={save} disabled={saving}>{saving ? 'Guardando...' : editing ? 'Guardar pago' : 'Registrar pago'}</button>
         </div>
+      </Modal>
+    )
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // MODAL VER / EDITAR / ELIMINAR PAGOS
+  // ─────────────────────────────────────────────────────────────────────────
+
+  function ModalPagosView() {
+    const g = modalPagos!
+    const pagos = (g.gastos_pagos ?? []).slice().sort((a, b) =>
+      (a.fecha_pago ?? a.created_at).localeCompare(b.fecha_pago ?? b.created_at)
+    )
+    const [deletingId, setDeletingId] = useState<number | null>(null)
+    const [err, setErr] = useState('')
+
+    async function eliminarPago(id: number) {
+      setDeletingId(id); setErr('')
+      const r = await fetch(`/api/dashboard/gastos/pagos/${id}`, { method: 'DELETE' })
+      if (r.ok) {
+        const updated: Gasto = await r.json()
+        setGastos(prev => prev.map(x => x.id === updated.id ? updated : x))
+        setModalPagos(updated)
+      } else {
+        const d = await r.json(); setErr(d.error ?? 'Error'); setDeletingId(null)
+      }
+    }
+
+    return (
+      <Modal title={`Pagos — ${g.descripcion}`} onClose={() => setModalPagos(null)} width={560}>
+        {err && <ErrorBox msg={err} />}
+        {pagos.length === 0 ? (
+          <p style={{ color: theme.colors.textMuted, fontSize: theme.fontSizes.sm, marginBottom: 16 }}>
+            No hay pagos registrados para este gasto.
+          </p>
+        ) : (
+          <div>
+            {pagos.map(p => (
+              <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: `1px solid ${theme.colors.border}` }}>
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontSize: theme.fontSizes.sm, fontWeight: theme.fontWeights.medium, color: '#15803d' }}>${fmt(p.monto)}</span>
+                  {p.fecha_pago && <span style={{ marginLeft: 8, fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>{fmtFecha(p.fecha_pago)}</span>}
+                  {p.metodo_pago && (
+                    <span style={{ marginLeft: 6, fontSize: theme.fontSizes.xs, background: '#f3f4f6', borderRadius: 4, padding: '1px 6px', color: theme.colors.textMuted }}>
+                      {p.tarjetas ? p.tarjetas.nombre : p.metodo_pago}
+                    </span>
+                  )}
+                  {p.notas && <div style={{ fontSize: theme.fontSizes.xs, color: theme.colors.textMuted }}>{p.notas}</div>}
+                </div>
+                {permisos.can_edit && (
+                  <button
+                    title="Editar pago"
+                    onClick={() => { fromPagos.current = true; setModalPagar({ gasto: g, pago: p }); setModalPagos(null) }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.textMuted, display: 'flex', padding: 4 }}
+                  >
+                    <Pencil size={14} />
+                  </button>
+                )}
+                {permisos.can_delete && deletingId === p.id ? (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                    <button onClick={() => eliminarPago(p.id)} style={{ ...btnSecondary, padding: '4px 8px', fontSize: theme.fontSizes.xs, color: '#dc2626', borderColor: '#fecaca' }}>
+                      Eliminar
+                    </button>
+                    <button onClick={() => setDeletingId(null)} style={{ ...btnSecondary, padding: '4px 8px', fontSize: theme.fontSizes.xs }}>
+                      Cancelar
+                    </button>
+                  </span>
+                ) : (
+                  permisos.can_delete && (
+                    <button
+                      title="Eliminar pago"
+                      onClick={() => setDeletingId(p.id)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', display: 'flex', padding: 4 }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        {!estaPagado(g) && permisos.can_edit && (
+          <button
+            style={{ ...btnPrimary, marginTop: 16 }}
+            onClick={() => { fromPagos.current = true; setModalPagar({ gasto: g, pago: null }); setModalPagos(null) }}
+          >
+            + Registrar pago
+          </button>
+        )}
       </Modal>
     )
   }
@@ -891,10 +1014,13 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
                       <td style={{ padding: '11px 14px' }}>
                         <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
                           {!estaPagado(g) && permisos.can_edit && (
-                            <button title="Registrar pago" onClick={() => setModalPagar(g)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#15803d', display: 'flex', padding: 4 }}>
+                            <button title="Registrar pago" onClick={() => setModalPagar({ gasto: g, pago: null })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#15803d', display: 'flex', padding: 4 }}>
                               <CheckCircle size={16} />
                             </button>
                           )}
+                          <button title="Ver pagos" onClick={() => setModalPagos(g)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.textMuted, display: 'flex', padding: 4 }}>
+                            <ReceiptText size={14} />
+                          </button>
                           {permisos.can_edit && (
                             <button title="Editar" onClick={() => setModalGasto(g)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.colors.textMuted, display: 'flex', padding: 4 }}>
                               <Pencil size={14} />
@@ -929,6 +1055,7 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
 
       {/* ── Modales ── */}
       {modalPagar && <ModalPagar />}
+      {modalPagos && <ModalPagosView />}
       {modalGasto && <ModalGasto />}
       {modalDeleteGasto && <ModalDelete />}
       {modalTarjetas && <ModalTarjetasPanel />}

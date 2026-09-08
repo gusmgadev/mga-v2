@@ -18,7 +18,7 @@ export default async function GastosPage() {
   const [{ data: gastos }, { data: plantillas }, { data: tarjetas }] = await Promise.all([
     supabaseAdmin
       .from('gastos')
-      .select('*, tarjetas(id, nombre, tipo, banco)')
+      .select('*, tarjetas(id, nombre, tipo, banco), gastos_pagos(*, tarjetas(id, nombre, tipo, banco))')
       .eq('mes', mes)
       .eq('anio', anio)
       .order('categoria')
