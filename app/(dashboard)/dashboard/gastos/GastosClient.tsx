@@ -959,7 +959,7 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
                 <th style={{ padding: '10px 14px', textAlign: 'right', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, fontWeight: theme.fontWeights.medium, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Saldo</th>
                 <th style={{ padding: '10px 14px', textAlign: 'center', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, fontWeight: theme.fontWeights.medium, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Estado</th>
                 <th style={{ padding: '10px 14px', textAlign: 'left', fontSize: theme.fontSizes.xs, color: theme.colors.textMuted, fontWeight: theme.fontWeights.medium, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Fecha / Método</th>
-                <th style={{ padding: '10px 14px', width: 100 }}></th>
+                <th style={{ padding: '10px 14px', width: 100, position: 'sticky', right: 0, background: '#f9fafb', zIndex: 2, borderLeft: `1px solid ${theme.colors.border}` }}></th>
               </tr>
             </thead>
             <tbody>
@@ -1015,8 +1015,8 @@ export default function GastosClient({ initialGastos, initialPlantillas, initial
                           </>
                         ) : '—'}
                       </td>
-                      <td style={{ padding: '11px 14px' }}>
-                        <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                      <td style={{ padding: '11px 14px', position: 'sticky', right: 0, background: '#fff', zIndex: 1, borderLeft: `1px solid ${theme.colors.border}` }}>
+                        <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end', backgroundColor: '#fff' }}>
                           {!estaPagado(g) && permisos.can_edit && (
                             <button title="Registrar pago" onClick={() => setModalPagar({ gasto: g, pago: null })} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#15803d', display: 'flex', padding: 4 }}>
                               <CheckCircle size={16} />

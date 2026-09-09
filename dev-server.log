@@ -4,11 +4,10 @@
 
 ▲ Next.js 16.2.4 (webpack)
 - Local:         http://localhost:3000
-- Network:       http://100.95.133.48:3000
+- Network:       http://169.254.83.107:3000
 - Environments: .env.local
-✓ Ready in 22.2s
+✓ Ready in 7.8s
 
-○ Compiling proxy ...
 ○ Compiling /auth/signin ...
- GET /auth/signin 200 in 1465ms (next.js: 107ms, proxy.ts: 117ms, application-code: 1241ms)
+ GET /auth/signin 200 in 23.2s (next.js: 19.3s, proxy.ts: 107ms, application-code: 3.7s)
 [?25h
