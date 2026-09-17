@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Link from 'next/link'
@@ -10,6 +10,8 @@ import { theme } from '@/lib/theme'
 import type { ModulePermisos } from '@/lib/permisos'
 import FieldRow from '@/components/dashboard/FieldRow'
 import QuickCreateActivoModal from '@/components/dashboard/QuickCreateActivoModal'
+import QuickCreateClienteModal from '@/components/dashboard/QuickCreateClienteModal'
+import { ClienteFormCombobox } from '@/components/dashboard/ClienteCombobox'
 import { useIsMobile } from '@/hooks/useIsMobile'
 
 type ServicioEstado = 'INGRESADO' | 'EN PROCESO' | 'CANCELADO' | 'RECHAZADO' | 'TERMINADO' | 'PRESUPUESTADO'
@@ -90,6 +92,7 @@ const TAREA_COLORS: Record<TareaEstado, { bg: string; text: string }> = {
 }
 
 const editSchema = z.object({
+  cliente_id: z.number().int().positive('Seleccioná un cliente'),
   activo_id: z.number().int().positive().nullable().optional(),
   titulo: z.string().min(2, 'Mínimo 2 caracteres'),
   descripcion: z.string().nullable().optional(),
@@ -196,8 +199,10 @@ export default function ServicioDetalleClient({
   const [pagos, setPagos] = useState<CobranzaPago[]>(initialPagos)
   const [pagosACuenta, setPagosACuenta] = useState<CobranzaPago[]>(initialPagosACuenta)
   const [localActivos, setLocalActivos] = useState(activos)
+  const [localClientes, setLocalClientes] = useState(clientes)
   const [showEdit, setShowEdit] = useState(false)
   const [showQCActivo, setShowQCActivo] = useState(false)
+  const [showQCCliente, setShowQCCliente] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
   const [editLoading, setEditLoading] = useState(false)
   const [showGenPresupuesto, setShowGenPresupuesto] = useState(false)
@@ -232,17 +237,10 @@ export default function ServicioDetalleClient({
   const [imputarLoading, setImputarLoading] = useState(false)
   const [imputarError, setImputarError] = useState<string | null>(null)
 
-  const activosFiltrados = localActivos.filter((a) => a.cliente_id === servicio.cliente_id)
-
-  const handleActivoCreado = (a: { id: number; nombre: string; cliente_id: number }) => {
-    setLocalActivos((prev) => [...prev, a].sort((a, b) => a.nombre.localeCompare(b.nombre)))
-    editForm.setValue('activo_id', a.id)
-    setShowQCActivo(false)
-  }
-
   const editForm = useForm<EditForm>({
     resolver: zodResolver(editSchema),
     defaultValues: {
+      cliente_id: servicio.cliente_id,
       activo_id: servicio.activo_id,
       titulo: servicio.titulo,
       descripcion: servicio.descripcion ?? '',
@@ -253,8 +251,24 @@ export default function ServicioDetalleClient({
     },
   })
 
+  const editClienteId = useWatch({ control: editForm.control, name: 'cliente_id' })
+  const activosFiltrados = localActivos.filter((a) => a.cliente_id === editClienteId)
+
+  const handleActivoCreado = (a: { id: number; nombre: string; cliente_id: number }) => {
+    setLocalActivos((prev) => [...prev, a].sort((a, b) => a.nombre.localeCompare(b.nombre)))
+    editForm.setValue('activo_id', a.id)
+    setShowQCActivo(false)
+  }
+
+  const handleClienteCreado = (c: { id: number; nombre: string }) => {
+    setLocalClientes((prev) => [...prev, c].sort((a, b) => a.nombre.localeCompare(b.nombre)))
+    editForm.setValue('cliente_id', c.id, { shouldValidate: true })
+    setShowQCCliente(false)
+  }
+
   const openEdit = () => {
     editForm.reset({
+      cliente_id: servicio.cliente_id,
       activo_id: servicio.activo_id,
       titulo: servicio.titulo,
       descripcion: servicio.descripcion ?? '',
@@ -976,8 +990,15 @@ export default function ServicioDetalleClient({
         <QuickCreateActivoModal
           onClose={() => setShowQCActivo(false)}
           onCreated={handleActivoCreado}
-          clienteIdPreset={servicio.cliente_id}
-          clientes={[]}
+          clienteIdPreset={editClienteId}
+          clientes={localClientes}
+        />
+      )}
+
+      {showQCCliente && (
+        <QuickCreateClienteModal
+          onClose={() => setShowQCCliente(false)}
+          onCreated={handleClienteCreado}
         />
       )}
 
@@ -988,6 +1009,32 @@ export default function ServicioDetalleClient({
             <form id="edit-form" onSubmit={editForm.handleSubmit(onEditSubmit)}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <FieldRow label="Cliente" required>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <ClienteFormCombobox
+                          clientes={localClientes}
+                          value={editClienteId}
+                          onChange={(id) => {
+                            editForm.setValue('cliente_id', id, { shouldValidate: true })
+                            const activoActual = editForm.getValues('activo_id')
+                            if (activoActual && !localActivos.some((a) => a.id === activoActual && a.cliente_id === id)) {
+                              editForm.setValue('activo_id', null, { shouldValidate: true })
+                            }
+                          }}
+                        />
+                        <button type="button" title="Crear nuevo cliente" onClick={() => setShowQCCliente(true)} style={quickAddBtnStyle}>
+                          <Plus size={14} />
+                        </button>
+                      </div>
+                      {editForm.formState.errors.cliente_id && (
+                        <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+                          {editForm.formState.errors.cliente_id.message}
+                        </p>
+                      )}
+                    </FieldRow>
+                  </div>
+
                   <div style={{ gridColumn: '1 / -1' }}>
                     <FieldRow label="Activo (opcional)">
                       <div style={{ display: 'flex', gap: '6px' }}>

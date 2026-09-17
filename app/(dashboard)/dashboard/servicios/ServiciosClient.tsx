@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useRouter } from 'next/navigation'
@@ -53,6 +53,7 @@ const servicioSchema = z.object({
 type ServicioForm = z.infer<typeof servicioSchema>
 
 const editSchema = z.object({
+  cliente_id: z.number().int().positive('Seleccioná un cliente'),
   activo_id: z.number().int().positive().nullable().optional(),
   titulo: z.string().min(2, 'Mínimo 2 caracteres'),
   descripcion: z.string().optional(),
@@ -377,10 +378,12 @@ export default function ServiciosClient({
 
   const editForm = useForm<EditForm>({
     resolver: zodResolver(editSchema),
-    defaultValues: { activo_id: null, titulo: '', descripcion: '', estado: 'INGRESADO', estado_pago: 'PENDIENTE', valor: 0, fecha: new Date().toISOString().split('T')[0] },
+    defaultValues: { cliente_id: 0, activo_id: null, titulo: '', descripcion: '', estado: 'INGRESADO', estado_pago: 'PENDIENTE', valor: 0, fecha: new Date().toISOString().split('T')[0] },
   })
   const [editError, setEditError] = useState<string | null>(null)
   const [editLoading, setEditLoading] = useState(false)
+  const [showQCEditCliente, setShowQCEditCliente] = useState(false)
+  const editClienteId = useWatch({ control: editForm.control, name: 'cliente_id' })
 
   const pagoForm = useForm<PagoForm>({
     resolver: zodResolver(pagoSchema),
@@ -454,6 +457,7 @@ export default function ServiciosClient({
 
   const openEdit = (s: Servicio) => {
     editForm.reset({
+      cliente_id: s.cliente_id,
       activo_id: s.activo_id,
       titulo: s.titulo,
       descripcion: s.descripcion ?? '',
@@ -483,7 +487,8 @@ export default function ServiciosClient({
       const nuevoActivo = data.activo_id
         ? (localActivos.find((a) => a.id === data.activo_id) ?? null)
         : null
-      return { ...s, ...json, clientes: s.clientes, activos: nuevoActivo ? { nombre: nuevoActivo.nombre } : null, totalPagado: s.totalPagado }
+      const nuevoCliente = localClientes.find((c) => c.id === data.cliente_id)
+      return { ...s, ...json, clientes: nuevoCliente ? { nombre: nuevoCliente.nombre } : s.clientes, activos: nuevoActivo ? { nombre: nuevoActivo.nombre } : null, totalPagado: s.totalPagado }
     })))
     setEditTarget(null)
   }
@@ -738,10 +743,28 @@ export default function ServiciosClient({
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '12px' }}>
                   <div style={{ gridColumn: '1 / -1' }}>
-                    <FieldRow label="Cliente">
-                      <div style={{ padding: '10px 14px', backgroundColor: '#F8F9FB', borderRadius: theme.radii.sm, border: `1px solid ${theme.colors.border}`, fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
-                        {editTarget.clientes?.nombre ?? '—'}
+                    <FieldRow label="Cliente" required>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <ClienteFormCombobox
+                          clientes={localClientes}
+                          value={editClienteId}
+                          onChange={(id) => {
+                            editForm.setValue('cliente_id', id, { shouldValidate: true })
+                            const activoActual = editForm.getValues('activo_id')
+                            if (activoActual && !localActivos.some((a) => a.id === activoActual && a.cliente_id === id)) {
+                              editForm.setValue('activo_id', null, { shouldValidate: true })
+                            }
+                          }}
+                        />
+                        <button type="button" title="Crear nuevo cliente" onClick={() => setShowQCEditCliente(true)} style={quickAddBtnStyle}>
+                          <Plus size={14} />
+                        </button>
                       </div>
+                      {editForm.formState.errors.cliente_id && (
+                        <p style={{ color: theme.colors.error, fontSize: theme.fontSizes.sm, marginTop: '4px' }}>
+                          {editForm.formState.errors.cliente_id.message}
+                        </p>
+                      )}
                     </FieldRow>
                   </div>
 
@@ -752,12 +775,23 @@ export default function ServiciosClient({
                         style={{ ...inputStyle, backgroundColor: '#fff' }}
                       >
                         <option value="">Sin activo</option>
-                        {localActivos.filter((a) => a.cliente_id === editTarget.cliente_id).map((a) => (
+                        {localActivos.filter((a) => a.cliente_id === editClienteId).map((a) => (
                           <option key={a.id} value={a.id}>{a.nombre}</option>
                         ))}
                       </select>
                     </FieldRow>
                   </div>
+
+                  {showQCEditCliente && (
+                    <QuickCreateClienteModal
+                      onClose={() => setShowQCEditCliente(false)}
+                      onCreated={(c) => {
+                        setLocalClientes((prev) => [...prev, c].sort((a, b) => a.nombre.localeCompare(b.nombre)))
+                        editForm.setValue('cliente_id', c.id, { shouldValidate: true })
+                        setShowQCEditCliente(false)
+                      }}
+                    />
+                  )}
 
                   <div style={{ gridColumn: '1 / -1' }}>
                     <FieldRow label="Título" required>

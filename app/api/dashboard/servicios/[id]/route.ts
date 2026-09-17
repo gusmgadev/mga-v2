@@ -4,6 +4,7 @@ import { supabaseAdmin } from '@/services/supabase-admin'
 import { z } from 'zod'
 
 const updateSchema = z.object({
+  cliente_id: z.number().int().positive().optional(),
   activo_id: z.number().int().positive().nullable().optional(),
   titulo: z.string().min(2, 'Mínimo 2 caracteres').optional(),
   descripcion: z.string().nullable().optional(),
