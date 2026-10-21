@@ -17,7 +17,7 @@ type Activo = {
   id: number
   cliente_id: number
   nombre: string
-  tipo: 'PC' | 'NOTEBOOK' | 'SERVIDOR' | 'IMPRESORA' | 'SISTEMA' | 'DESARROLLO' | 'SERVICIO' | 'DISPOSITIVO' | 'OTRO'
+  tipo: 'PC' | 'NOTEBOOK' | 'SERVIDOR' | 'IMPRESORA' | 'SISTEMA' | 'DESARROLLO' | 'SERVICIO' | 'DISPOSITIVO' | 'OTRO' | 'PANTERA' | 'LINCE' | 'DRAGONFISH'
   numero_serie: string | null
   notas: string | null
   activo: boolean
@@ -26,7 +26,7 @@ type Activo = {
 
 type ClienteSimple = { id: number; nombre: string }
 
-const TIPOS = ['PC', 'NOTEBOOK', 'SERVIDOR', 'IMPRESORA', 'SISTEMA', 'DESARROLLO', 'SERVICIO', 'DISPOSITIVO', 'OTRO'] as const
+const TIPOS = ['PC', 'NOTEBOOK', 'SERVIDOR', 'IMPRESORA', 'SISTEMA', 'DESARROLLO', 'SERVICIO', 'DISPOSITIVO', 'OTRO', 'PANTERA', 'LINCE', 'DRAGONFISH'] as const
 
 const activoSchema = z.object({
   cliente_id: z.number().int().positive('Seleccioná un cliente'),

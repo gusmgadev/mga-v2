@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { X, Loader2, AlertCircle } from 'lucide-react'
 import { theme } from '@/lib/theme'
 
-const TIPOS = ['PC', 'NOTEBOOK', 'SERVIDOR', 'IMPRESORA', 'SISTEMA', 'DESARROLLO', 'SERVICIO', 'DISPOSITIVO', 'OTRO'] as const
+const TIPOS = ['PC', 'NOTEBOOK', 'SERVIDOR', 'IMPRESORA', 'SISTEMA', 'DESARROLLO', 'SERVICIO', 'DISPOSITIVO', 'OTRO', 'PANTERA', 'LINCE', 'DRAGONFISH'] as const
 type Tipo = typeof TIPOS[number]
 
 interface Props {

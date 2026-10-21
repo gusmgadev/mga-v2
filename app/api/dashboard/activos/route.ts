@@ -6,7 +6,7 @@ import { z } from 'zod'
 const createSchema = z.object({
   cliente_id: z.number().int().positive('Seleccioná un cliente'),
   nombre: z.string().min(2, 'Mínimo 2 caracteres'),
-  tipo: z.enum(['PC', 'NOTEBOOK', 'SERVIDOR', 'IMPRESORA', 'SISTEMA', 'DESARROLLO', 'SERVICIO', 'DISPOSITIVO', 'OTRO']),
+  tipo: z.enum(['PC', 'NOTEBOOK', 'SERVIDOR', 'IMPRESORA', 'SISTEMA', 'DESARROLLO', 'SERVICIO', 'DISPOSITIVO', 'OTRO', 'PANTERA', 'LINCE', 'DRAGONFISH']),
   numero_serie: z.string().optional(),
   notas: z.string().optional(),
   activo: z.boolean(),

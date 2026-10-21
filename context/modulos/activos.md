@@ -14,6 +14,12 @@ public.activos {
 }
 ```
 
+### Valores de `tipo`
+
+`PC`, `NOTEBOOK`, `SERVIDOR`, `IMPRESORA`, `SISTEMA`, `DESARROLLO`, `SERVICIO`, `DISPOSITIVO`, `OTRO`, `PANTERA`, `LINCE`, `DRAGONFISH`
+
+Definidos en `app/api/dashboard/activos/route.ts`, `app/api/dashboard/activos/[id]/route.ts`, `components/dashboard/QuickCreateActivoModal.tsx` y `app/(dashboard)/dashboard/activos/ActivosClient.tsx` (columna `text` en BD, sin constraint).
+
 ---
 
 ## Funcionalidad

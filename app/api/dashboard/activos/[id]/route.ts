@@ -6,7 +6,7 @@ import { z } from 'zod'
 const updateSchema = z.object({
   cliente_id: z.number().int().positive().optional(),
   nombre: z.string().min(2, 'Mínimo 2 caracteres').optional(),
-  tipo: z.enum(['PC', 'NOTEBOOK', 'SERVIDOR', 'IMPRESORA', 'SISTEMA', 'DESARROLLO', 'SERVICIO', 'DISPOSITIVO', 'OTRO']).optional(),
+  tipo: z.enum(['PC', 'NOTEBOOK', 'SERVIDOR', 'IMPRESORA', 'SISTEMA', 'DESARROLLO', 'SERVICIO', 'DISPOSITIVO', 'OTRO', 'PANTERA', 'LINCE', 'DRAGONFISH']).optional(),
   numero_serie: z.string().optional(),
   notas: z.string().optional(),
   activo: z.boolean().optional(),
