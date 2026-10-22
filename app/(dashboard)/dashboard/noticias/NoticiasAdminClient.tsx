@@ -270,9 +270,9 @@ export default function NoticiasAdminClient({
     if (!ig) return
     const msg = ig.posted
       ? '✓ Publicado en Instagram correctamente'
-      : `Instagram: ${ig.error ?? 'No se pudo publicar'}`
+      : `La noticia quedó publicada en el sitio, pero falló Instagram: ${ig.error ?? 'error desconocido'}`
     setIgToast({ ok: ig.posted, message: msg })
-    setTimeout(() => setIgToast(null), 6000)
+    setTimeout(() => setIgToast(null), 8000)
   }
 
   const createForm = useForm<NoticiaForm>({

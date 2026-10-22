@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { supabaseAdmin } from '@/services/supabase-admin'
-import { postNoticiaToInstagram } from '@/services/instagram'
+import { postNoticiaToInstagram, type InstagramResult } from '@/services/instagram'
 import { z } from 'zod'
+
+export const maxDuration = 30
 
 const createSchema = z.object({
   titulo: z.string().min(2, 'Mínimo 2 caracteres'),
@@ -53,9 +55,14 @@ export async function POST(req: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  let _instagram = undefined
+  let _instagram: InstagramResult | undefined
   if (data.publicada && data.imagen_card) {
-    _instagram = await postNoticiaToInstagram(data)
+    try {
+      _instagram = await postNoticiaToInstagram(data)
+    } catch (err) {
+      console.error('[noticias] Error inesperado publicando en Instagram:', err)
+      _instagram = { posted: false, error: 'Error inesperado al publicar en Instagram' }
+    }
   }
 
   return NextResponse.json({ ...data, _instagram }, { status: 201 })
