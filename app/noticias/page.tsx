@@ -35,7 +35,6 @@ export default async function NoticiasPage() {
     .from("noticias")
     .select("id, titulo, resumen, imagen_card, created_at")
     .eq("publicada", true)
-    .order("orden", { ascending: true })
     .order("created_at", { ascending: false })
 
   return (
