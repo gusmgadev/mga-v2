@@ -7,7 +7,7 @@ import { supabaseAdmin } from "@/services/supabase-admin"
 import { theme } from "@/lib/theme"
 
 export const metadata: Metadata = {
-  title: "Noticias y Novedades | MGA Informática",
+  title: "Noticias y Novedades",
   description: "Últimas noticias, actualizaciones y novedades de MGA Informática: sistemas de gestión, desarrollo web, soporte técnico y soluciones IT en Rada Tilly y Comodoro Rivadavia, Chubut.",
   keywords: [
     "noticias tecnología Chubut",

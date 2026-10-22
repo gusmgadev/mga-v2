@@ -161,6 +161,7 @@ export default function Footer() {
                 className="mt-4 rounded-lg"
                 style={{ border: "none" }}
                 loading="lazy"
+                title="Ubicación de MGA Informática en Google Maps"
               />
             )}
           </div>

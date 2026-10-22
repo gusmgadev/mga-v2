@@ -3,11 +3,26 @@
 import { usePathname } from "next/navigation"
 import { theme } from "@/lib/theme"
 
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void
+  }
+}
+
 export default function WhatsAppButton() {
   const pathname = usePathname()
   if (pathname.startsWith('/dashboard') || pathname.startsWith('/auth')) return null
 
   const url = `https://wa.me/${theme.contact.whatsapp}?text=Hola%20MGA%20Informática%2C%20quisiera%20hacer%20una%20consulta`
+
+  const handleClick = () => {
+    if (typeof window !== "undefined" && typeof window.gtag === "function") {
+      window.gtag("event", "whatsapp_click", {
+        event_category: "contacto",
+        event_label: "boton_flotante",
+      })
+    }
+  }
 
   return (
     <a
@@ -15,6 +30,7 @@ export default function WhatsAppButton() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Contactar por WhatsApp"
+      onClick={handleClick}
       className="fixed bottom-6 right-6 z-50 flex items-center justify-center rounded-full shadow-lg transition-transform hover:scale-110"
       style={{
         width: "56px",

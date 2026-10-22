@@ -1,12 +1,13 @@
 import type { Metadata } from "next"
 import Image from "next/image"
+import Link from "next/link"
 import { theme } from "@/lib/theme"
 import MovingBanner from "@/components/landing/moving-banner"
 import Navbar from "@/components/landing/navbar"
 import Footer from "@/components/landing/footer"
 
 export const metadata: Metadata = {
-  title: "Pantera Comercios - Sistema de Gestión Web en Chubut | MGA Informática",
+  title: "Pantera Comercios - Sistema de Gestión Web en Chubut",
   description: "Pantera Comercios: sistema de gestión 100% web para comercios. Control de stock, facturación electrónica, caja y venta en Mercado Libre desde cualquier dispositivo. Distribuidor en Chubut.",
   keywords: ["Pantera Comercios Chubut", "sistema gestión web Patagonia", "ZooLogic Pantera", "software comercios Comodoro Rivadavia", "gestión online Chubut", "Pantera sistema gestión web", "sistema punto de venta web", "facturación electrónica web", "integración Mercado Libre web", "control stock online Patagonia"],
   alternates: { canonical: `${theme.site.url}/pantera` },
@@ -45,7 +46,6 @@ export default function PanteraPage() {
             src="/images/secciones/zoologic.jpg"
             alt=""
             fill
-            priority
             sizes="100vw"
             className="object-cover"
             style={{ filter: "blur(3px) brightness(0.85)" }}
@@ -116,13 +116,13 @@ export default function PanteraPage() {
             <h2 className="text-base font-bold text-white">
               ¿Qué esperás para optimizar tu negocio?
             </h2>
-            <a
+            <Link
               href="/#contact"
               className="inline-block px-5 py-2 rounded-lg font-medium text-sm whitespace-nowrap flex-shrink-0"
               style={{ backgroundColor: "#fff", color: "#7C3AED" }}
             >
               Consultános
-            </a>
+            </Link>
           </div>
         </div>
       </main>

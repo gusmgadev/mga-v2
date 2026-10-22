@@ -41,7 +41,6 @@ export default function JsonLd() {
       "@type":       "ContactPoint",
       telephone:     contact.phone,
       contactType:   "customer service",
-      contactOption: "TollFree",
       areaServed:    "AR",
       availableLanguage: "Spanish",
     },

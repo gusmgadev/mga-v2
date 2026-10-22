@@ -1,12 +1,13 @@
 import type { Metadata } from "next"
 import Image from "next/image"
+import Link from "next/link"
 import { theme } from "@/lib/theme"
 import MovingBanner from "@/components/landing/moving-banner"
 import Navbar from "@/components/landing/navbar"
 import Footer from "@/components/landing/footer"
 
 export const metadata: Metadata = {
-  title: "Dragonfish - Sistema de Gestión para Pymes en Chubut | MGA Informática",
+  title: "Dragonfish - Sistema de Gestión para Pymes en Chubut",
   description: "Dragonfish Color y Talle: software completo para pymes con integración a Mercado Libre, Tienda Nube y WooCommerce. Gestión de stock, facturación y multi-sucursales. Distribuidor certificado en Chubut.",
   keywords: ["Dragonfish Chubut", "sistema gestión pymes Patagonia", "ZooLogic Dragonfish", "software Mercado Libre Chubut", "facturación electrónica pymes Comodoro Rivadavia", "Dragonfish Color y Talle", "sistema de stock pymes", "integración Tienda Nube", "integración WooCommerce", "gestión multi-sucursales Chubut"],
   alternates: { canonical: `${theme.site.url}/dragonfish` },
@@ -45,7 +46,6 @@ export default function DragonfishPage() {
             src="/images/secciones/zoologic.jpg"
             alt=""
             fill
-            priority
             sizes="100vw"
             className="object-cover"
             style={{ filter: "blur(3px) brightness(0.85)" }}
@@ -116,13 +116,13 @@ export default function DragonfishPage() {
             <h2 className="text-base font-bold text-white">
               Optimizá tu negocio con Dragonfish
             </h2>
-            <a
+            <Link
               href="/#contact"
               className="inline-block px-5 py-2 rounded-lg font-medium text-sm whitespace-nowrap flex-shrink-0"
               style={{ backgroundColor: "#fff", color: "#0077C0" }}
             >
               Consultános
-            </a>
+            </Link>
           </div>
         </div>
       </main>

@@ -210,12 +210,6 @@ export default function SignInPage() {
         </button>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: theme.spacing.xs, marginTop: theme.spacing.sm }}>
-          <Link
-            href="/auth/reset"
-            style={{ fontSize: theme.fontSizes.sm, color: theme.colors.primary, textDecoration: 'none' }}
-          >
-            ¿Olvidaste tu contraseña?
-          </Link>
           <p style={{ fontSize: theme.fontSizes.sm, color: theme.colors.textMuted }}>
             ¿No tenés cuenta?{' '}
             <Link

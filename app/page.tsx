@@ -1,3 +1,4 @@
+import type { Metadata } from "next"
 import Navbar from "@/components/landing/navbar"
 import MovingBanner from "@/components/landing/moving-banner"
 import Hero from "@/components/landing/hero"
@@ -9,8 +10,13 @@ import Contact from "@/components/landing/contact"
 import Footer from "@/components/landing/footer"
 import JsonLd from "@/components/landing/json-ld"
 import { supabaseAdmin } from "@/services/supabase-admin"
+import { theme } from "@/lib/theme"
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 300
+
+export const metadata: Metadata = {
+  alternates: { canonical: theme.site.url },
+}
 
 export default async function Home() {
   const { data: clientes } = await supabaseAdmin

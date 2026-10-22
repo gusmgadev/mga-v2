@@ -122,9 +122,17 @@ export const theme = {
       text: "Contactanos",
       href: "#contact",
     },
-items: [
+    items: [
       { label: "Home", href: "/", scroll: false },
-      { label: "Servicios", href: "/#services", scroll: true },
+      {
+        label: "Servicios", href: "/#services", scroll: true,
+        submenu: [
+          { label: "Desarrollo Web", href: "/desarrollo-web" },
+          { label: "Sistemas de Gestión", href: "/sistemas-gestion" },
+          { label: "Consultoría IT", href: "/consultoria-it" },
+          { label: "Soporte Técnico", href: "/soporte-tecnico" },
+        ],
+      },
       { label: "Sistemas Zoologic", href: "/#sistemas-zoologic", scroll: true },
       { label: "Clientes", href: "/#clientes", scroll: true },
       { label: "Proceso", href: "/#process", scroll: true },
@@ -193,8 +201,8 @@ items: [
 
 // ── CLIENTES ────────────────────────────────────────────────────────────────
   clients: {
-    title: "Algunas empresas y comercios que confian en nosotros",
-    subtitle: "desde el 2004 brindando soluciones tecnologicas en la region",
+    title: "Algunas empresas y comercios que confían en nosotros",
+    subtitle: "Desde el 2004 brindando soluciones tecnológicas en la región",
     items: [], // se carga desde lib/clientes.ts
   },
 
@@ -279,10 +287,10 @@ items: [
     },
 
     services: [
-      { label: "Desarrollo WEB", href: "#services" },
-      { label: "Sistemas de Gestion y Puntos de venta", href: "#services" },
-      { label: "Consultoria IT",    href: "#services" },
-      { label: "Mantenimiento y Soporte IT",         href: "#services" },
+      { label: "Desarrollo WEB", href: "/desarrollo-web" },
+      { label: "Sistemas de Gestión y Puntos de venta", href: "/sistemas-gestion" },
+      { label: "Consultoría IT", href: "/consultoria-it" },
+      { label: "Mantenimiento y Soporte IT", href: "/soporte-tecnico" },
     ],
 
     nav: [

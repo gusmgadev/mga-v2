@@ -1,6 +1,15 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { theme } from '@/lib/theme'
+
+export const metadata: Metadata = {
+  title: {
+    default: 'Acceso | MGA Informática',
+    template: '%s | MGA Informática',
+  },
+  robots: { index: false, follow: false },
+}
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (

@@ -1,12 +1,13 @@
 import type { Metadata } from "next"
 import Image from "next/image"
+import Link from "next/link"
 import { theme } from "@/lib/theme"
 import MovingBanner from "@/components/landing/moving-banner"
 import Navbar from "@/components/landing/navbar"
 import Footer from "@/components/landing/footer"
 
 export const metadata: Metadata = {
-  title: "Lince Indumentaria - Sistema de Gestión en Chubut | MGA Informática",
+  title: "Lince Indumentaria - Sistema de Gestión en Chubut",
   description: "Lince Indumentaria: el sistema más elegido por la industria textil con más de 25 años en el mercado. Gestión de ventas, stock, producción y facturación electrónica. Distribuidor certificado en Chubut.",
   keywords: ["Lince Indumentaria Chubut", "sistema gestión indumentaria", "ZooLogic Lince", "software textil Patagonia", "punto de venta indumentaria Comodoro Rivadavia", "Lince indumentaria sistema", "sistema de stock indumentaria", "gestión producción textil", "facturación electrónica indumentaria"],
   alternates: { canonical: `${theme.site.url}/lince` },
@@ -45,7 +46,6 @@ export default function LincePage() {
             src="/images/secciones/zoologic.jpg"
             alt=""
             fill
-            priority
             sizes="100vw"
             className="object-cover"
             style={{ filter: "blur(3px) brightness(0.85)" }}
@@ -114,13 +114,13 @@ export default function LincePage() {
             <h2 className="text-base font-bold text-white">
               Mejorá el trabajo en tu negocio con Lince Indumentaria
             </h2>
-            <a
+            <Link
               href="/#contact"
               className="inline-block px-5 py-2 rounded-lg font-medium text-sm whitespace-nowrap flex-shrink-0"
               style={{ backgroundColor: "#fff", color: "#F58220" }}
             >
               Consultános
-            </a>
+            </Link>
           </div>
         </div>
       </main>

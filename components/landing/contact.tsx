@@ -4,6 +4,12 @@ import { useState } from "react"
 import { theme } from "@/lib/theme"
 import { Phone, Mail, MapPin, Send } from "lucide-react"
 
+declare global {
+  interface Window {
+    gtag?: (...args: unknown[]) => void
+  }
+}
+
 export default function Contact() {
   const [formData, setFormData] = useState({
     name: "",
@@ -29,6 +35,12 @@ export default function Contact() {
       if (!res.ok) throw new Error(data.error ?? "Error al enviar")
       setSubmitted(true)
       setFormData({ name: "", email: "", phone: "", message: "" })
+      if (typeof window !== "undefined" && typeof window.gtag === "function") {
+        window.gtag("event", "generate_lead", {
+          event_category: "contacto",
+          event_label: "formulario_web",
+        })
+      }
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : "Error al enviar. Intentá de nuevo.")
     } finally {
@@ -161,14 +173,17 @@ export default function Contact() {
                 <h3 className="text-lg font-semibold mb-4 text-center" style={{ color: "#fff" }}>Envianos tu consulta</h3>
                 <div className="flex items-center gap-3">
                   <label
+                    htmlFor="contact-name"
                     className="w-24 text-sm font-medium flex-shrink-0"
                     style={{ color: "#fff" }}
                   >
                     Nombre
                   </label>
                   <input
+                    id="contact-name"
                     type="text"
                     name="name"
+                    autoComplete="name"
                     value={formData.name}
                     onChange={handleChange}
                     required
@@ -188,14 +203,17 @@ export default function Contact() {
                 </div>
                 <div className="flex items-center gap-3">
                   <label
+                    htmlFor="contact-email"
                     className="w-24 text-sm font-medium flex-shrink-0"
                     style={{ color: "#fff" }}
                   >
                     Email
                   </label>
                   <input
+                    id="contact-email"
                     type="email"
                     name="email"
+                    autoComplete="email"
                     value={formData.email}
                     onChange={handleChange}
                     required
@@ -215,14 +233,17 @@ export default function Contact() {
                 </div>
                 <div className="flex items-center gap-3">
                   <label
+                    htmlFor="contact-phone"
                     className="w-24 text-sm font-medium flex-shrink-0"
                     style={{ color: "#fff" }}
                   >
                     Teléfono
                   </label>
                   <input
+                    id="contact-phone"
                     type="tel"
                     name="phone"
+                    autoComplete="tel"
                     value={formData.phone}
                     onChange={handleChange}
                     className="flex-1 px-2 py-1.5 rounded-lg border outline-none transition-colors"
@@ -241,12 +262,14 @@ export default function Contact() {
                 </div>
                 <div className="flex items-start gap-3">
                   <label
+                    htmlFor="contact-message"
                     className="w-24 text-sm font-medium flex-shrink-0 pt-1.5"
                     style={{ color: "#fff" }}
                   >
                     Mensaje
                   </label>
                   <textarea
+                    id="contact-message"
                     name="message"
                     value={formData.message}
                     onChange={handleChange}

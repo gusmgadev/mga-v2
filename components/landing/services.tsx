@@ -41,7 +41,6 @@ style={{
           src="/images/secciones/servicios1.jpg"
           alt=""
           fill
-          priority
           sizes="100vw"
           className="object-cover"
           style={{ filter: "blur(2px) brightness(0.8)" }}

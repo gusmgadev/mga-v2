@@ -11,44 +11,18 @@ const inter = Inter({
   subsets: ["latin"],
 })
 
-const { site, contact } = theme
+const { site } = theme
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
 
   title: {
-    default: "MGA Informática — Servicio Técnico y Soluciones IT en Rada Tilly",
+    default: "MGA Informática — Desarrollo Web, Sistemas de Gestión y Soporte IT en Chubut",
     template: "%s | MGA Informática",
   },
 
   description:
-    "Servicio técnico, reparación de computadoras, desarrollo web y sistemas de gestión en Rada Tilly, Chubut. Más de 20 años brindando soluciones tecnológicas. " +
-    contact.phone,
-
-  keywords: [
-    "servicio técnico Rada Tilly",
-    "reparación computadoras Chubut",
-    "mantenimiento informático Rada Tilly",
-    "desarrollo web Patagonia",
-    "sistemas de gestión Chubut",
-    "punto de venta Rada Tilly",
-    "consultoría IT Comodoro Rivadavia",
-    "MGA informática",
-    "mga digital Rada Tilly",
-    "soporte técnico Chubut",
-    "software a medida Patagonia",
-    "sistema de stock Patagonia",
-    "control de ventas Chubut",
-    "Zoologic Chubut",
-    "Lince indumentaria Chubut",
-    "Dragonfish sistema gestión",
-    "Pantera comercios Patagonia",
-    "venta online Chubut",
-    "e-commerce Comodoro Rivadavia",
-    "aplicaciones web Chubut",
-    "páginas web Comodoro Rivadavia",
-    "técnico informático Rada Tilly",
-  ],
+    "Desarrollo web, tiendas online, sistemas de gestión y soporte informático para empresas y comercios en Comodoro Rivadavia y Rada Tilly, Chubut. Consultanos.",
 
   authors:   [{ name: "MGA Informática" }],
   creator:   "MGA Informática",
@@ -70,14 +44,14 @@ export const metadata: Metadata = {
     locale:      "es_AR",
     url:         site.url,
     siteName:    site.name,
-    title:       "MGA Informática — Servicio Técnico y Soluciones IT en Rada Tilly",
+    title:       "MGA Informática — Desarrollo Web, Sistemas de Gestión y Soporte IT en Chubut",
     description:
-      "Servicio técnico, reparación de computadoras, desarrollo web y sistemas de gestión en Rada Tilly, Chubut. Más de 20 años brindando soluciones tecnológicas en la Patagonia.",
+      "Desarrollo web, tiendas online, sistemas de gestión y soporte informático para empresas y comercios en Comodoro Rivadavia y Rada Tilly, Chubut.",
     images: [
       {
         url:    site.ogImage,
-        width:  1200,
-        height: 630,
+        width:  1920,
+        height: 1281,
         alt:    "MGA Informática — Soluciones Tecnológicas en Rada Tilly, Chubut",
       },
     ],
@@ -85,14 +59,10 @@ export const metadata: Metadata = {
 
   twitter: {
     card:        "summary_large_image",
-    title:       "MGA Informática — Servicio Técnico y Soluciones IT en Rada Tilly",
+    title:       "MGA Informática — Desarrollo Web, Sistemas de Gestión y Soporte IT en Chubut",
     description:
-      "Servicio técnico, reparación de computadoras, desarrollo web y sistemas de gestión en Rada Tilly, Chubut.",
+      "Desarrollo web, tiendas online, sistemas de gestión y soporte informático en Comodoro Rivadavia y Rada Tilly, Chubut.",
     images: [site.ogImage],
-  },
-
-  alternates: {
-    canonical: site.url,
   },
 
   category: "technology",
@@ -100,8 +70,6 @@ export const metadata: Metadata = {
   other: {
     "geo.region":    "AR-U",
     "geo.placename": "Rada Tilly, Chubut, Argentina",
-    "geo.position":  "-45.9298;-67.5547",
-    ICBM:            "-45.9298, -67.5547",
   },
 }
 

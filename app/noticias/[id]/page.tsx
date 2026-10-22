@@ -22,10 +22,10 @@ export async function generateMetadata({
     .eq("publicada", true)
     .single()
 
-  if (!data) return { title: "Noticia no encontrada | MGA Informática" }
+  if (!data) return { title: "Noticia no encontrada" }
 
   return {
-    title: `${data.titulo} | MGA Informática`,
+    title: data.titulo,
     description: data.resumen,
     alternates: { canonical: `${theme.site.url}/noticias/${id}` },
     openGraph: {
@@ -210,7 +210,7 @@ export default async function NoticiaDetallePage({
         description: noticia.resumen,
         url: `${theme.site.url}/noticias/${id}`,
         datePublished: noticia.fecha ?? noticia.created_at,
-        dateModified: noticia.created_at,
+        dateModified: noticia.fecha ?? noticia.created_at,
         image: noticia.imagen_portada ? [noticia.imagen_portada] : [`${theme.site.url}${theme.site.ogImage}`],
         author: { "@type": "Organization", name: "MGA Informática", url: theme.site.url },
         publisher: {

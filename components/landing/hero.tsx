@@ -61,7 +61,7 @@ export default function Hero() {
               alt=""
               fill
               priority={idx === 0}
-              loading={idx === 0 ? "eager" : "eager"}
+              loading={idx === 0 ? "eager" : "lazy"}
               sizes="100vw"
               className="object-cover object-center"
               style={{ filter: `blur(${theme.hero.blurAmount}) brightness(0.4)` }}
@@ -106,7 +106,6 @@ export default function Hero() {
             style={{
               color: "#fff",
               lineHeight: 1.2,
-              fontFamily: "var(--font-poppins)",
               animationDelay: "0.1s",
             }}
           >

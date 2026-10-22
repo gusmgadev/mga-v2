@@ -121,3 +121,22 @@ body {
   -webkit-text-stroke: 0.3px #333 !important;
   animation: text-shine 4s ease-in-out infinite;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-banner-scroll,
+  .animate-pulse-up,
+  .animate-pulse-down,
+  .animated-gradient-text,
+  .animated-gradient-text-celeste {
+    animation: none !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
