@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(site.url),
 
   title: {
-    default: "MGA Informática — Desarrollo Web, Sistemas de Gestión y Soporte IT en Chubut",
+    default: "MGA Informática — Desarrollo Web, Sistemas de Gestión para comercios y empresas y Soporte Técnico en Comodoro Rivadavia - Rada Tilly",
     template: "%s | MGA Informática",
   },
 
@@ -44,22 +44,22 @@ export const metadata: Metadata = {
     locale:      "es_AR",
     url:         site.url,
     siteName:    site.name,
-    title:       "MGA Informática — Desarrollo Web, Sistemas de Gestión y Soporte IT en Chubut",
+    title:       "MGA Informática — Desarrollo Web, Sistemas de Gestión para comercios y empresas y Soporte Técnico en Comodoro Rivadavia - Rada Tilly",
     description:
       "Desarrollo web, tiendas online, sistemas de gestión y soporte informático para empresas y comercios en Comodoro Rivadavia y Rada Tilly, Chubut.",
     images: [
       {
         url:    site.ogImage,
-        width:  1920,
-        height: 1281,
-        alt:    "MGA Informática — Soluciones Tecnológicas en Rada Tilly, Chubut",
+        width:  1677,
+        height: 938,
+        alt:    "MGA Informática — Desarrollo Web, Sistemas de Gestión y Soporte Técnico en Chubut",
       },
     ],
   },
 
   twitter: {
     card:        "summary_large_image",
-    title:       "MGA Informática — Desarrollo Web, Sistemas de Gestión y Soporte IT en Chubut",
+    title:       "MGA Informática — Desarrollo Web, Sistemas de Gestión para comercios y empresas y Soporte Técnico en Comodoro Rivadavia - Rada Tilly",
     description:
       "Desarrollo web, tiendas online, sistemas de gestión y soporte informático en Comodoro Rivadavia y Rada Tilly, Chubut.",
     images: [site.ogImage],

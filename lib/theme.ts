@@ -23,7 +23,7 @@ export const theme = {
   site: {
     url:     "https://mgadigital.com.ar",
     name:    "MGA Informática",
-    ogImage: "/images/hero/hero-1.jpg",     // imagen para compartir en redes (1200×630 ideal)
+    ogImage: "/images/og-mga.png",     // imagen para compartir en redes (ideal 1200×630)
   },
 
   // ── COLORES ────────────────────────────────────────────────────────────────
